@@ -58,6 +58,14 @@
     box-sizing: border-box;
 }
 
+h5{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    left: 20px;
+    right: 20px;
+}
+
 html{
     font-size: 62.5%;
 }
@@ -829,6 +837,81 @@ textarea:hover {
     color: var(--light-color-alt);
     font-size: var(--font-size-md);
 }
+.quotes-categories{
+    margin-top: 30px;
+    margin-bottom: 10px;
+    color: var(--light-color-alt);
+    font-size: var(--font-size-md);
+}
+
+/* Media queries for different screen sizes */
+
+@media only screen and (max-width: 768px) {
+    /* Styles for screens smaller than 768px (tablets and mobiles) */
+    .quotes-categories.headline-banner {
+      display: flex; /* Make the categories a flexbox */
+      flex-wrap: wrap; /* Wrap categories if they overflow */
+      justify-content: center; /* Center the categories horizontally */
+      align-items: center; /* Center the categories vertically */
+    }
+    
+    .quotes-categories.headline-banner h3.headline {
+      font-size: 1.2rem; /* Adjust headline font size for smaller screens */
+    }
+    
+    .quotes-categories.headline-banner .headline-description {
+      font-size: 0.8rem; /* Adjust description font size for smaller screens */
+      margin-top: 1rem; /* Add some space between categories and description */
+    }
+    
+    .quotes-categories.headline-banner a span.place-items-center {
+      margin: 0.5rem; /* Add some margin between categories on smaller screens */
+    }
+}
+  
+/* Styles for all screen sizes */
+  
+.quotes-categories.headline-banner {
+    margin: 1rem 0; /* Add some margin for spacing */
+    padding: 1rem; /* Add some padding for aesthetics */
+    border: 1px solid #ddd; /* Optional: Add a border */
+    display: flex; /* Make the categories a flexbox for alignment options */
+    align-items: center; /* Align categories and description vertically */
+}
+  
+.quotes-categories.headline-banner h3.headline {
+    font-size: 1.5rem; /* Adjust headline font size for larger screens */
+    margin: 0; /* Remove default margin */
+}
+  
+.quotes-categories.headline-banner .headline-description {
+    font-size: 1rem; /* Adjust description font size */
+    margin-left: 1rem; /* Add margin for spacing */
+}
+  
+.quotes-categories.headline-banner a span.place-items-center {
+    display: inline-block; /* Make category links behave like blocks */
+    padding: 0.5rem 1rem; /* Add padding for readability */
+    border-radius: 5px; /* Add rounded corners */
+    text-decoration: none; /* Remove underline from links */
+    color: var(--light-color); /* Set text color */
+    margin: 0.5rem; /* Add some margin between categories */
+}
+  
+.quotes-categories.headline-banner a span.place-items-center:hover {
+    background-color: var(--secondary-background-color); /* Add hover effect */
+}
+
+.quotes-image{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .25s;
+    border: 2px solid darkcyan; /* Adjust border width and color as needed */
+  border-radius: 8px; /* Adjust corner radius for desired roundness */
+}
+  
 
 .your-custom-class button {
     /* Your styles for the button here */
