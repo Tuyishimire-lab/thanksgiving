@@ -823,6 +823,13 @@ textarea:hover {
     font-size: var(--font-size-md);
 }
 
+.quotes{
+    margin-top: 30px;
+    margin-bottom: 10px;
+    color: var(--light-color-alt);
+    font-size: var(--font-size-md);
+}
+
 .your-custom-class button {
     /* Your styles for the button here */
     background-color: #3498db;
@@ -999,4 +1006,13 @@ textarea:hover {
         grid-row: 2/-1;
     }
 
+}
+
+@media screen and (min-width: 1800px) {
+    .featured-article-1 {
+        grid-column: 1/4;
+    }
+    .featured-article {
+        grid-column: 4/-1;
+    }
 }
