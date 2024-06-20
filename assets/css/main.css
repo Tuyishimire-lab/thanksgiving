@@ -47,6 +47,7 @@
     --gap: 2rem;
     --margin-sm: 2rem;
     --margin-md: 3rem;
+    --item-min-height-smm: 10rem;
     --item-min-height-sm: 20rem;
     --item-min-height-md: 30rem;
 }
@@ -296,6 +297,15 @@ body.light-theme{
     display: flex;
 }
 
+/* Ensure the container used the full width */
+.featured-articles-container{
+    width: 100%;
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
 /* Form JavaScript styles */
 .search-form-container.activated{
     opacity: 1;
@@ -304,16 +314,30 @@ body.light-theme{
 
 /* Featured articles */
 .featured-articles{
-    padding-block: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
 }
 
 .section-header-offset{
     margin-top: 7.4rem;
 }
 
-.featured-articles-container,
+
 .featured-content{
-    gap: var(--gap);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2 rem;
+}
+/* Make the featured articles grid layout */
+.featured-content{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
 }
 
 .headline-banner{
@@ -438,55 +462,7 @@ body.light-theme{
     font-size: var(--font-size-md);
 }
 
-/* Sidebar */
-.sidebar{
-    background-color: var(--secondary-background-color);
-    padding: 2.5rem;
-}
 
-.trending-news-box{
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap);
-    padding-block: 2rem;
-    border-bottom: 1px solid var(--transparent-light-color);
-}
-
-.trending-news-box:last-of-type{
-    border-bottom: none;
-}
-
-.featured-content-title{
-    font-size: var(--font-size-md);
-    text-align: center;
-    padding: 1rem;
-}
-
-.trending-news-img-box{
-    position: relative;
-    width: 100%;
-    height: var(--item-min-height-sm);
-}
-
-.trending-number{
-    position: absolute;
-    top: -1rem;
-    left: -1rem;
-    z-index: 15;
-    width: 3rem;
-    height: 3rem;
-    background-color: var(--secondary-background-color);
-    color: var(--light-color);
-    border-radius: 50%;
-}
-
-.trending-news-data .article-title{
-    font-size: var(--font-size-sm);
-}
-
-.trending-news-box:hover .article-title{
-    color: var(--light-color-alt);
-}
 
 /* Quick read */
 .section-title{
@@ -585,7 +561,7 @@ body.light-theme{
 }
 
 .popular-tags-container .article{
-    min-height: var(--item-min-height-sm);
+    min-height: var(--item-min-height-smm);
 }
 
 .tag-name{
@@ -652,7 +628,7 @@ body.light-theme{
 }
 
 .footer-list{
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
 }
 
@@ -867,6 +843,7 @@ textarea:hover {
     .quotes-categories.headline-banner a span.place-items-center {
       margin: 0.5rem; /* Add some margin between categories on smaller screens */
     }
+    
 }
   
 /* Styles for all screen sizes */
@@ -1097,5 +1074,66 @@ textarea:hover {
     }
     .featured-article {
         grid-column: 4/-1;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .featured-articles-container, .featured-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Add this to your existing main.css */
+
+/* Verse of the Day Card */
+.verse-of-the-day-card {
+    background-color: #000;
+    color: var(--light-color);
+    /* background-color: #fff;
+    border: 2px solid #333; */
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 55px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+.verse-of-the-day-card:hover {
+    color: var(--light-color);
+    background-color: var(--secondary-background-color);
+}
+
+.verse-of-the-day-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.verse-of-the-day-content {
+    margin: 15px 0;
+    font-size: 18px;
+}
+
+.verse-of-the-day-tag {
+    font-size: 16px;
+    color: #777;
+}
+
+
+@media (max-width: 480px) {
+    .card {
+        padding: 10px;
+    }
+
+    .card-title {
+        font-size: 16px;
+    }
+
+    .card-content {
+        font-size: 14px;
+    }
+
+    .card-tag {
+        font-size: 12px;
     }
 }
