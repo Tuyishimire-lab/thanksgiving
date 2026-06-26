@@ -75,13 +75,13 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
                 padding: "2rem", 
                 borderRadius: "8px", 
                 marginBottom: "2.5rem",
-                borderLeft: "4px solid #4fcf70"
+                borderLeft: "4px solid var(--accent-color)"
               }}
             >
               <p style={{ fontStyle: "italic", fontSize: "1.6rem", lineHeight: "1.6", marginBottom: "1rem" }}>
                 "{verseText}"
               </p>
-              <span style={{ fontSize: "1.3rem", fontWeight: "600", color: "#4fcf70" }}>
+              <span style={{ fontSize: "1.3rem", fontWeight: "600", color: "var(--accent-color)" }}>
                 {verseTag}
               </span>
             </div>
@@ -158,7 +158,7 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
                 onClick={() => setShowImageCreator(true)}
                 style={{
                   flex: 1,
-                  background: "var(--gradient-color)",
+                  background: "var(--accent-color)",
                   color: "#fff",
                   border: "none",
                   borderRadius: "30px",

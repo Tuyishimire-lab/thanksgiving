@@ -289,7 +289,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
               onChange={(e) => setFontSize(parseInt(e.target.value))}
               style={{
                 width: "100%",
-                accentColor: "#4fcf70",
+                accentColor: "var(--accent-color)",
                 cursor: "pointer"
               }}
             />
@@ -371,7 +371,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
                       height: "3rem",
                       borderRadius: "50%",
                       background: color,
-                      border: textColor === color ? "3px solid #4fcf70" : "1px solid var(--transparent-light-color)",
+                      border: textColor === color ? "3px solid var(--accent-color)" : "1px solid var(--transparent-light-color)",
                       cursor: "pointer",
                       boxShadow: "0 2px 5px rgba(0,0,0,0.15)"
                     }}
@@ -387,7 +387,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
               onClick={downloadImage}
               style={{
                 flex: 1,
-                background: "var(--gradient-color)",
+                background: "var(--accent-color)",
                 color: "#fff",
                 border: "none",
                 borderRadius: "30px",

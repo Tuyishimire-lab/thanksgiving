@@ -173,3 +173,21 @@ export const saveTestimony = (title, author, contentText) => {
   saveToStorage("thanksgiving_local_testimonies", testimonies);
   return testimonies;
 };
+
+// ================= SAVED/BOOKMARKED PLANS =================
+
+export const getSavedPlans = () => {
+  return getFromStorage("thanksgiving_saved_plans", []);
+};
+
+export const toggleSavePlan = (planId) => {
+  const saved = getSavedPlans();
+  let updated;
+  if (saved.includes(planId)) {
+    updated = saved.filter(id => id !== planId);
+  } else {
+    updated = [...saved, planId];
+  }
+  saveToStorage("thanksgiving_saved_plans", updated);
+  return updated;
+};

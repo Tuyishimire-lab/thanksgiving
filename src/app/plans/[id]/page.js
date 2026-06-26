@@ -18,7 +18,7 @@ function PlanPlayerContent({ params }) {
       <div className="container" style={{ paddingBlock: "8rem", textAlign: "center" }}>
         <h2>Plan Not Found</h2>
         <p style={{ marginBlock: "2rem" }}>We couldn't find the reading plan you were looking for.</p>
-        <Link href="/plans" style={{ color: "#4fcf70", textDecoration: "underline", fontSize: "1.6rem" }}>
+        <Link href="/plans" style={{ color: "var(--accent-color)", textDecoration: "underline", fontSize: "1.6rem" }}>
           Back to Reading Plans
         </Link>
       </div>
@@ -225,7 +225,7 @@ function PlanPlayerContent({ params }) {
               onClick={handleMarkDayComplete}
               disabled={progress.completedDays.includes(activeDayNum)}
               style={{
-                background: progress.completedDays.includes(activeDayNum) ? "var(--transparent-light-color)" : "var(--gradient-color)",
+                background: progress.completedDays.includes(activeDayNum) ? "var(--transparent-light-color)" : "var(--accent-color)",
                 color: "#fff",
                 border: "none",
                 borderRadius: "30px",

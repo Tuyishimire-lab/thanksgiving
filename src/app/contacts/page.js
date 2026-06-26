@@ -267,7 +267,7 @@ export default function Contacts() {
                 <button
                   type="submit"
                   style={{
-                    background: "var(--gradient-color)",
+                    background: "var(--accent-color)",
                     color: "#fff",
                     border: "none",
                     borderRadius: "30px",

@@ -105,7 +105,7 @@ export default function PersonalProfile() {
                 border: "none",
                 paddingBlock: "1.5rem",
                 color: activeTab === tab.id ? "var(--light-color)" : "var(--light-color-alt)",
-                borderBottom: activeTab === tab.id ? "3px solid #4fcf70" : "3px solid transparent",
+                borderBottom: activeTab === tab.id ? "3px solid var(--accent-color)" : "3px solid transparent",
                 fontSize: "1.5rem",
                 fontWeight: activeTab === tab.id ? "700" : "500",
                 cursor: "pointer",
@@ -130,7 +130,7 @@ export default function PersonalProfile() {
                 <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
                   <i className="ri-quill-pen-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
                   <p style={{ fontSize: "1.5rem" }}>You haven't written any reflections yet.</p>
-                  <Link href="/bible" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--gradient-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
+                  <Link href="/bible" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
                     Read the Bible & Add Notes
                   </Link>
                 </div>
@@ -174,7 +174,7 @@ export default function PersonalProfile() {
                 <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
                   <i className="ri-markup-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
                   <p style={{ fontSize: "1.5rem" }}>You haven't highlighted any scriptures yet.</p>
-                  <Link href="/bible" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--gradient-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
+                  <Link href="/bible" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
                     Browse Bible
                   </Link>
                 </div>
@@ -232,7 +232,7 @@ export default function PersonalProfile() {
                 <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
                   <i className="ri-calendar-todo-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
                   <p style={{ fontSize: "1.5rem" }}>You aren't enrolled in any reading plans.</p>
-                  <Link href="/plans" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--gradient-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
+                  <Link href="/plans" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
                     Find a Devotional Plan
                   </Link>
                 </div>
@@ -266,7 +266,7 @@ export default function PersonalProfile() {
                         style={{
                           padding: "0.6rem 1.8rem",
                           borderRadius: "20px",
-                          background: plan.isCompleted ? "var(--transparent-light-color)" : "var(--gradient-color)",
+                          background: plan.isCompleted ? "var(--transparent-light-color)" : "var(--accent-color)",
                           color: "white",
                           fontSize: "1.2rem",
                           fontWeight: "700"

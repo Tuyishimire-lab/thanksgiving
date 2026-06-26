@@ -35,6 +35,7 @@
     --hover-dark-color: var(--primary-background-color);
     --gradient-color: linear-gradient(
         115deg,#4fcf70,#fad648,#a767e5,#12bcfe,#44ce7b);
+    --accent-color: #4fcf70;
     --transparent-light-color: rgba(255,255,255,.05);
     --transparent-dark-color: rgba(0,0,0,.75);
     --font-family: 'Poppins', sans-serif;
@@ -110,6 +111,7 @@ body.light-theme{
     --primary-background-color: #fff;
     --secondary-background-color: #f1f1f1;
     --hover-light-color: #fff;
+    --accent-color: #2b9348;
     --transparent-dark-color: var(--secondary-background-color);
     --transparent-light-color: rgba(0,0,0,.1);
 }
@@ -1221,7 +1223,7 @@ textarea:hover {
 }
 
 .mobile-bottom-nav .nav-link.active i {
-    color: #4fcf70; /* Standard green from signature gradient */
+    color: var(--accent-color);
     transform: scale(1.1);
 }
 
@@ -1311,7 +1313,7 @@ textarea:hover {
 }
 
 .progress-bar-fill {
-    background: var(--gradient-color);
+    background: var(--accent-color);
     height: 100%;
     width: 0%;
     transition: width 0.4s ease;
@@ -1349,7 +1351,7 @@ textarea:hover {
 }
 
 .day-bubble.completed {
-    background-color: #4fcf70;
+    background-color: var(--accent-color);
     color: white;
 }
 

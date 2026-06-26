@@ -89,7 +89,7 @@ export default function CommunityFeed() {
           <button
             onClick={() => setShowModal(true)}
             style={{
-              background: "var(--gradient-color)",
+              background: "var(--accent-color)",
               color: "#fff",
               border: "none",
               borderRadius: "30px",
@@ -314,7 +314,7 @@ export default function CommunityFeed() {
                 <button
                   type="submit"
                   style={{
-                    background: "var(--gradient-color)",
+                    background: "var(--accent-color)",
                     color: "#fff",
                     border: "none",
                     borderRadius: "30px",

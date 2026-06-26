@@ -100,7 +100,7 @@ export default function Home() {
             </div>
             <div style={{ textAlign: "right" }}>
               <span style={{ fontSize: "1.1rem", display: "block", color: "var(--light-color-alt)" }}>MY BIBLE STATE</span>
-              <span style={{ fontSize: "1.4rem", fontWeight: "600", color: "#4fcf70" }}>
+              <span style={{ fontSize: "1.4rem", fontWeight: "600", color: "var(--accent-color)" }}>
                 Active
               </span>
             </div>
@@ -181,7 +181,7 @@ export default function Home() {
                       href={`/plans/${plan.id}`}
                       style={{
                         padding: "0.8rem 2.5rem",
-                        background: "var(--gradient-color)",
+                        background: "var(--accent-color)",
                         color: "white",
                         borderRadius: "30px",
                         fontWeight: "700",
