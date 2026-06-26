@@ -51,17 +51,20 @@ export default function Home() {
     
     setActivePlans(activeList);
 
-    // 3. Load Verse of the Day
+    // 3. Load Verse of the Day (Day of the Year rotation logic)
     const today = new Date();
+    const start = new Date(today.getFullYear(), 0, 0);
+    const diff = (today - start) + ((start.getTimezoneOffset() - today.getTimezoneOffset()) * 60 * 1000);
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+    
+    // Pick deterministically from our pool of curated verses
+    const verseIndex = dayOfYear % verses.length;
+    const currentVerse = verses[verseIndex] || verses[0];
+    
+    // Format id for the highlights check (standardize to e.g. "votd_06_26")
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
-    
-    // Match date string used in the verses.js dataset
-    const targetDateStr = `2024-${month}-${day}`;
-    const currentVerse = verses.find((v) => v.date === targetDateStr) || verses[0];
-    
-    // Format id for the highlights check (standardize to e.g. "Romans_8_28" or date string)
-    // To keep it simple, we key it by a normalized representation
     const formattedId = `votd_${month}_${day}`;
     
     setVerseOfTheDay({
@@ -77,72 +80,111 @@ export default function Home() {
     setHighlights(getHighlights());
   }, [updateTrigger]);
 
-  if (!verseOfTheDay) return null;
+  const isLoading = !verseOfTheDay;
 
   return (
     <>
       {/* 1. Streak Tracker Dashboard Widget */}
-      <section style={{ paddingTop: "4rem", paddingBottom: "1rem" }}>
+      <section style={{ paddingTop: "4rem", paddingBottom: "0rem" }}>
         <div className="container" style={{ maxWidth: "1000px" }}>
           <div className="streak-card">
-            <div className="streak-number-wrapper">
-              <div className="streak-fire-icon">
+            <div className="streak-number-wrapper" style={{ gap: "1.2rem" }}>
+              <div className="streak-fire-icon" style={{ fontSize: "3.2rem" }}>
                 <i className="ri-fire-fill"></i>
               </div>
               <div>
-                <h3 style={{ fontSize: "2.2rem", color: "var(--light-color)" }}>
-                  Daily Streak: {streak.count} {streak.count === 1 ? "Day" : "Days"}
-                </h3>
-                <p style={{ fontSize: "1.3rem", color: "var(--light-color-alt)" }}>
-                  Good job! You logged in today. Keep building your daily reflection habit.
-                </p>
+                {isLoading ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <div className="shimmer" style={{ width: "100px", height: "1.6rem", borderRadius: "4px" }}></div>
+                    <div className="shimmer" style={{ width: "80px", height: "1.1rem", borderRadius: "4px" }}></div>
+                  </div>
+                ) : (
+                  <>
+                    <h3 style={{ fontSize: "1.6rem", fontWeight: "600", color: "var(--light-color)" }}>
+                      {streak.count} Day Streak
+                    </h3>
+                    <p style={{ fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
+                      Keep building your habit
+                    </p>
+                  </>
+                )}
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <span style={{ fontSize: "1.1rem", display: "block", color: "var(--light-color-alt)" }}>MY BIBLE STATE</span>
-              <span style={{ fontSize: "1.4rem", fontWeight: "600", color: "var(--accent-color)" }}>
-                Active
-              </span>
+              {isLoading ? (
+                <span className="shimmer" style={{ width: "60px", height: "2rem", borderRadius: "30px", display: "inline-block" }}></span>
+              ) : (
+                <span style={{
+                  background: "rgba(79, 207, 112, 0.12)",
+                  color: "var(--accent-color)",
+                  padding: "0.4rem 1rem",
+                  borderRadius: "30px",
+                  fontSize: "1.1rem",
+                  fontWeight: "600",
+                  letterSpacing: "0.5px"
+                }}>
+                  ACTIVE
+                </span>
+              )}
             </div>
           </div>
         </div>
       </section>
 
       {/* 2. Verse of the Day Card (Clickable) */}
-      <section id="word-of-the-day" style={{ paddingBlock: "2rem" }}>
+      <section id="word-of-the-day" style={{ paddingTop: "0.5rem", paddingBottom: "2rem" }}>
         <div className="container" style={{ maxWidth: "1000px" }}>
-          <div 
-            className={`verse-of-the-day-card ${highlights[verseOfTheDay.id] || ""}`} 
-            style={{ 
-              cursor: "pointer", 
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15)",
-              border: "1px solid var(--transparent-light-color)",
-              transition: "transform 0.25s, background-color 0.25s"
-            }}
-            onClick={() => setActiveVerse({
-              id: verseOfTheDay.id,
-              text: verseOfTheDay.verse,
-              tag: verseOfTheDay.tag
-            })}
-            onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.01)"}
-            onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
-          >
-            <div className="verse-of-the-day-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>Verse of the Day: {dayOfWeek}</span>
-              <i className="ri-bookmark-line" style={{ fontSize: "2.2rem", opacity: 0.7 }}></i>
+          {isLoading ? (
+            <div 
+              className="verse-of-the-day-card" 
+              style={{ 
+                padding: "2rem"
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div className="shimmer" style={{ width: "150px", height: "1.1rem", borderRadius: "4px" }}></div>
+                  <div className="shimmer" style={{ width: "1.8rem", height: "1.8rem", borderRadius: "4px" }}></div>
+                </div>
+                <div className="shimmer" style={{ width: "100%", height: "1.7rem", borderRadius: "4px", marginBlock: "0.5rem" }}></div>
+                <div className="shimmer" style={{ width: "80%", height: "1.7rem", borderRadius: "4px", marginBlock: "0.5rem" }}></div>
+                <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--transparent-light-color)", paddingTop: "1rem", marginTop: "0.5rem" }}>
+                  <div className="shimmer" style={{ width: "120px", height: "1.2rem", borderRadius: "4px" }}></div>
+                  <div className="shimmer" style={{ width: "90px", height: "1.1rem", borderRadius: "4px" }}></div>
+                </div>
+              </div>
             </div>
-            <div className="verse-of-the-day-content" style={{ fontStyle: "italic", fontSize: "2rem", lineHeight: "1.6" }}>
-              "{verseOfTheDay.verse}"
+          ) : (
+            <div 
+              className={`verse-of-the-day-card ${highlights[verseOfTheDay.id] || ""}`} 
+              onClick={() => setActiveVerse({
+                id: verseOfTheDay.id,
+                text: verseOfTheDay.verse,
+                tag: verseOfTheDay.tag
+              })}
+              onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.01)"}
+              onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="verse-of-the-day-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <span>Verse of the Day • {dayOfWeek}</span>
+                <i className="ri-double-quotes-r" style={{ fontSize: "1.8rem", color: "var(--accent-color)", opacity: 0.8 }}></i>
+              </div>
+              <div className="verse-of-the-day-content">
+                "{verseOfTheDay.verse}"
+              </div>
+              
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1.5rem", borderTop: "1px solid var(--transparent-light-color)", paddingTop: "1rem" }}>
+                <span className="verse-of-the-day-tag" style={{ margin: 0 }}>
+                  — {verseOfTheDay.tag}
+                </span>
+                <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)", display: "flex", alignItems: "center", gap: "0.5rem", opacity: 0.8 }}>
+                  <i className="ri-tap-line" style={{ fontSize: "1.3rem" }}></i>
+                  Reflect & Share
+                </span>
+              </div>
             </div>
-            <div className="verse-of-the-day-tag" style={{ color: "var(--light-color-alt)", fontWeight: "600" }}>
-              {verseOfTheDay.tag}
-            </div>
-            
-            <div style={{ marginTop: "2rem", display: "flex", gap: "1rem", alignItems: "center", fontSize: "1.2rem", opacity: 0.8 }}>
-              <i className="ri-tap-line"></i>
-              <span>Tap verse to highlight, write a reflection note, or share</span>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
