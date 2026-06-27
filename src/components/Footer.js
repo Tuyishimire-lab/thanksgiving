@@ -29,10 +29,6 @@ export default function Footer() {
               </a>
             </li>
           </ul>
-
-          <span className="copyright-notice">
-            &copy; {new Date().getFullYear()} Ju & Vicky. All rights reserved.
-          </span>
         </div>
 
         <div>
@@ -76,6 +72,10 @@ export default function Footer() {
             </li>
           </ul>
         </div>
+
+        <span className="copyright-notice">
+          &copy; {new Date().getFullYear()} Ju & Vicky. All rights reserved.
+        </span>
       </div>
     </footer>
   );
