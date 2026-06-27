@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getStreak, updateStreak, getPlansProgress, getHighlights } from "@/data/userState";
+import { getStreak, updateStreak, getPlansProgress, getHighlights, getLocalTestimonies, saveTestimony } from "@/data/userState";
 import { verses } from "@/data/verses";
 import { devotionals } from "@/data/devotionals";
 import { posts } from "@/data/posts";
 import VerseActionsModal from "@/components/VerseActionsModal";
 
 const PLANS_MAPPING = [
-  { id: "love", title: "#Love", image: "/assets/images/tags/travel-tag.jpg" },
-  { id: "gratitude", title: "#Gratitude", image: "/assets/images/tags/food-tag.jpg" },
-  { id: "happiness", title: "#Happiness", image: "/assets/images/tags/technology-tag.jpg" },
-  { id: "patience", title: "#Patience", image: "/assets/images/tags/health-tag.jpg" },
-  { id: "hope", title: "#Hope", image: "/assets/images/tags/nature-tag.jpg" },
-  { id: "strength", title: "#Strength", image: "/assets/images/tags/fitness-tag.jpg" }
+  { id: "love", title: "#Love", subtitle: "Walk in Love • 5 Days", image: "/assets/images/tags/travel-tag.jpg" },
+  { id: "gratitude", title: "#Gratitude", subtitle: "Thanks in All Things • 5 Days", image: "/assets/images/tags/food-tag.jpg" },
+  { id: "happiness", title: "#Happiness", subtitle: "Joy & Cheerfulness • 5 Days", image: "/assets/images/tags/technology-tag.jpg" },
+  { id: "patience", title: "#Patience", subtitle: "Stillness & Waiting • 5 Days", image: "/assets/images/tags/health-tag.jpg" },
+  { id: "hope", title: "#Hope", subtitle: "Unshakable Hope • 5 Days", image: "/assets/images/tags/nature-tag.jpg" },
+  { id: "strength", title: "#Strength", subtitle: "Strength in Weakness • 5 Days", image: "/assets/images/tags/fitness-tag.jpg" }
 ];
 
 export default function Home() {
@@ -80,53 +80,259 @@ export default function Home() {
     setHighlights(getHighlights());
   }, [updateTrigger]);
 
+  const [homepageTestimonies, setHomepageTestimonies] = useState([]);
+
+  useEffect(() => {
+    const localPosts = getLocalTestimonies();
+    
+    const formattedStatic = posts.map(p => ({
+      ...p,
+      author: "Ju & Vicky",
+      bodyText: p.content.map(c => c.text).join("\n\n")
+    }));
+
+    const formattedLocal = localPosts.map(p => ({
+      ...p,
+      bodyText: p.content.map(c => c.text).join("\n\n")
+    }));
+
+    const merged = [...formattedLocal, ...formattedStatic];
+    setHomepageTestimonies(merged.slice(0, 4));
+  }, [updateTrigger]);
+
   const isLoading = !verseOfTheDay;
 
   return (
     <>
+      {/* 0. Hero Welcome Banner */}
+      <section 
+        style={{
+          background: "radial-gradient(circle at top right, rgba(79, 207, 112, 0.15), transparent 60%), radial-gradient(circle at bottom left, rgba(167, 103, 229, 0.12), transparent 50%)",
+          paddingBlock: "6rem 4rem",
+          borderBottom: "1px solid var(--transparent-light-color)",
+          textAlign: "center"
+        }}
+      >
+        <div className="container" style={{ maxWidth: "800px" }}>
+          <h1 
+            style={{ 
+              fontSize: "3.6rem", 
+              fontWeight: "700", 
+              color: "var(--light-color)",
+              lineHeight: "1.2",
+              marginBottom: "1.5rem",
+              letterSpacing: "-0.5px"
+            }}
+          >
+            A Sanctuary of <span style={{ color: "var(--accent-color)" }}>Gratitude</span> & <span style={{ background: "linear-gradient(45deg, #a767e5, #12bcfe)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Faith</span>
+          </h1>
+          <p 
+            style={{ 
+              fontSize: "1.6rem", 
+              color: "var(--light-color-alt)", 
+              lineHeight: "1.6",
+              maxWidth: "600px",
+              margin: "0 auto 3rem auto"
+            }}
+          >
+            Reflect on God's word, build your daily devotional habit, and share testimonies of His faithfulness.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: "1.5rem", flexWrap: "wrap", alignItems: "center" }}>
+            <Link 
+              href="/plans" 
+              style={{
+                background: "var(--accent-color)",
+                color: "#131417",
+                padding: "1.2rem 2.5rem",
+                borderRadius: "30px",
+                fontWeight: "700",
+                fontSize: "1.4rem",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                boxShadow: "0 4px 15px rgba(79, 207, 112, 0.3)"
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(79, 207, 112, 0.4)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 4px 15px rgba(79, 207, 112, 0.3)";
+              }}
+            >
+              Start Daily Reading
+            </Link>
+            <Link 
+              href="/bible" 
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                color: "var(--light-color)",
+                padding: "1.2rem 2.5rem",
+                borderRadius: "30px",
+                fontWeight: "600",
+                fontSize: "1.4rem",
+                border: "1px solid var(--transparent-light-color)",
+                transition: "background 0.2s ease, transform 0.2s ease"
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              Read the Bible
+            </Link>
+            <Link 
+              href="/feed?share=true" 
+              style={{
+                background: "linear-gradient(45deg, rgba(167, 103, 229, 0.15), rgba(18, 188, 254, 0.15))",
+                color: "var(--light-color)",
+                padding: "1.2rem 2.5rem",
+                borderRadius: "30px",
+                fontWeight: "600",
+                fontSize: "1.4rem",
+                border: "1px solid rgba(167, 103, 229, 0.3)",
+                transition: "background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease"
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = "linear-gradient(45deg, rgba(167, 103, 229, 0.25), rgba(18, 188, 254, 0.25))";
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 15px rgba(167, 103, 229, 0.2)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = "linear-gradient(45deg, rgba(167, 103, 229, 0.15), rgba(18, 188, 254, 0.15))";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              Share a Testimony
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* 1. Streak Tracker Dashboard Widget */}
-      <section style={{ paddingTop: "4rem", paddingBottom: "0rem" }}>
+      <section style={{ paddingTop: "4rem", paddingBottom: "1rem" }}>
         <div className="container" style={{ maxWidth: "1000px" }}>
-          <div className="streak-card">
-            <div className="streak-number-wrapper" style={{ gap: "1.2rem" }}>
-              <div className="streak-fire-icon" style={{ fontSize: "3.2rem" }}>
-                <i className="ri-fire-fill"></i>
+          <div className="streak-card" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", flexWrap: "wrap", gap: "1rem" }}>
+              <div className="streak-number-wrapper" style={{ gap: "1.2rem", display: "flex", alignItems: "center" }}>
+                <div className="streak-fire-icon" style={{ fontSize: "3.2rem", color: "var(--accent-color)" }}>
+                  <i className="ri-fire-fill"></i>
+                </div>
+                <div>
+                  {isLoading ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <div className="shimmer" style={{ width: "100px", height: "1.6rem", borderRadius: "4px" }}></div>
+                      <div className="shimmer" style={{ width: "80px", height: "1.1rem", borderRadius: "4px" }}></div>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 style={{ fontSize: "1.8rem", fontWeight: "600", color: "var(--light-color)" }}>
+                        {streak.count} Day Streak
+                      </h3>
+                      <p style={{ fontSize: "1.2rem", color: "var(--light-color-alt)" }}>
+                        Nourish your soul daily
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
-              <div>
+              <div style={{ textAlign: "right" }}>
                 {isLoading ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    <div className="shimmer" style={{ width: "100px", height: "1.6rem", borderRadius: "4px" }}></div>
-                    <div className="shimmer" style={{ width: "80px", height: "1.1rem", borderRadius: "4px" }}></div>
-                  </div>
+                  <span className="shimmer" style={{ width: "60px", height: "2rem", borderRadius: "30px", display: "inline-block" }}></span>
                 ) : (
-                  <>
-                    <h3 style={{ fontSize: "1.6rem", fontWeight: "600", color: "var(--light-color)" }}>
-                      {streak.count} Day Streak
-                    </h3>
-                    <p style={{ fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
-                      Keep building your habit
-                    </p>
-                  </>
+                  <span style={{
+                    background: "rgba(79, 207, 112, 0.12)",
+                    color: "var(--accent-color)",
+                    padding: "0.4rem 1.2rem",
+                    borderRadius: "30px",
+                    fontSize: "1.2rem",
+                    fontWeight: "600",
+                    letterSpacing: "0.5px"
+                  }}>
+                    ACTIVE
+                  </span>
                 )}
               </div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              {isLoading ? (
-                <span className="shimmer" style={{ width: "60px", height: "2rem", borderRadius: "30px", display: "inline-block" }}></span>
-              ) : (
-                <span style={{
-                  background: "rgba(79, 207, 112, 0.12)",
-                  color: "var(--accent-color)",
-                  padding: "0.4rem 1rem",
-                  borderRadius: "30px",
-                  fontSize: "1.1rem",
-                  fontWeight: "600",
-                  letterSpacing: "0.5px"
-                }}>
-                  ACTIVE
+
+            {/* 7-Day Habit Progress Row */}
+            {!isLoading && (
+              <div style={{
+                borderTop: "1px solid var(--transparent-light-color)",
+                paddingTop: "1.5rem",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "1.5rem"
+              }}>
+                <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600", letterSpacing: "1px" }}>
+                  THIS WEEK'S WALK:
                 </span>
-              )}
-            </div>
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayAbbr, idx) => {
+                    const dayIndexMap = { 'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6 };
+                    const todayAbbr = dayOfWeek.substring(0, 3);
+                    const currentDayIdx = dayIndexMap[todayAbbr] ?? 0;
+                    
+                    // Highlight if it's today or within the active streak range
+                    const isActive = idx === currentDayIdx || 
+                      (idx < currentDayIdx && idx >= currentDayIdx - (streak.count - 1));
+                    
+                    const isToday = idx === currentDayIdx;
+
+                    return (
+                      <div 
+                        key={dayAbbr} 
+                        style={{ 
+                          display: "flex", 
+                          flexDirection: "column", 
+                          alignItems: "center", 
+                          gap: "0.5rem" 
+                        }}
+                      >
+                        <div 
+                          style={{
+                            width: "3rem",
+                            height: "3rem",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "1.2rem",
+                            fontWeight: "700",
+                            background: isActive 
+                              ? "var(--accent-color)" 
+                              : "rgba(255, 255, 255, 0.05)",
+                            color: isActive ? "#131417" : "var(--light-color-alt)",
+                            border: isToday ? "1.5px solid var(--accent-color)" : "1px solid transparent",
+                            boxShadow: isActive ? "0 0 10px rgba(79, 207, 112, 0.4)" : "none",
+                            transition: "all 0.3s ease"
+                          }}
+                        >
+                          {isActive ? (
+                            <i className="ri-check-line" style={{ fontSize: "1.4rem" }}></i>
+                          ) : (
+                            dayAbbr[0]
+                          )}
+                        </div>
+                        <span style={{ 
+                          fontSize: "1rem", 
+                          fontWeight: isToday ? "700" : "500", 
+                          color: isToday ? "var(--light-color)" : "var(--light-color-alt)" 
+                        }}>
+                          {dayAbbr}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -187,6 +393,7 @@ export default function Home() {
           )}
         </div>
       </section>
+
 
       {/* 3. Active Devotional Plans (If Enrolled) */}
       {activePlans.length > 0 && (
@@ -252,7 +459,7 @@ export default function Home() {
           </h2>
 
           <div className="older-posts-grid-wrapper d-grid">
-            {posts.map((post) => (
+            {homepageTestimonies.map((post) => (
               <Link href={`/feed`} key={post.id} className="article d-grid">
                 <div className="older-posts-article-image-wrapper">
                   <img src={post.image} alt={post.title} className="article-image" />
@@ -263,6 +470,8 @@ export default function Home() {
                     <span>{post.date}</span>
                     <span className="article-data-spacer"></span>
                     <span>{post.readTime}</span>
+                    <span className="article-data-spacer"></span>
+                    <span style={{ color: "var(--accent-color)", fontWeight: "600" }}>By {post.author}</span>
                   </div>
 
                   <h3 className="title article-title">{post.title}</h3>
@@ -281,11 +490,87 @@ export default function Home() {
             Our Six Beacons
           </h2>
 
-          <div className="popular-tags-container d-grid">
+          <div className="popular-tags-container d-grid" style={{ gap: "2rem" }}>
             {PLANS_MAPPING.map((beacon) => (
-              <Link href={`/plans/${beacon.id}`} key={beacon.id} className="article">
-                <span className="tag-name">{beacon.title}</span>
-                <img src={beacon.image} alt={beacon.title} className="article-image" />
+              <Link 
+                href={`/plans/${beacon.id}`} 
+                key={beacon.id} 
+                className="article"
+                style={{
+                  position: "relative",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                  aspectRatio: "4 / 3",
+                  display: "block"
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = "scale(1.03) translateY(-4px)";
+                  e.currentTarget.style.boxShadow = "0 12px 30px rgba(79, 207, 112, 0.25)";
+                  const overlay = e.currentTarget.querySelector('.beacon-overlay');
+                  if (overlay) overlay.style.background = "linear-gradient(to top, rgba(19, 20, 23, 0.95), rgba(19, 20, 23, 0.4))";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = "scale(1) translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.15)";
+                  const overlay = e.currentTarget.querySelector('.beacon-overlay');
+                  if (overlay) overlay.style.background = "linear-gradient(to top, rgba(19, 20, 23, 0.9), rgba(19, 20, 23, 0.5))";
+                }}
+              >
+                <img 
+                  src={beacon.image} 
+                  alt={beacon.title} 
+                  className="article-image" 
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                    margin: 0
+                  }}
+                />
+                <div 
+                  className="beacon-overlay"
+                  style={{
+                    position: "absolute",
+                    inset: "0",
+                    background: "linear-gradient(to top, rgba(19, 20, 23, 0.9), rgba(19, 20, 23, 0.5))",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                    padding: "2rem",
+                    transition: "background 0.3s ease"
+                  }}
+                >
+                  <span 
+                    style={{
+                      background: "rgba(255, 255, 255, 0.08)",
+                      backdropFilter: "blur(8px)",
+                      WebkitBackdropFilter: "blur(8px)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "var(--accent-color)",
+                      padding: "0.5rem 1.2rem",
+                      borderRadius: "20px",
+                      fontSize: "1.3rem",
+                      fontWeight: "700",
+                      alignSelf: "flex-start",
+                      marginBottom: "0.8rem",
+                      letterSpacing: "0.5px"
+                    }}
+                  >
+                    {beacon.title}
+                  </span>
+                  <span 
+                    style={{ 
+                      fontSize: "1.2rem", 
+                      color: "var(--light-color-alt)",
+                      fontWeight: "500"
+                    }}
+                  >
+                    {beacon.subtitle}
+                  </span>
+                </div>
               </Link>
             ))}
           </div>

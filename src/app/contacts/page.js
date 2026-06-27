@@ -32,7 +32,7 @@ export default function Contacts() {
 
         <div className="d-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "4rem", marginTop: "4rem" }}>
           {/* Author/Company Information Card */}
-          <div 
+          <div
             style={{
               background: "var(--secondary-background-color)",
               padding: "4rem 3rem",
@@ -48,7 +48,7 @@ export default function Contacts() {
                 Ju & Vicky
               </h3>
               <p style={{ lineHeight: "1.6", color: "var(--light-color-alt)" }}>
-                We are Justine and Vicky, two writers passionate about faith, hope, and testimonies of how the Lord works in modern lives. Feel free to reach out to us with any questions, reflections, or cooperation requests!
+                We are Justine and Victorien, We are passionate about faith, hope, and testimonies of how the Lord works in modern lives. Feel free to reach out to us with any questions, reflections, or cooperation requests!
               </p>
             </div>
 
@@ -56,8 +56,8 @@ export default function Contacts() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                <div 
-                  className="place-items-center" 
+                <div
+                  className="place-items-center"
                   style={{
                     width: "4.5rem",
                     height: "4.5rem",
@@ -77,8 +77,8 @@ export default function Contacts() {
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                <div 
-                  className="place-items-center" 
+                <div
+                  className="place-items-center"
                   style={{
                     width: "4.5rem",
                     height: "4.5rem",
@@ -92,7 +92,7 @@ export default function Contacts() {
                 <div>
                   <span style={{ display: "block", fontSize: "1.2rem", color: "var(--light-color-alt)" }}>OUR LOCATION</span>
                   <span style={{ fontSize: "1.5rem", fontWeight: "600", color: "var(--light-color)" }}>
-                    Rome, Italy
+                    Kigali, Rwanda
                   </span>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export default function Contacts() {
           </div>
 
           {/* Contact Form Card */}
-          <div 
+          <div
             style={{
               background: "var(--secondary-background-color)",
               padding: "4rem 3rem",
@@ -135,8 +135,8 @@ export default function Contacts() {
           >
             {submitted ? (
               <div style={{ textAlign: "center", padding: "4rem 2rem" }}>
-                <div 
-                  className="place-items-center" 
+                <div
+                  className="place-items-center"
                   style={{
                     width: "8rem",
                     height: "8rem",

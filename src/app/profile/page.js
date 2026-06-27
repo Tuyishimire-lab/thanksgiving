@@ -18,12 +18,17 @@ export default function PersonalProfile() {
   const [notes, setNotes] = useState({});
   const [plansProg, setPlansProg] = useState({});
   const [activeTab, setActiveTab] = useState("notebook");
+  const [dayOfWeek, setDayOfWeek] = useState("");
 
   useEffect(() => {
     setStreak(getStreak());
     setHighlights(getHighlights());
     setNotes(getNotes());
     setPlansProg(getPlansProgress());
+
+    const today = new Date();
+    const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
+    setDayOfWeek(dayName);
   }, []);
 
   const hasNotes = Object.keys(notes).length > 0;
@@ -61,26 +66,103 @@ export default function PersonalProfile() {
       <div className="container" style={{ maxWidth: "800px" }}>
         
         {/* Profile Card / Streak */}
-        <div className="streak-card">
-          <div className="streak-number-wrapper">
-            <div className="streak-fire-icon">
-              <i className="ri-fire-fill"></i>
+        <div className="streak-card" style={{ display: "flex", flexDirection: "column", gap: "2rem", marginBottom: "3rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", flexWrap: "wrap", gap: "1rem" }}>
+            <div className="streak-number-wrapper" style={{ gap: "1.2rem", display: "flex", alignItems: "center" }}>
+              <div className="streak-fire-icon" style={{ fontSize: "3.2rem", color: "var(--accent-color)" }}>
+                <i className="ri-fire-fill"></i>
+              </div>
+              <div>
+                <h3 style={{ fontSize: "2.4rem", color: "var(--light-color)" }}>
+                  {streak.count} Day Streak!
+                </h3>
+                <p style={{ fontSize: "1.3rem", color: "var(--light-color-alt)" }}>
+                  Nourish your soul daily
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 style={{ fontSize: "2.4rem", color: "var(--light-color)" }}>
-                {streak.count} Day Streak!
-              </h3>
-              <p style={{ fontSize: "1.3rem", color: "var(--light-color-alt)" }}>
-                {streak.count > 0 ? "Keep growing your daily scripture habit." : "Log in tomorrow to start your streak."}
-              </p>
+            <div style={{ textAlign: "right" }}>
+              <span style={{ fontSize: "1.1rem", display: "block", color: "var(--light-color-alt)" }}>LAST ACTIVE</span>
+              <span style={{ fontSize: "1.4rem", fontWeight: "600", color: "var(--light-color)" }}>
+                {streak.lastActive ? streak.lastActive.split(" ").slice(1, 3).join(" ") : "Not active yet"}
+              </span>
             </div>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <span style={{ fontSize: "1.1rem", display: "block", color: "var(--light-color-alt)" }}>LAST ACTIVE</span>
-            <span style={{ fontSize: "1.4rem", fontWeight: "600", color: "var(--light-color)" }}>
-              {streak.lastActive ? streak.lastActive.split(" ").slice(1, 3).join(" ") : "Not active yet"}
-            </span>
-          </div>
+
+          {/* 7-Day Habit Progress Row */}
+          {dayOfWeek && (
+            <div style={{
+              borderTop: "1px solid var(--transparent-light-color)",
+              paddingTop: "1.5rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "1.5rem"
+            }}>
+              <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600", letterSpacing: "1px" }}>
+                THIS WEEK'S WALK:
+              </span>
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayAbbr, idx) => {
+                  const dayIndexMap = { 'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6 };
+                  const todayAbbr = dayOfWeek.substring(0, 3);
+                  const currentDayIdx = dayIndexMap[todayAbbr] ?? 0;
+                  
+                  // Highlight if it's today or within the active streak range
+                  const isActive = idx === currentDayIdx || 
+                    (idx < currentDayIdx && idx >= currentDayIdx - (streak.count - 1));
+                  
+                  const isToday = idx === currentDayIdx;
+
+                  return (
+                    <div 
+                      key={dayAbbr} 
+                      style={{ 
+                        display: "flex", 
+                        flexDirection: "column", 
+                        alignItems: "center", 
+                        gap: "0.5rem" 
+                      }}
+                    >
+                      <div 
+                        style={{
+                          width: "3rem",
+                          height: "3rem",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "1.2rem",
+                          fontWeight: "700",
+                          background: isActive 
+                            ? "var(--accent-color)" 
+                            : "rgba(255, 255, 255, 0.05)",
+                          color: isActive ? "#131417" : "var(--light-color-alt)",
+                          border: isToday ? "1.5px solid var(--accent-color)" : "1px solid transparent",
+                          boxShadow: isActive ? "0 0 10px rgba(79, 207, 112, 0.4)" : "none",
+                          transition: "all 0.3s ease"
+                        }}
+                      >
+                        {isActive ? (
+                          <i className="ri-check-line" style={{ fontSize: "1.4rem" }}></i>
+                        ) : (
+                          dayAbbr[0]
+                        )}
+                      </div>
+                      <span style={{ 
+                        fontSize: "1rem", 
+                        fontWeight: isToday ? "700" : "500", 
+                        color: isToday ? "var(--light-color)" : "var(--light-color-alt)" 
+                      }}>
+                        {dayAbbr}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Navigation Tabs */}

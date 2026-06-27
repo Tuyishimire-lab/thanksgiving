@@ -3,7 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 
 const BG_PRESETS = [
-  { name: "Brand Gradient", value: "linear-gradient(115deg, #4fcf70, #fad648, #a767e5, #12bcfe, #44ce7b)", type: "gradient", colors: ["#4fcf70", "#fad648", "#a767e5", "#12bcfe", "#44ce7b"] },
+  { name: "Gold Watercolor", value: "url(/assets/images/card_bgs/gold_watercolor.png)", type: "image", src: "/assets/images/card_bgs/gold_watercolor.png" },
+  { name: "Autumn Leaves", value: "url(/assets/images/card_bgs/autumn_leaves.png)", type: "image", src: "/assets/images/card_bgs/autumn_leaves.png" },
+  { name: "Moody Forest", value: "url(/assets/images/card_bgs/moody_forest.png)", type: "image", src: "/assets/images/card_bgs/moody_forest.png" },
+  { name: "Marble Gold", value: "url(/assets/images/card_bgs/marble_gold.png)", type: "image", src: "/assets/images/card_bgs/marble_gold.png" },
   { name: "Deep Slate", value: "#131417", type: "solid", colors: ["#131417"] },
   { name: "Sunset", value: "linear-gradient(45deg, #ff5e62, #ff9966)", type: "gradient", colors: ["#ff5e62", "#ff9966"] },
   { name: "Ocean", value: "linear-gradient(45deg, #12bcfe, #00f2fe)", type: "gradient", colors: ["#12bcfe", "#00f2fe"] },
@@ -12,7 +15,7 @@ const BG_PRESETS = [
 
 export default function VerseImageCreator({ verseText, verseTag, onClose }) {
   const [selectedBg, setSelectedBg] = useState(BG_PRESETS[0]);
-  const [fontSize, setFontSize] = useState(24); // px in preview
+  const [fontSize, setFontSize] = useState(20); // px in preview
   const [alignment, setAlignment] = useState("center");
   const [textColor, setTextColor] = useState("#ffffff");
   const canvasRef = useRef(null);
@@ -20,85 +23,114 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
   const [fileFormat, setFileFormat] = useState("image/jpeg"); // image/jpeg or image/png
 
   const renderCanvas = (canvas, size) => {
-    const ctx = canvas.getContext("2d");
-    canvas.width = size;
-    canvas.height = size;
+    return new Promise((resolve) => {
+      const ctx = canvas.getContext("2d");
+      canvas.width = size;
+      canvas.height = size;
 
-    // Draw background
-    if (selectedBg.type === "solid") {
-      ctx.fillStyle = selectedBg.colors[0];
-      ctx.fillRect(0, 0, size, size);
-    } else {
-      // Create Gradient
-      const grad = ctx.createLinearGradient(0, 0, size, size);
-      const step = 1 / (selectedBg.colors.length - 1);
-      selectedBg.colors.forEach((color, idx) => {
-        grad.addColorStop(idx * step, color);
-      });
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, size, size);
-    }
+      const drawTextAndResolve = () => {
+        // Settings for text drawing
+        ctx.fillStyle = textColor;
+        ctx.textAlign = alignment;
+        const fontScalar = size / 400; // Scalar relative to preview area
+        const renderFontSize = Math.round(fontSize * fontScalar);
+        ctx.font = `italic 600 ${renderFontSize}px 'Poppins', 'Segoe UI', Roboto, sans-serif`;
 
-    // Settings for text drawing
-    ctx.fillStyle = textColor;
-    ctx.textAlign = alignment;
-    const fontScalar = size / 400; // Scalar relative to preview area
-    const renderFontSize = Math.round(fontSize * fontScalar);
-    ctx.font = `italic 600 ${renderFontSize}px 'Poppins', 'Segoe UI', Roboto, sans-serif`;
+        const padding = 80;
+        const maxTextWidth = size - padding * 2;
+        const textX = alignment === "center" ? size / 2 : alignment === "left" ? padding : size - padding;
+        let textY = size / 2.2; // Start around middle-upper
 
-    const padding = 80;
-    const maxTextWidth = size - padding * 2;
-    const textX = alignment === "center" ? size / 2 : alignment === "left" ? padding : size - padding;
-    let textY = size / 2.2; // Start around middle-upper
+        // Word wrapping algorithm
+        const words = `"${verseText}"`.split(" ");
+        let line = "";
+        const lines = [];
+        const lineHeight = renderFontSize * 1.35;
 
-    // Word wrapping algorithm
-    const words = `"${verseText}"`.split(" ");
-    let line = "";
-    const lines = [];
-    const lineHeight = renderFontSize * 1.35;
-
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + " ";
-      const metrics = ctx.measureText(testLine);
-      const testWidth = metrics.width;
-      if (testWidth > maxTextWidth && n > 0) {
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line + words[n] + " ";
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+          if (testWidth > maxTextWidth && n > 0) {
+            lines.push(line);
+            line = words[n] + " ";
+          } else {
+            line = testLine;
+          }
+        }
         lines.push(line);
-        line = words[n] + " ";
-      } else {
-        line = testLine;
+
+        // Adjust textY so the block of text is perfectly centered vertically
+        const totalTextHeight = lines.length * lineHeight;
+        textY = (size - totalTextHeight) / 2;
+
+        // Draw the verse lines
+        lines.forEach((lineStr) => {
+          ctx.fillText(lineStr.trim(), textX, textY);
+          textY += lineHeight;
+        });
+
+        // Draw the tag reference
+        ctx.fillStyle = textColor === "#ffffff" ? "rgba(255, 255, 255, 0.85)" : "rgba(0, 0, 0, 0.75)";
+        ctx.textAlign = "center";
+        ctx.font = `600 ${Math.round(18 * fontScalar)}px 'Poppins', 'Segoe UI', Roboto, sans-serif`;
+        ctx.fillText(verseTag.toUpperCase(), size / 2, size - 80);
+
+        // Draw the website watermark branding at the bottom-right corner
+        ctx.fillStyle = textColor === "#ffffff" ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.3)";
+        ctx.textAlign = "right";
+        ctx.font = `italic 600 ${Math.round(12 * fontScalar)}px 'Poppins', sans-serif`;
+        ctx.fillText("thanksgivings.com", size - 40, size - 30);
+
+        resolve();
+      };
+
+      // Draw background
+      if (selectedBg.type === "solid") {
+        ctx.fillStyle = selectedBg.colors[0];
+        ctx.fillRect(0, 0, size, size);
+        drawTextAndResolve();
+      } else if (selectedBg.type === "gradient") {
+        // Create Gradient
+        const grad = ctx.createLinearGradient(0, 0, size, size);
+        const step = 1 / (selectedBg.colors.length - 1);
+        selectedBg.colors.forEach((color, idx) => {
+          grad.addColorStop(idx * step, color);
+        });
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, size, size);
+        drawTextAndResolve();
+      } else if (selectedBg.type === "image") {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = selectedBg.src;
+        img.onload = () => {
+          // Draw image to fill the canvas (cover)
+          const hRatio = canvas.width / img.width;
+          const vRatio = canvas.height / img.height;
+          const ratio = Math.max(hRatio, vRatio);
+          const centerShift_x = (canvas.width - img.width * ratio) / 2;
+          const centerShift_y = (canvas.height - img.height * ratio) / 2;
+          ctx.drawImage(img, 0, 0, img.width, img.height,
+                             centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+          drawTextAndResolve();
+        };
+        img.onerror = () => {
+          // Fallback to slate solid if image fails to load
+          ctx.fillStyle = "#131417";
+          ctx.fillRect(0, 0, size, size);
+          drawTextAndResolve();
+        };
       }
-    }
-    lines.push(line);
-
-    // Adjust textY so the block of text is perfectly centered vertically
-    const totalTextHeight = lines.length * lineHeight;
-    textY = (size - totalTextHeight) / 2;
-
-    // Draw the verse lines
-    lines.forEach((lineStr) => {
-      ctx.fillText(lineStr.trim(), textX, textY);
-      textY += lineHeight;
     });
-
-    // Draw the tag reference
-    ctx.fillStyle = textColor === "#ffffff" ? "rgba(255, 255, 255, 0.85)" : "rgba(0, 0, 0, 0.75)";
-    ctx.textAlign = "center";
-    ctx.font = `600 ${Math.round(18 * fontScalar)}px 'Poppins', 'Segoe UI', Roboto, sans-serif`;
-    ctx.fillText(verseTag.toUpperCase(), size / 2, size - 80);
-
-    // Draw the website watermark branding at the bottom-right corner
-    ctx.fillStyle = textColor === "#ffffff" ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.3)";
-    ctx.textAlign = "right";
-    ctx.font = `italic 600 ${Math.round(12 * fontScalar)}px 'Poppins', sans-serif`;
-    ctx.fillText("thanksgivings.com", size - 40, size - 30);
   };
 
-  const downloadImage = () => {
+  const downloadImage = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const size = 800; // High-res 1:1 image
-    renderCanvas(canvas, size);
+    await renderCanvas(canvas, size);
 
     // Download the canvas
     try {
@@ -117,12 +149,12 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
     }
   };
 
-  const shareImage = () => {
+  const shareImage = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const size = 800;
-    renderCanvas(canvas, size);
+    await renderCanvas(canvas, size);
 
     const ext = fileFormat === "image/jpeg" ? "jpg" : "png";
     const filename = `ThanksGivings_Verse_${verseTag.replace(/\s+/g, "_")}.${ext}`;
@@ -185,6 +217,8 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
               width: "300px",
               height: "300px",
               background: selectedBg.value,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
               borderRadius: "12px",
               padding: "3rem 2rem",
               display: "flex",
@@ -264,6 +298,8 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
                     height: "3.5rem",
                     borderRadius: "50%",
                     background: preset.value,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
                     border: selectedBg.name === preset.name ? "3px solid var(--light-color)" : "2px solid rgba(255,255,255,0.1)",
                     cursor: "pointer",
                     boxShadow: "0 2px 5px rgba(0,0,0,0.15)",

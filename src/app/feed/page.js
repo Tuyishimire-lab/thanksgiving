@@ -41,6 +41,12 @@ export default function CommunityFeed() {
       if (savedLikes) {
         setLikedPosts(JSON.parse(savedLikes));
       }
+
+      // Automatically open the share modal if coming from a share CTA link
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get("share") === "true") {
+        setShowModal(true);
+      }
     }
   }, []);
 
