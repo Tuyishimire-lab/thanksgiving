@@ -94,9 +94,12 @@ function PlanPlayerContent({ params }) {
       let activeReflections = {};
 
       if (user) {
-        const notebook = await getNotebookData();
+        const [notebook, reflections] = await Promise.all([
+          getNotebookData(),
+          getPlanReflectionsDb()
+        ]);
         activeHighlights = notebook.highlights || {};
-        activeReflections = await getPlanReflectionsDb();
+        activeReflections = reflections;
       } else {
         activeHighlights = getHighlightsLocal();
         activeReflections = getPlanReflectionsLocal();

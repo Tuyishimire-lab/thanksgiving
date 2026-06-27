@@ -35,10 +35,11 @@ export default function CommunityFeed() {
   const [postError, setPostError] = useState("");
 
   const loadFeed = async () => {
-    const currentUser = await getMe();
+    const [currentUser, testimonies] = await Promise.all([
+      getMe(),
+      getTestimonies()
+    ]);
     setUser(currentUser);
-
-    const testimonies = await getTestimonies();
     setAllPosts(testimonies);
 
     // Sync liked states

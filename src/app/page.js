@@ -7,8 +7,7 @@ import { verses } from "@/data/verses";
 import { devotionals } from "@/data/devotionals";
 import { posts } from "@/data/posts";
 import VerseActionsModal from "@/components/VerseActionsModal";
-import { getMe, updateStreakAction } from "@/app/actions/authActions";
-import { getDevotionalProgress, getNotebookData, getTestimonies } from "@/app/actions/dbActions";
+import { getHomepageData } from "@/app/actions/dbActions";
 
 const PLANS_MAPPING = [
   { id: "love", title: "#Love", subtitle: "Walk in Love • 5 Days", image: "/assets/images/tags/travel-tag.jpg" },
@@ -32,31 +31,19 @@ export default function Home() {
 
   useEffect(() => {
     async function initUserAndState() {
-      const user = await getMe();
-      setCurrentUser(user);
+      const data = await getHomepageData();
+      setCurrentUser(data.user);
       
       let currentStreak = { count: 0, lastActive: null };
       let activeProgress = {};
       let userHighlights = {};
       let mergeTestimonies = [];
 
-      if (user) {
-        // Logged in: update/fetch streak from DB
-        const streakData = await updateStreakAction();
-        currentStreak = { 
-          count: streakData ? streakData.streak_count : user.streak_count, 
-          lastActive: streakData ? streakData.last_active : user.last_active 
-        };
-        
-        // Fetch plans progress from DB
-        activeProgress = await getDevotionalProgress();
-        
-        // Fetch highlights from DB
-        const notebook = await getNotebookData();
-        userHighlights = notebook.highlights || {};
-
-        // Fetch testimonies from DB
-        mergeTestimonies = await getTestimonies();
+      if (data.user) {
+        currentStreak = data.streak || { count: 0, lastActive: null };
+        activeProgress = data.progress || {};
+        userHighlights = data.highlights || {};
+        mergeTestimonies = data.testimonies || [];
       } else {
         // Logged out: fallback to localStorage
         const localStreak = updateStreak();

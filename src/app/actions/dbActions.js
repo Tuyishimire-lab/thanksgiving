@@ -2,6 +2,7 @@
 
 import { getDb } from "@/data/db";
 import { cookies } from "next/headers";
+import { getMe, updateStreakAction } from "./authActions";
 
 /**
  * Helper to fetch current logged-in user ID
@@ -397,18 +398,20 @@ export async function getNotebookData() {
     if (!userId) return { notes: {}, highlights: {}, reflections: {} };
 
     const db = await getDb();
-    const notesRes = await db.execute({
-      sql: "SELECT * FROM notes WHERE user_id = ?",
-      args: [userId]
-    });
-    const highlightsRes = await db.execute({
-      sql: "SELECT * FROM highlights WHERE user_id = ?",
-      args: [userId]
-    });
-    const reflectionsRes = await db.execute({
-      sql: "SELECT * FROM plan_reflections WHERE user_id = ?",
-      args: [userId]
-    });
+    const [notesRes, highlightsRes, reflectionsRes] = await Promise.all([
+      db.execute({
+        sql: "SELECT * FROM notes WHERE user_id = ?",
+        args: [userId]
+      }),
+      db.execute({
+        sql: "SELECT * FROM highlights WHERE user_id = ?",
+        args: [userId]
+      }),
+      db.execute({
+        sql: "SELECT * FROM plan_reflections WHERE user_id = ?",
+        args: [userId]
+      })
+    ]);
 
     const notes = {};
     notesRes.rows.forEach(r => {
@@ -615,5 +618,100 @@ export async function syncLocalData(localData) {
   } catch (error) {
     console.error("Error syncing local data:", error);
     return { error: "Something went wrong during data synchronization." };
+  }
+}
+
+// ================= CONSOLIDATED DASHBOARD LOADERS =================
+
+export async function getHomepageData() {
+  try {
+    const user = await getMe();
+    if (!user) {
+      // Guest mode - fetch testimonies in parallel with null values for auth stats
+      const testimonies = await getTestimonies();
+      return {
+        user: null,
+        streak: null,
+        progress: {},
+        highlights: {},
+        testimonies: testimonies.slice(0, 4)
+      };
+    }
+
+    // Logged in: fetch everything concurrently on the server
+    const [streakData, progress, notebook, testimonies] = await Promise.all([
+      updateStreakAction(),
+      getDevotionalProgress(),
+      getNotebookData(),
+      getTestimonies()
+    ]);
+
+    return {
+      user,
+      streak: {
+        count: streakData ? streakData.streak_count : user.streak_count,
+        lastActive: streakData ? streakData.last_active : user.last_active
+      },
+      progress,
+      highlights: notebook.highlights || {},
+      testimonies: testimonies.slice(0, 4)
+    };
+  } catch (error) {
+    console.error("Error fetching homepage data:", error);
+    return {
+      user: null,
+      streak: null,
+      progress: {},
+      highlights: {},
+      testimonies: []
+    };
+  }
+}
+
+export async function getProfileData() {
+  try {
+    const user = await getMe();
+    if (!user) {
+      return { user: null };
+    }
+
+    const [notebook, progress, savedPlans] = await Promise.all([
+      getNotebookData(),
+      getDevotionalProgress(),
+      getSavedPlans()
+    ]);
+
+    return {
+      user,
+      notebook,
+      progress,
+      savedPlans
+    };
+  } catch (error) {
+    console.error("Error fetching profile data:", error);
+    return { user: null };
+  }
+}
+
+export async function getPlansDashboardData() {
+  try {
+    const user = await getMe();
+    if (!user) {
+      return { user: null, progress: {}, savedPlans: [] };
+    }
+
+    const [progress, savedPlans] = await Promise.all([
+      getDevotionalProgress(),
+      getSavedPlans()
+    ]);
+
+    return {
+      user,
+      progress,
+      savedPlans
+    };
+  } catch (error) {
+    console.error("Error fetching plans dashboard data:", error);
+    return { user: null, progress: {}, savedPlans: [] };
   }
 }

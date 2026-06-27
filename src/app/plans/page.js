@@ -8,11 +8,9 @@ import {
   toggleSavePlan 
 } from "@/data/userState";
 import { devotionals } from "@/data/devotionals";
-import { getMe } from "@/app/actions/authActions";
 import { 
-  getDevotionalProgress as getDevotionalProgressDb, 
-  getSavedPlans as getSavedPlansDb, 
-  toggleSavedPlan as toggleSavedPlanDb 
+  toggleSavedPlan as toggleSavedPlanDb, 
+  getPlansDashboardData 
 } from "@/app/actions/dbActions";
 
 const CATEGORIES = [
@@ -71,14 +69,12 @@ export default function PlansDashboard() {
 
   useEffect(() => {
     async function loadPlansState() {
-      const currentUser = await getMe();
-      setUser(currentUser);
+      const data = await getPlansDashboardData();
+      setUser(data.user);
       
-      if (currentUser) {
-        const dbProgress = await getDevotionalProgressDb();
-        const dbSaved = await getSavedPlansDb();
-        setProgress(dbProgress || {});
-        setSavedPlans(dbSaved || []);
+      if (data.user) {
+        setProgress(data.progress || {});
+        setSavedPlans(data.savedPlans || []);
       } else {
         setProgress(getPlansProgress());
         setSavedPlans(getSavedPlans());

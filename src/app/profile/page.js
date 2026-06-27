@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStreak, getHighlights, getNotes, getPlansProgress } from "@/data/userState";
 import { devotionals } from "@/data/devotionals";
-import { getMe } from "@/app/actions/authActions";
-import { getNotebookData, getDevotionalProgress } from "@/app/actions/dbActions";
+import { getProfileData } from "@/app/actions/dbActions";
 
 const HIGHLIGHT_COLOR_NAMES = {
   "highlight-yellow": "Yellow",
@@ -26,7 +25,8 @@ export default function PersonalProfile() {
 
   useEffect(() => {
     async function loadUserData() {
-      const currentUser = await getMe();
+      const data = await getProfileData();
+      const currentUser = data.user;
       setUser(currentUser);
       
       const today = new Date();
@@ -34,14 +34,11 @@ export default function PersonalProfile() {
       setDayOfWeek(dayName);
 
       if (currentUser) {
-        // Load data from DB
+        // Load data from DB consolidated payload
         setStreak({ count: currentUser.streak_count, lastActive: currentUser.last_active });
-        const notebook = await getNotebookData();
-        setNotes(notebook.notes || {});
-        setHighlights(notebook.highlights || {});
-        
-        const progress = await getDevotionalProgress();
-        setPlansProg(progress || {});
+        setNotes(data.notebook?.notes || {});
+        setHighlights(data.notebook?.highlights || {});
+        setPlansProg(data.progress || {});
       } else {
         // Fallback to local storage for guests
         setStreak(getStreak());
