@@ -38,13 +38,16 @@ export default function Home() {
         const detail = devotionals[id];
         if (!detail) return null;
         const prog = progress[id];
+        const currentDayIdx = Math.min(detail.days.length - 1, prog.completedDays.length);
+        const previewText = detail.days[currentDayIdx]?.reflection || "";
         return {
           id,
           title: detail.title,
           days: detail.days.length,
           completed: prog.completedDays.length,
           isCompleted: prog.isCompleted,
-          percent: Math.round((prog.completedDays.length / detail.days.length) * 100)
+          percent: Math.round((prog.completedDays.length / detail.days.length) * 100),
+          preview: previewText
         };
       })
       .filter((plan) => plan && !plan.isCompleted); // Only show ongoing plans
@@ -403,48 +406,61 @@ export default function Home() {
               My Active Plans
             </h2>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+            <div className="active-plans-grid">
               {activePlans.map((plan) => (
-                <div 
+                <Link 
+                  href={`/plans/${plan.id}`}
                   key={plan.id}
-                  style={{
-                    background: "var(--secondary-background-color)",
-                    padding: "2.5rem 3rem",
-                    borderRadius: "12px",
-                    boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
-                    border: "1px solid var(--transparent-light-color)",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1.5rem"
-                  }}
+                  className="active-plan-tile"
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-                    <div>
-                      <h4 style={{ fontSize: "1.8rem", color: "var(--light-color)" }}>{plan.title}</h4>
-                      <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)" }}>
-                        Day {plan.completed} of {plan.days} completed
-                      </span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <h4 style={{ 
+                      fontSize: "1.6rem", 
+                      fontWeight: "700", 
+                      color: "var(--light-color)",
+                      lineHeight: "1.3",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden"
+                    }}>
+                      {plan.title}
+                    </h4>
+                    <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
+                      Day {plan.completed} of {plan.days}
+                    </span>
+                    <p style={{ 
+                      fontSize: "1.15rem", 
+                      lineHeight: "1.4", 
+                      color: "var(--light-color-alt)",
+                      opacity: 0.85,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      marginBlockStart: "0.5rem"
+                    }}>
+                      {plan.preview}
+                    </p>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <div className="progress-bar-container" style={{ margin: "0", height: "6px" }}>
+                      <div className="progress-bar-fill" style={{ width: `${plan.percent}%` }}></div>
                     </div>
-
-                    <Link 
-                      href={`/plans/${plan.id}`}
-                      style={{
-                        padding: "0.8rem 2.5rem",
-                        background: "var(--accent-color)",
-                        color: "white",
-                        borderRadius: "30px",
-                        fontWeight: "700",
-                        fontSize: "1.3rem"
-                      }}
-                    >
-                      Continue Reading
-                    </Link>
+                    <div style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "space-between", 
+                      fontSize: "1.2rem", 
+                      fontWeight: "600",
+                      color: "var(--accent-color)" 
+                    }}>
+                      <span>Continue</span>
+                      <i className="ri-arrow-right-line"></i>
+                    </div>
                   </div>
-
-                  <div className="progress-bar-container" style={{ margin: "0" }}>
-                    <div className="progress-bar-fill" style={{ width: `${plan.percent}%` }}></div>
-                  </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

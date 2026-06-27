@@ -191,3 +191,25 @@ export const toggleSavePlan = (planId) => {
   saveToStorage("thanksgiving_saved_plans", updated);
   return updated;
 };
+
+// ================= PLAN REFLECTIONS =================
+
+export const getPlanReflections = () => {
+  return getFromStorage("thanksgiving_plan_reflections", {});
+};
+
+export const savePlanReflection = (planId, dayNumber, text) => {
+  const reflections = getPlanReflections();
+  const key = `${planId}_${dayNumber}`;
+  if (!text || text.trim() === "") {
+    delete reflections[key];
+  } else {
+    reflections[key] = {
+      text,
+      timestamp: new Date().toLocaleDateString()
+    };
+  }
+  saveToStorage("thanksgiving_plan_reflections", reflections);
+  return reflections;
+};
+

@@ -4,7 +4,7 @@ import { useState, useEffect, use, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { devotionals } from "@/data/devotionals";
-import { getPlansProgress, startPlan, completePlanDay, getHighlights } from "@/data/userState";
+import { getPlansProgress, startPlan, completePlanDay, getHighlights, getPlanReflections, savePlanReflection } from "@/data/userState";
 import VerseActionsModal from "@/components/VerseActionsModal";
 
 function PlanPlayerContent({ params }) {
@@ -30,6 +30,8 @@ function PlanPlayerContent({ params }) {
   const [activeVerse, setActiveVerse] = useState(null);
   const [highlights, setHighlights] = useState({});
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [reflectionText, setReflectionText] = useState("");
+  const [showReflectionInput, setShowReflectionInput] = useState(false);
 
   useEffect(() => {
     // Start the plan if not already started
@@ -47,6 +49,20 @@ function PlanPlayerContent({ params }) {
   useEffect(() => {
     setHighlights(getHighlights());
   }, [updateTrigger]);
+
+  useEffect(() => {
+    const reflections = getPlanReflections();
+    const currentKey = `${planId}_${activeDayNum}`;
+    const savedRef = reflections[currentKey];
+    setReflectionText(savedRef ? savedRef.text : "");
+    setShowReflectionInput(false);
+  }, [planId, activeDayNum, updateTrigger]);
+
+  const handleSaveReflection = () => {
+    savePlanReflection(planId, activeDayNum, reflectionText);
+    setShowReflectionInput(false);
+    setUpdateTrigger(prev => prev + 1);
+  };
 
   const refreshProgress = () => {
     const progressMap = getPlansProgress();
@@ -209,6 +225,135 @@ function PlanPlayerContent({ params }) {
               <i className="ri-lightbulb-line" style={{ marginRight: "0.5rem" }}></i>
               Tip: Click the scripture above to highlight it, write a note, or make an image card.
             </span>
+          </div>
+
+          {/* Reflection Section */}
+          <div style={{ borderTop: "1px solid var(--transparent-light-color)", paddingTop: "3rem", marginTop: "3rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <span style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--light-color-alt)", letterSpacing: "1px" }}>
+                MY DAILY REFLECTION
+              </span>
+              {!showReflectionInput && (
+                <button
+                  onClick={() => setShowReflectionInput(true)}
+                  style={{
+                    color: "#fad648",
+                    fontSize: "1.3rem",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem"
+                  }}
+                >
+                  <i className="ri-quill-pen-line"></i>
+                  {reflectionText ? "Edit Reflection" : "Write Reflection"}
+                </button>
+              )}
+            </div>
+
+            {reflectionText && !showReflectionInput && (
+              <div 
+                style={{ 
+                  background: "rgba(250, 214, 72, 0.05)", 
+                  padding: "2.5rem", 
+                  borderRadius: "8px", 
+                  borderLeft: "4px solid #fad648",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                }}
+              >
+                <p style={{ fontSize: "1.5rem", fontStyle: "italic", lineHeight: "1.6", color: "var(--light-color)" }}>
+                  "{reflectionText}"
+                </p>
+              </div>
+            )}
+
+            {!reflectionText && !showReflectionInput && (
+              <div 
+                onClick={() => setShowReflectionInput(true)}
+                style={{
+                  background: "var(--primary-background-color)",
+                  border: "1px dashed var(--transparent-light-color)",
+                  padding: "2rem",
+                  borderRadius: "8px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  color: "var(--light-color-alt)",
+                  transition: "all 0.2s"
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.borderColor = "#fad648";
+                  e.currentTarget.style.color = "var(--light-color)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.borderColor = "var(--transparent-light-color)";
+                  e.currentTarget.style.color = "var(--light-color-alt)";
+                }}
+              >
+                <i className="ri-quill-pen-line" style={{ display: "block", fontSize: "2rem", marginBottom: "0.5rem", color: "#fad648" }}></i>
+                <span style={{ fontSize: "1.3rem", fontWeight: "600" }}>Reflect on what you learnt from today's plan content...</span>
+              </div>
+            )}
+
+            {showReflectionInput && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                <textarea
+                  value={reflectionText}
+                  onChange={(e) => setReflectionText(e.target.value)}
+                  placeholder="What did you learn today? Write your personal thoughts, prayers, or applications..."
+                  style={{
+                    width: "100%",
+                    minHeight: "120px",
+                    background: "var(--primary-background-color)",
+                    color: "var(--light-color)",
+                    border: "1px solid var(--transparent-light-color)",
+                    borderRadius: "8px",
+                    padding: "1.5rem",
+                    fontSize: "1.5rem",
+                    lineHeight: "1.6",
+                    outline: "none",
+                    resize: "none",
+                    fontFamily: "inherit"
+                  }}
+                />
+                <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
+                  <button
+                    onClick={() => {
+                      setShowReflectionInput(false);
+                      const reflections = getPlanReflections();
+                      const currentKey = `${planId}_${activeDayNum}`;
+                      const savedRef = reflections[currentKey];
+                      setReflectionText(savedRef ? savedRef.text : "");
+                    }}
+                    style={{
+                      background: "transparent",
+                      color: "var(--light-color-alt)",
+                      padding: "0.8rem 2rem",
+                      borderRadius: "20px",
+                      fontSize: "1.3rem",
+                      fontWeight: "600",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveReflection}
+                    style={{
+                      background: "var(--accent-color)",
+                      color: "#fff",
+                      padding: "0.8rem 2.5rem",
+                      borderRadius: "20px",
+                      fontSize: "1.3rem",
+                      fontWeight: "700",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Save Reflection
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action Footer */}

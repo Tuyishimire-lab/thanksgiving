@@ -7,6 +7,7 @@ import { devotionals } from "@/data/devotionals";
 
 const CATEGORIES = [
   "All",
+  "Gratitude",
   "Love",
   "Anxiety",
   "Healing",

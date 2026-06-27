@@ -1453,3 +1453,44 @@ textarea:hover {
     }
 }
 
+/* Active Plans Homepage Grid & Tiles */
+.active-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2rem;
+}
+
+.active-plan-tile {
+    background: var(--secondary-background-color);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border: 1px solid var(--transparent-light-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.active-plan-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* Aspect ratio 1/1 square on screens that can fit multiple columns */
+@media (min-width: 480px) {
+    .active-plan-tile {
+        aspect-ratio: 1 / 1;
+    }
+}
+
+/* Standard auto-height on narrow screens to prevent oversized height */
+@media (max-width: 479px) {
+    .active-plan-tile {
+        min-height: 160px;
+        gap: 1.5rem;
+    }
+}
+
+
