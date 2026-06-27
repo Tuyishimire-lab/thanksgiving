@@ -2,6 +2,7 @@
 
 import { getDb } from "@/data/db";
 import { cookies } from "next/headers";
+import { parseContentBlocks } from "@/data/utils";
 import { getMe, updateStreakAction } from "./authActions";
 
 /**
@@ -112,7 +113,7 @@ export async function createTestimony(title, content, tag = "Gratitude") {
     }
 
     const id = `testimony_${Date.now()}`;
-    const contentBlocks = [{ type: "paragraph", text: content }];
+    const contentBlocks = parseContentBlocks(content);
     const excerpt = content.substring(0, 120) + (content.length > 120 ? "..." : "");
     const dateStr = new Date().toISOString();
 

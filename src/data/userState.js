@@ -1,4 +1,5 @@
 // Helper logic for local storage state management (SSR-safe)
+import { parseContentBlocks } from "./utils";
 
 const isClient = () => typeof window !== "undefined";
 
@@ -165,12 +166,7 @@ export const saveTestimony = (title, author, contentText, tag = "Gratitude") => 
     image: "/assets/images/featured/featured-2.jpg", // Default placeholder image from project assets
     excerpt: contentText.substring(0, 100) + "...",
     tag,
-    content: [
-      {
-        type: "paragraph",
-        text: contentText
-      }
-    ]
+    content: parseContentBlocks(contentText)
   };
   
   testimonies.unshift(newPost);

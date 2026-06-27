@@ -148,6 +148,28 @@ export default function CommunityFeed() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const insertFormatting = (before, after) => {
+    const textarea = document.getElementById("testimony-textarea");
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end);
+    const replacement = before + selected + after;
+
+    const newContent = text.substring(0, start) + replacement + text.substring(end);
+    setFormData(prev => ({
+      ...prev,
+      content: newContent
+    }));
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
+    }, 0);
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.content) return;
@@ -542,15 +564,61 @@ export default function CommunityFeed() {
                   </select>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <label style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600" }}>YOUR TESTIMONY / REFLECTION</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+                    <label style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600", margin: "0" }}>YOUR TESTIMONY / REFLECTION</label>
+                    {/* Rich text helper toolbar */}
+                    <div style={{ display: "flex", gap: "0.4rem", background: "rgba(255, 255, 255, 0.03)", padding: "0.3rem", borderRadius: "8px", border: "1px solid var(--transparent-light-color)" }}>
+                      <button
+                        type="button"
+                        onClick={() => insertFormatting("**", "**")}
+                        title="Bold Text"
+                        style={{ background: "transparent", border: "none", cursor: "pointer", padding: "0.4rem 0.8rem", color: "var(--light-color-alt)", fontSize: "1.3rem", fontWeight: "700" }}
+                      >
+                        B
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertFormatting("_", "_")}
+                        title="Italic Text"
+                        style={{ background: "transparent", border: "none", cursor: "pointer", padding: "0.4rem 0.8rem", color: "var(--light-color-alt)", fontSize: "1.3rem", fontStyle: "italic" }}
+                      >
+                        I
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertFormatting("\n> ", "")}
+                        title="Block Quote"
+                        style={{ background: "transparent", border: "none", cursor: "pointer", padding: "0.4rem 0.8rem", color: "var(--light-color-alt)", display: "flex", alignItems: "center" }}
+                      >
+                        <i className="ri-double-quotes-l" style={{ fontSize: "1.4rem" }}></i>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertFormatting("\n- ", "")}
+                        title="Bullet List"
+                        style={{ background: "transparent", border: "none", cursor: "pointer", padding: "0.4rem 0.8rem", color: "var(--light-color-alt)", display: "flex", alignItems: "center" }}
+                      >
+                        <i className="ri-list-unordered" style={{ fontSize: "1.4rem" }}></i>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => insertFormatting("\n1. ", "")}
+                        title="Numbered List"
+                        style={{ background: "transparent", border: "none", cursor: "pointer", padding: "0.4rem 0.8rem", color: "var(--light-color-alt)", display: "flex", alignItems: "center" }}
+                      >
+                        <i className="ri-list-ordered" style={{ fontSize: "1.4rem" }}></i>
+                      </button>
+                    </div>
+                  </div>
                   <textarea
+                    id="testimony-textarea"
                     name="content"
                     value={formData.content}
                     onChange={handleFormChange}
-                    placeholder="What did the Lord do in your life today?"
+                    placeholder="What did the Lord do in your life today? (You can use the toolbar above to style your content)"
                     required
-                    rows="6"
+                    rows="8"
                     style={{
                       border: "2px solid var(--transparent-light-color)",
                       borderRadius: "6px",
@@ -558,7 +626,9 @@ export default function CommunityFeed() {
                       background: "var(--primary-background-color)",
                       color: "var(--light-color)",
                       outline: "none",
-                      resize: "none"
+                      resize: "vertical",
+                      fontSize: "1.4rem",
+                      lineHeight: "1.6"
                     }}
                   />
                 </div>
