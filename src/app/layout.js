@@ -1,4 +1,4 @@
-import { Poppins } from "next/font/google";
+import { Poppins, Playfair_Display, Caveat } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -7,7 +7,23 @@ import ThemeProvider from "@/components/ThemeProvider";
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["300", "400", "600", "700"],
-  variable: "--font-family", // Bind to custom property used in main.css
+  variable: "--font-family",
+  display: "swap",
+  preload: false,
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-family-serif",
+  display: "swap",
+  preload: false,
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-family-cursive",
   display: "swap",
   preload: false,
 });
@@ -44,9 +60,37 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "ThanksGivings",
+    "url": "https://thanksgivings.vercel.app",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://thanksgivings.vercel.app/bible?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "ThanksGivings",
+    "url": "https://thanksgivings.vercel.app",
+    "logo": "https://thanksgivings.vercel.app/assets/images/thanksgivings.jpeg"
+  };
+
   return (
-    <html lang="en" className={poppins.variable}>
+    <html lang="en" className={`${poppins.variable} ${playfair.variable} ${caveat.variable}`}>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         <ThemeProvider>
           <Header />
           <main className="section-header-offset" style={{ minHeight: "75vh" }}>

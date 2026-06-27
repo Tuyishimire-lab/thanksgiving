@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 
 const BG_PRESETS = [
   { name: "Gold Watercolor", value: "url(/assets/images/card_bgs/gold_watercolor.png)", type: "image", src: "/assets/images/card_bgs/gold_watercolor.png" },
@@ -18,34 +18,59 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
   const [fontSize, setFontSize] = useState(20); // px in preview
   const [alignment, setAlignment] = useState("center");
   const [textColor, setTextColor] = useState("#ffffff");
+  const [aspectRatio, setAspectRatio] = useState("1:1"); // "1:1", "9:16", "16:9"
+  const [fontStyle, setFontStyle] = useState("Modern"); // "Modern", "Classic", "Typewriter", "Handwritten"
+  const [overlayOpacity, setOverlayOpacity] = useState(0.2); // contrast dark overlay
   const canvasRef = useRef(null);
 
   const [fileFormat, setFileFormat] = useState("image/jpeg"); // image/jpeg or image/png
 
-  const renderCanvas = (canvas, size) => {
+  const renderCanvas = (canvas) => {
     return new Promise((resolve) => {
       const ctx = canvas.getContext("2d");
-      canvas.width = size;
-      canvas.height = size;
+      
+      let canvasWidth = 1080;
+      let canvasHeight = 1080;
+
+      if (aspectRatio === "9:16") {
+        canvasWidth = 1080;
+        canvasHeight = 1920;
+      } else if (aspectRatio === "16:9") {
+        canvasWidth = 1920;
+        canvasHeight = 1080;
+      }
+
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
 
       const drawTextAndResolve = () => {
         // Settings for text drawing
         ctx.fillStyle = textColor;
         ctx.textAlign = alignment;
-        const fontScalar = size / 400; // Scalar relative to preview area
+        const fontScalar = Math.min(canvasWidth, canvasHeight) / 400;
         const renderFontSize = Math.round(fontSize * fontScalar);
-        ctx.font = `italic 600 ${renderFontSize}px 'Poppins', 'Segoe UI', Roboto, sans-serif`;
 
-        const padding = 80;
-        const maxTextWidth = size - padding * 2;
-        const textX = alignment === "center" ? size / 2 : alignment === "left" ? padding : size - padding;
-        let textY = size / 2.2; // Start around middle-upper
+        let activeFont = `'Poppins', 'Segoe UI', Roboto, sans-serif`;
+        if (fontStyle === "Classic") {
+          activeFont = `var(--font-family-serif, 'Playfair Display', Georgia, serif)`;
+        } else if (fontStyle === "Typewriter") {
+          activeFont = `'Courier New', Courier, monospace`;
+        } else if (fontStyle === "Handwritten") {
+          activeFont = `var(--font-family-cursive, 'Caveat', cursive)`;
+        }
+
+        ctx.font = `italic 600 ${renderFontSize}px ${activeFont}`;
+
+        const padding = Math.round(canvasWidth * 0.08);
+        const maxTextWidth = canvasWidth - padding * 2;
+        const textX = alignment === "center" ? canvasWidth / 2 : alignment === "left" ? padding : canvasWidth - padding;
+        let textY;
 
         // Word wrapping algorithm
         const words = `"${verseText}"`.split(" ");
         let line = "";
         const lines = [];
-        const lineHeight = renderFontSize * 1.35;
+        const lineHeight = renderFontSize * 1.4;
 
         for (let n = 0; n < words.length; n++) {
           const testLine = line + words[n] + " ";
@@ -62,7 +87,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
 
         // Adjust textY so the block of text is perfectly centered vertically
         const totalTextHeight = lines.length * lineHeight;
-        textY = (size - totalTextHeight) / 2;
+        textY = (canvasHeight - totalTextHeight) / 2;
 
         // Draw the verse lines
         lines.forEach((lineStr) => {
@@ -73,14 +98,15 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
         // Draw the tag reference
         ctx.fillStyle = textColor === "#ffffff" ? "rgba(255, 255, 255, 0.85)" : "rgba(0, 0, 0, 0.75)";
         ctx.textAlign = "center";
-        ctx.font = `600 ${Math.round(18 * fontScalar)}px 'Poppins', 'Segoe UI', Roboto, sans-serif`;
-        ctx.fillText(verseTag.toUpperCase(), size / 2, size - 80);
+        ctx.font = `600 ${Math.round(18 * fontScalar)}px ${activeFont}`;
+        ctx.fillText(verseTag.toUpperCase(), canvasWidth / 2, canvasHeight - Math.round(80 * fontScalar));
 
         // Draw the website watermark branding at the bottom-right corner
+        const domainName = typeof window !== "undefined" ? window.location.host : "thanksgivings.vercel.app";
         ctx.fillStyle = textColor === "#ffffff" ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.3)";
         ctx.textAlign = "right";
         ctx.font = `italic 600 ${Math.round(12 * fontScalar)}px 'Poppins', sans-serif`;
-        ctx.fillText("thanksgivings.com", size - 40, size - 30);
+        ctx.fillText(domainName, canvasWidth - Math.round(40 * fontScalar), canvasHeight - Math.round(30 * fontScalar));
 
         resolve();
       };
@@ -88,37 +114,49 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
       // Draw background
       if (selectedBg.type === "solid") {
         ctx.fillStyle = selectedBg.colors[0];
-        ctx.fillRect(0, 0, size, size);
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        
+        if (overlayOpacity > 0) {
+          ctx.fillStyle = `rgba(0, 0, 0, ${overlayOpacity})`;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
         drawTextAndResolve();
       } else if (selectedBg.type === "gradient") {
-        // Create Gradient
-        const grad = ctx.createLinearGradient(0, 0, size, size);
+        const grad = ctx.createLinearGradient(0, 0, canvasWidth, canvasHeight);
         const step = 1 / (selectedBg.colors.length - 1);
         selectedBg.colors.forEach((color, idx) => {
           grad.addColorStop(idx * step, color);
         });
         ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, size, size);
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        
+        if (overlayOpacity > 0) {
+          ctx.fillStyle = `rgba(0, 0, 0, ${overlayOpacity})`;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
         drawTextAndResolve();
       } else if (selectedBg.type === "image") {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.src = selectedBg.src;
         img.onload = () => {
-          // Draw image to fill the canvas (cover)
-          const hRatio = canvas.width / img.width;
-          const vRatio = canvas.height / img.height;
+          const hRatio = canvasWidth / img.width;
+          const vRatio = canvasHeight / img.height;
           const ratio = Math.max(hRatio, vRatio);
-          const centerShift_x = (canvas.width - img.width * ratio) / 2;
-          const centerShift_y = (canvas.height - img.height * ratio) / 2;
+          const centerShift_x = (canvasWidth - img.width * ratio) / 2;
+          const centerShift_y = (canvasHeight - img.height * ratio) / 2;
           ctx.drawImage(img, 0, 0, img.width, img.height,
                              centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+          
+          if (overlayOpacity > 0) {
+            ctx.fillStyle = `rgba(0, 0, 0, ${overlayOpacity})`;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+          }
           drawTextAndResolve();
         };
         img.onerror = () => {
-          // Fallback to slate solid if image fails to load
           ctx.fillStyle = "#131417";
-          ctx.fillRect(0, 0, size, size);
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
           drawTextAndResolve();
         };
       }
@@ -129,10 +167,8 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const size = 800; // High-res 1:1 image
-    await renderCanvas(canvas, size);
+    await renderCanvas(canvas);
 
-    // Download the canvas
     try {
       const ext = fileFormat === "image/jpeg" ? "jpg" : "png";
       const url = canvas.toDataURL(fileFormat, fileFormat === "image/jpeg" ? 0.92 : undefined);
@@ -153,8 +189,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const size = 800;
-    await renderCanvas(canvas, size);
+    await renderCanvas(canvas);
 
     const ext = fileFormat === "image/jpeg" ? "jpg" : "png";
     const filename = `ThanksGivings_Verse_${verseTag.replace(/\s+/g, "_")}.${ext}`;
@@ -164,7 +199,6 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
 
       const file = new File([blob], filename, { type: fileFormat });
       
-      // Attempt to use native mobile Web Share API
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
@@ -173,17 +207,14 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
             text: `"${verseText}" - ${verseTag}`
           });
         } catch (err) {
-          // User cancellation is normal, don't trigger alert for it
           if (err.name !== "AbortError") {
             console.error("Native share failed:", err);
           }
         }
       } else {
-        // Fallback for desktop browsers: prompt sharing link options
         const shareText = encodeURIComponent(`"${verseText}" - ${verseTag} via thanksgivings.com`);
         const url = encodeURIComponent(window.location.origin);
         
-        // Show share panel options
         const method = prompt(
           "Native sharing is not supported by your browser.\nChoose a fallback sharing options:\n1. Twitter / X\n2. Facebook\n3. WhatsApp\n(Type 1, 2, or 3)", 
           "1"
@@ -214,8 +245,8 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", alignItems: "center" }}>
           <div
             style={{
-              width: "300px",
-              height: "300px",
+              width: aspectRatio === "1:1" ? "300px" : aspectRatio === "9:16" ? "220px" : "350px",
+              height: aspectRatio === "1:1" ? "300px" : aspectRatio === "9:16" ? "390px" : "197px",
               background: selectedBg.value,
               backgroundSize: "cover",
               backgroundPosition: "center",
@@ -232,6 +263,20 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
               overflow: "hidden"
             }}
           >
+            {/* Dark Overlay in Preview */}
+            {overlayOpacity > 0 && (
+              <div 
+                style={{ 
+                  position: "absolute", 
+                  top: 0, 
+                  left: 0, 
+                  width: "100%", 
+                  height: "100%", 
+                  background: `rgba(0, 0, 0, ${overlayOpacity})`, 
+                  zIndex: 1 
+                }} 
+              />
+            )}
             <p
               style={{
                 fontSize: `${fontSize}px`,
@@ -240,7 +285,9 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
                 lineHeight: "1.4",
                 marginBottom: "3rem",
                 width: "100%",
-                wordBreak: "break-word"
+                wordBreak: "break-word",
+                zIndex: 2,
+                fontFamily: fontStyle === "Modern" ? "var(--font-family)" : fontStyle === "Classic" ? "var(--font-family-serif)" : fontStyle === "Typewriter" ? "monospace" : "var(--font-family-cursive)"
               }}
             >
               "{verseText}"
@@ -248,7 +295,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
             <span
               style={{
                 position: "absolute",
-                bottom: "3.5rem",
+                bottom: aspectRatio === "9:16" ? "4.5rem" : "3.5rem",
                 left: "50%",
                 transform: "translateX(-50%)",
                 fontSize: "1.2rem",
@@ -257,7 +304,9 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
                 opacity: 0.85,
                 textTransform: "uppercase",
                 width: "100%",
-                textAlign: "center"
+                textAlign: "center",
+                zIndex: 2,
+                fontFamily: fontStyle === "Modern" ? "var(--font-family)" : fontStyle === "Classic" ? "var(--font-family-serif)" : fontStyle === "Typewriter" ? "monospace" : "var(--font-family-cursive)"
               }}
             >
               {verseTag}
@@ -271,17 +320,49 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
                 fontSize: "1rem",
                 fontWeight: "600",
                 fontStyle: "italic",
-                opacity: 0.4
+                opacity: 0.4,
+                zIndex: 2
               }}
             >
-              thanksgivings.com
+              {typeof window !== "undefined" ? window.location.host : "thanksgivings.vercel.app"}
             </span>
           </div>
-          <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)" }}>Preview (square 1:1 aspect ratio)</span>
+          <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)" }}>
+            Preview ({aspectRatio === "1:1" ? "Square 1:1" : aspectRatio === "9:16" ? "Story 9:16" : "Landscape 16:9"} ratio)
+          </span>
         </div>
 
         {/* Customization Settings */}
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          {/* Aspect Ratio Selector */}
+          <div>
+            <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
+              ASPECT RATIO
+            </span>
+            <div style={{ display: "flex", gap: "1rem" }}>
+              {["1:1", "9:16", "16:9"].map((ratio) => (
+                <button
+                  key={ratio}
+                  onClick={() => setAspectRatio(ratio)}
+                  style={{
+                    flex: 1,
+                    padding: "0.8rem",
+                    borderRadius: "6px",
+                    background: aspectRatio === ratio ? "var(--transparent-light-color)" : "transparent",
+                    border: `1px solid ${aspectRatio === ratio ? "var(--light-color)" : "var(--transparent-light-color)"}`,
+                    color: "var(--light-color)",
+                    cursor: "pointer",
+                    fontWeight: aspectRatio === ratio ? "600" : "400",
+                    fontSize: "1.3rem"
+                  }}
+                >
+                  <i className={ratio === "1:1" ? "ri-aspect-ratio-line" : ratio === "9:16" ? "ri-smartphone-line" : "ri-tv-line"} style={{ fontSize: "1.5rem", marginRight: "0.5rem", verticalAlign: "middle" }}></i>
+                  {ratio === "1:1" ? "Square" : ratio === "9:16" ? "Story" : "Landscape"}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Background Presets */}
           <div>
             <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
@@ -308,6 +389,55 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
                   onMouseOver={(e) => (e.target.style.transform = "scale(1.1)")}
                   onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
                 />
+              ))}
+            </div>
+          </div>
+
+          {/* Dark Overlay Slider */}
+          <div>
+            <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
+              BACKGROUND CONTRAST OVERLAY ({Math.round(overlayOpacity * 100)}%)
+            </span>
+            <input
+              type="range"
+              min="0"
+              max="0.8"
+              step="0.1"
+              value={overlayOpacity}
+              onChange={(e) => setOverlayOpacity(parseFloat(e.target.value))}
+              style={{
+                width: "100%",
+                accentColor: "var(--accent-color)",
+                cursor: "pointer"
+              }}
+            />
+          </div>
+
+          {/* Typography Font Style selector */}
+          <div>
+            <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
+              TYPOGRAPHY
+            </span>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              {["Modern", "Classic", "Typewriter", "Handwritten"].map((style) => (
+                <button
+                  key={style}
+                  onClick={() => setFontStyle(style)}
+                  style={{
+                    flex: "1 1 calc(50% - 0.5rem)",
+                    padding: "0.8rem",
+                    borderRadius: "6px",
+                    background: fontStyle === style ? "var(--transparent-light-color)" : "transparent",
+                    border: `1px solid ${fontStyle === style ? "var(--light-color)" : "var(--transparent-light-color)"}`,
+                    color: "var(--light-color)",
+                    cursor: "pointer",
+                    fontWeight: fontStyle === style ? "600" : "400",
+                    fontSize: "1.3rem",
+                    fontFamily: style === "Modern" ? "var(--font-family)" : style === "Classic" ? "var(--font-family-serif)" : style === "Typewriter" ? "monospace" : "var(--font-family-cursive)"
+                  }}
+                >
+                  {style}
+                </button>
               ))}
             </div>
           </div>

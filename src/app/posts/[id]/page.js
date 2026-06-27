@@ -56,8 +56,52 @@ export default async function PostPage({ params }) {
     notFound();
   }
 
+  const firstParagraph = post.content.find(c => c.type === "paragraph")?.text || "";
+  const cleanDescription = firstParagraph.replace(/<[^>]*>/g, "").substring(0, 160) + "...";
+
+  let publishedDate;
+  try {
+    publishedDate = new Date(post.date).toISOString();
+  } catch (e) {
+    publishedDate = new Date().toISOString();
+  }
+
+  const schemaJson = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "description": cleanDescription,
+    "image": [
+      post.image.startsWith("http") ? post.image : `https://thanksgivings.vercel.app${post.image}`
+    ],
+    "datePublished": publishedDate,
+    "dateModified": publishedDate,
+    "author": {
+      "@type": "Person",
+      "name": "ThanksGivings",
+      "url": "https://thanksgivings.vercel.app"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ThanksGivings",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://thanksgivings.vercel.app/assets/images/thanksgivings.jpeg"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://thanksgivings.vercel.app/posts/${id}`
+    }
+  };
+
   return (
-    <section className="blog-post section-header-offset" style={{ paddingBlock: "4rem 6rem" }}>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+      />
+      <section className="blog-post section-header-offset" style={{ paddingBlock: "4rem 6rem" }}>
       <div className="blog-post-container container" style={{ maxWidth: "900px" }}>
         <div className="blog-post-data" style={{ textAlign: "center", marginBottom: "4rem" }}>
           <h1 className="title blog-post-title" style={{ fontSize: "var(--font-size-xl)", color: "var(--light-color)", marginBlock: "2rem 1rem" }}>
@@ -143,5 +187,6 @@ export default async function PostPage({ params }) {
         </div>
       </div>
     </section>
+    </>
   );
 }
