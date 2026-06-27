@@ -1,75 +1,141 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { posts } from "@/data/posts";
-import { getLocalTestimonies, saveTestimony } from "@/data/userState";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getMe } from "@/app/actions/authActions";
+import { 
+  getTestimonies, 
+  createTestimony, 
+  toggleLikeTestimony, 
+  getComments, 
+  addComment 
+} from "@/app/actions/dbActions";
 
 const CATEGORIES = ["All", "Gratitude", "Hope", "Love", "Strength", "Patience", "Joy"];
 
 export default function CommunityFeed() {
+  const router = useRouter();
   const [allPosts, setAllPosts] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [likedPosts, setLikedPosts] = useState({});
-  const [formData, setFormData] = useState({ title: "", author: "", content: "", tag: "Gratitude" });
+  const [formData, setFormData] = useState({ title: "", content: "", tag: "Gratitude" });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [activeTag, setActiveTag] = useState("All");
   const [visibleCount, setVisibleCount] = useState(6);
   const [selectedPost, setSelectedPost] = useState(null);
+  
+  // Auth and comments state
+  const [user, setUser] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [newCommentText, setNewCommentText] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [commentError, setCommentError] = useState("");
+  const [postLoading, setPostLoading] = useState(false);
+  const [postError, setPostError] = useState("");
 
-  const loadFeed = () => {
-    const localPosts = getLocalTestimonies();
-    
-    // Format static posts to align properties
-    const formattedStatic = posts.map(p => {
-      let tag = "Gratitude";
-      if (p.id === "post1") tag = "Hope";
-      return {
-        ...p,
-        author: "Ju & Vicky",
-        tag,
-        bodyText: p.content.map(c => c.text).join("\n\n")
-      };
+  const loadFeed = async () => {
+    const currentUser = await getMe();
+    setUser(currentUser);
+
+    const testimonies = await getTestimonies();
+    setAllPosts(testimonies);
+
+    // Sync liked states
+    const initialLikes = {};
+    testimonies.forEach(t => {
+      if (t.isLikedByUser) {
+        initialLikes[t.id] = true;
+      }
     });
-
-    const formattedLocal = localPosts.map(p => ({
-      ...p,
-      tag: p.tag || "Gratitude",
-      bodyText: p.content.map(c => c.text).join("\n\n")
-    }));
-
-    // Local posts come first as they are newer, followed by static posts
-    setAllPosts([...formattedLocal, ...formattedStatic]);
+    setLikedPosts(initialLikes);
   };
 
   useEffect(() => {
     loadFeed();
     
-    // Load liked states from localStorage
+    // Automatically open the share modal if coming from a share CTA link and logged in
     if (typeof window !== "undefined") {
-      const savedLikes = localStorage.getItem("thanksgiving_likes");
-      if (savedLikes) {
-        setLikedPosts(JSON.parse(savedLikes));
-      }
-
-      // Automatically open the share modal if coming from a share CTA link
       const searchParams = new URLSearchParams(window.location.search);
       if (searchParams.get("share") === "true") {
-        setShowModal(true);
+        getMe().then(u => {
+          if (!u) {
+            router.push("/login?redirect=/feed?share=true");
+          } else {
+            setShowModal(true);
+          }
+        });
       }
     }
   }, []);
+
+  // Load comments when selected post changes
+  useEffect(() => {
+    if (selectedPost) {
+      loadComments(selectedPost.id);
+    } else {
+      setComments([]);
+      setNewCommentText("");
+      setCommentError("");
+    }
+  }, [selectedPost]);
+
+  const loadComments = async (postId) => {
+    const list = await getComments(postId);
+    setComments(list);
+  };
 
   // Reset pagination count when active filter tag changes
   useEffect(() => {
     setVisibleCount(6);
   }, [activeTag]);
 
-  const handleLike = (postId, e) => {
+  const handlePostButtonClick = () => {
+    if (!user) {
+      router.push("/login?redirect=/feed");
+    } else {
+      setShowModal(true);
+    }
+  };
+
+  const handleLike = async (postId, e) => {
     e.stopPropagation(); // Avoid opening the detail modal when liking the card!
-    const newLikes = { ...likedPosts };
-    newLikes[postId] = !newLikes[postId];
-    setLikedPosts(newLikes);
-    localStorage.setItem("thanksgiving_likes", JSON.stringify(newLikes));
+    if (!user) {
+      router.push("/login?redirect=/feed");
+      return;
+    }
+
+    const res = await toggleLikeTestimony(postId);
+    if (res.error) {
+      alert(res.error);
+    } else {
+      // Update local liked list
+      setLikedPosts(prev => ({
+        ...prev,
+        [postId]: res.isLiked
+      }));
+
+      // Update likes count on local post
+      setAllPosts(prev => prev.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            likesCount: res.isLiked ? post.likesCount + 1 : Math.max(0, post.likesCount - 1),
+            isLikedByUser: res.isLiked
+          };
+        }
+        return post;
+      }));
+
+      // Update selected post detail if open
+      if (selectedPost && selectedPost.id === postId) {
+        setSelectedPost(prev => ({
+          ...prev,
+          likesCount: res.isLiked ? prev.likesCount + 1 : Math.max(0, prev.likesCount - 1),
+          isLikedByUser: res.isLiked
+        }));
+      }
+    }
   };
 
   const handleFormChange = (e) => {
@@ -77,19 +143,66 @@ export default function CommunityFeed() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.content) return;
     
-    saveTestimony(formData.title, formData.author, formData.content, formData.tag);
-    setFormData({ title: "", author: "", content: "", tag: "Gratitude" });
-    setFormSubmitted(true);
-    
-    setTimeout(() => {
-      setFormSubmitted(false);
-      setShowModal(false);
-      loadFeed();
-    }, 1500);
+    setPostLoading(true);
+    setPostError("");
+
+    const res = await createTestimony(formData.title, formData.content, formData.tag);
+    if (res.error) {
+      setPostError(res.error);
+      setPostLoading(false);
+    } else {
+      setFormData({ title: "", content: "", tag: "Gratitude" });
+      setFormSubmitted(true);
+      setPostLoading(false);
+      
+      setTimeout(() => {
+        setFormSubmitted(false);
+        setShowModal(false);
+        loadFeed();
+      }, 1500);
+    }
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!newCommentText || newCommentText.trim() === "") return;
+
+    setCommentLoading(true);
+    setCommentError("");
+
+    const res = await addComment(selectedPost.id, newCommentText);
+    if (res.error) {
+      setCommentError(res.error);
+    } else {
+      setNewCommentText("");
+      await loadComments(selectedPost.id);
+
+      // Increment comments count on local feed post
+      setAllPosts(prev => prev.map(post => {
+        if (post.id === selectedPost.id) {
+          return {
+            ...post,
+            commentsCount: post.commentsCount + 1
+          };
+        }
+        return post;
+      }));
+
+      // Increment comments count on open selected post
+      setSelectedPost(prev => ({
+        ...prev,
+        commentsCount: prev.commentsCount + 1
+      }));
+    }
+    setCommentLoading(false);
   };
 
   // Filter posts based on active filter category
@@ -160,7 +273,7 @@ export default function CommunityFeed() {
           </div>
 
           <button
-            onClick={() => setShowModal(true)}
+            onClick={handlePostButtonClick}
             style={{
               background: "var(--accent-color)",
               color: "#fff",
@@ -296,12 +409,12 @@ export default function CommunityFeed() {
                         }}
                       >
                         <i className={isLiked ? "ri-heart-fill" : "ri-heart-line"} style={{ fontSize: "1.6rem" }}></i>
-                        {isLiked ? "Liked" : "Like"}
+                        {post.likesCount || 0}
                       </button>
 
                       <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
                         <i className="ri-chat-3-line" style={{ fontSize: "1.4rem", marginRight: "0.4rem", verticalAlign: "middle" }}></i>
-                        Comments (0)
+                        Comments ({post.commentsCount || 0})
                       </span>
                     </div>
                   </div>
@@ -374,6 +487,10 @@ export default function CommunityFeed() {
                   Share Your Story
                 </h3>
 
+                {postError && (
+                  <span style={{ color: "#ff5e62", fontSize: "1.3rem" }}>{postError}</span>
+                )}
+
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <label style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600" }}>TITLE</label>
                   <input
@@ -383,25 +500,6 @@ export default function CommunityFeed() {
                     onChange={handleFormChange}
                     placeholder="Enter a heading for your testimony..."
                     required
-                    style={{
-                      border: "2px solid var(--transparent-light-color)",
-                      borderRadius: "6px",
-                      padding: "1.2rem",
-                      background: "var(--primary-background-color)",
-                      color: "var(--light-color)",
-                      outline: "none"
-                    }}
-                  />
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <label style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600" }}>YOUR NAME (OPTIONAL)</label>
-                  <input
-                    type="text"
-                    name="author"
-                    value={formData.author}
-                    onChange={handleFormChange}
-                    placeholder="Anonymous"
                     style={{
                       border: "2px solid var(--transparent-light-color)",
                       borderRadius: "6px",
@@ -455,16 +553,17 @@ export default function CommunityFeed() {
                       background: "var(--primary-background-color)",
                       color: "var(--light-color)",
                       outline: "none",
-                      resize: "vertical"
+                      resize: "none"
                     }}
                   />
                 </div>
 
                 <button
                   type="submit"
+                  disabled={postLoading}
                   style={{
                     background: "var(--accent-color)",
-                    color: "#fff",
+                    color: "#131417",
                     border: "none",
                     borderRadius: "30px",
                     padding: "1.5rem",
@@ -472,10 +571,11 @@ export default function CommunityFeed() {
                     fontWeight: "700",
                     cursor: "pointer",
                     textAlign: "center",
-                    marginTop: "1rem"
+                    marginTop: "1rem",
+                    opacity: postLoading ? 0.7 : 1
                   }}
                 >
-                  Publish to Feed
+                  {postLoading ? "Publishing..." : "Publish to Feed"}
                 </button>
               </form>
             )}
@@ -492,6 +592,7 @@ export default function CommunityFeed() {
           <div 
             className="detail-modal-content"
             onClick={(e) => e.stopPropagation()}
+            style={{ maxHeight: "90vh", overflowY: "auto" }}
           >
             <span 
               className="close-button" 
@@ -556,7 +657,8 @@ export default function CommunityFeed() {
                 gap: "2.5rem", 
                 borderTop: "1px solid var(--transparent-light-color)", 
                 paddingTop: "2rem",
-                alignItems: "center"
+                alignItems: "center",
+                marginBottom: "2.5rem"
               }}
             >
               <button 
@@ -575,14 +677,104 @@ export default function CommunityFeed() {
                 }}
               >
                 <i className={likedPosts[selectedPost.id] ? "ri-heart-fill" : "ri-heart-line"} style={{ fontSize: "2rem" }}></i>
-                {likedPosts[selectedPost.id] ? "Liked" : "Like"}
+                {selectedPost.likesCount || 0}
               </button>
 
               <span style={{ fontSize: "1.3rem", color: "var(--light-color-alt)" }}>
                 <i className="ri-chat-3-line" style={{ fontSize: "1.8rem", marginRight: "0.5rem", verticalAlign: "middle" }}></i>
-                Comments (0)
+                Comments ({selectedPost.commentsCount || 0})
               </span>
             </div>
+
+            {/* Comments List Section */}
+            <div style={{ borderTop: "1px solid var(--transparent-light-color)", paddingTop: "2rem" }}>
+              <h4 style={{ fontSize: "1.6rem", color: "var(--light-color)", marginBottom: "2rem" }}>
+                Comments ({comments.length})
+              </h4>
+              
+              {comments.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxHeight: "250px", overflowY: "auto", paddingRight: "1rem", marginBottom: "2rem" }}>
+                  {comments.map((comment) => (
+                    <div 
+                      key={comment.id} 
+                      style={{ 
+                        background: "rgba(255,255,255,0.02)", 
+                        padding: "1.5rem", 
+                        borderRadius: "8px",
+                        border: "1px solid var(--transparent-light-color)"
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.8rem", alignItems: "center" }}>
+                        <span style={{ fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color)" }}>
+                          {comment.author}
+                        </span>
+                        <span style={{ fontSize: "1rem", color: "var(--light-color-alt)" }}>
+                          {comment.date}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "1.3rem", lineHeight: "1.5", color: "var(--light-color-alt)" }}>
+                        {comment.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: "1.3rem", color: "var(--light-color-alt)", fontStyle: "italic", marginBottom: "2rem" }}>
+                  No comments yet. Be the first to share an encouraging word!
+                </p>
+              )}
+
+              {/* Add Comment Form */}
+              {user ? (
+                <form onSubmit={handleCommentSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  {commentError && (
+                    <span style={{ color: "#ff5e62", fontSize: "1.2rem" }}>{commentError}</span>
+                  )}
+                  <textarea
+                    rows="3"
+                    value={newCommentText}
+                    onChange={(e) => setNewCommentText(e.target.value)}
+                    placeholder="Write an encouraging comment..."
+                    style={{
+                      width: "100%",
+                      padding: "1.2rem",
+                      borderRadius: "6px",
+                      background: "var(--primary-background-color)",
+                      border: "1px solid var(--transparent-light-color)",
+                      color: "var(--light-color)",
+                      fontSize: "1.3rem",
+                      outline: "none",
+                      resize: "none"
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={commentLoading || !newCommentText.trim()}
+                    style={{
+                      alignSelf: "flex-end",
+                      background: "var(--accent-color)",
+                      color: "#131417",
+                      border: "none",
+                      borderRadius: "30px",
+                      padding: "0.8rem 2.5rem",
+                      fontSize: "1.2rem",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                      opacity: (commentLoading || !newCommentText.trim()) ? 0.6 : 1
+                    }}
+                  >
+                    {commentLoading ? "Posting..." : "Comment"}
+                  </button>
+                </form>
+              ) : (
+                <div style={{ textAlign: "center", padding: "1.5rem", background: "rgba(255,255,255,0.02)", borderRadius: "6px", border: "1px dashed var(--transparent-light-color)" }}>
+                  <p style={{ fontSize: "1.3rem", color: "var(--light-color-alt)" }}>
+                    Please <Link href="/login" style={{ color: "var(--accent-color)", fontWeight: "600", textDecoration: "underline" }}>Log In</Link> to write a comment.
+                  </p>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       )}

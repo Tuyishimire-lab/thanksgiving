@@ -7,6 +7,8 @@ import { verses } from "@/data/verses";
 import { devotionals } from "@/data/devotionals";
 import { posts } from "@/data/posts";
 import VerseActionsModal from "@/components/VerseActionsModal";
+import { getMe, updateStreakAction } from "@/app/actions/authActions";
+import { getDevotionalProgress, getNotebookData, getTestimonies } from "@/app/actions/dbActions";
 
 const PLANS_MAPPING = [
   { id: "love", title: "#Love", subtitle: "Walk in Love • 5 Days", image: "/assets/images/tags/travel-tag.jpg" },
@@ -25,82 +27,104 @@ export default function Home() {
   const [activeVerse, setActiveVerse] = useState(null);
   const [highlights, setHighlights] = useState({});
   const [updateTrigger, setUpdateTrigger] = useState(0);
-
-  useEffect(() => {
-    // 1. Update and load daily streak
-    const updated = updateStreak();
-    setStreak(updated);
-
-    // 2. Load active plans
-    const progress = getPlansProgress();
-    const activeList = Object.keys(progress)
-      .map((id) => {
-        const detail = devotionals[id];
-        if (!detail) return null;
-        const prog = progress[id];
-        const currentDayIdx = Math.min(detail.days.length - 1, prog.completedDays.length);
-        const previewText = detail.days[currentDayIdx]?.reflection || "";
-        return {
-          id,
-          title: detail.title,
-          days: detail.days.length,
-          completed: prog.completedDays.length,
-          isCompleted: prog.isCompleted,
-          percent: Math.round((prog.completedDays.length / detail.days.length) * 100),
-          preview: previewText
-        };
-      })
-      .filter((plan) => plan && !plan.isCompleted); // Only show ongoing plans
-    
-    setActivePlans(activeList);
-
-    // 3. Load Verse of the Day (Day of the Year rotation logic)
-    const today = new Date();
-    const start = new Date(today.getFullYear(), 0, 0);
-    const diff = (today - start) + ((start.getTimezoneOffset() - today.getTimezoneOffset()) * 60 * 1000);
-    const oneDay = 1000 * 60 * 60 * 24;
-    const dayOfYear = Math.floor(diff / oneDay);
-    
-    // Pick deterministically from our pool of curated verses
-    const verseIndex = dayOfYear % verses.length;
-    const currentVerse = verses[verseIndex] || verses[0];
-    
-    // Format id for the highlights check (standardize to e.g. "votd_06_26")
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    const formattedId = `votd_${month}_${day}`;
-    
-    setVerseOfTheDay({
-      ...currentVerse,
-      id: formattedId
-    });
-    
-    const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
-    setDayOfWeek(dayName);
-  }, [updateTrigger]);
-
-  useEffect(() => {
-    setHighlights(getHighlights());
-  }, [updateTrigger]);
-
+  const [currentUser, setCurrentUser] = useState(null);
   const [homepageTestimonies, setHomepageTestimonies] = useState([]);
 
   useEffect(() => {
-    const localPosts = getLocalTestimonies();
-    
-    const formattedStatic = posts.map(p => ({
-      ...p,
-      author: "Ju & Vicky",
-      bodyText: p.content.map(c => c.text).join("\n\n")
-    }));
+    async function initUserAndState() {
+      const user = await getMe();
+      setCurrentUser(user);
+      
+      let currentStreak = { count: 0, lastActive: null };
+      let activeProgress = {};
+      let userHighlights = {};
+      let mergeTestimonies = [];
 
-    const formattedLocal = localPosts.map(p => ({
-      ...p,
-      bodyText: p.content.map(c => c.text).join("\n\n")
-    }));
+      if (user) {
+        // Logged in: update/fetch streak from DB
+        const streakData = await updateStreakAction();
+        currentStreak = { 
+          count: streakData ? streakData.streak_count : user.streak_count, 
+          lastActive: streakData ? streakData.last_active : user.last_active 
+        };
+        
+        // Fetch plans progress from DB
+        activeProgress = await getDevotionalProgress();
+        
+        // Fetch highlights from DB
+        const notebook = await getNotebookData();
+        userHighlights = notebook.highlights || {};
 
-    const merged = [...formattedLocal, ...formattedStatic];
-    setHomepageTestimonies(merged.slice(0, 4));
+        // Fetch testimonies from DB
+        mergeTestimonies = await getTestimonies();
+      } else {
+        // Logged out: fallback to localStorage
+        const localStreak = updateStreak();
+        currentStreak = localStreak;
+        activeProgress = getPlansProgress();
+        userHighlights = getHighlights();
+
+        const localPosts = getLocalTestimonies();
+        const formattedStatic = posts.map(p => ({
+          ...p,
+          author: "Ju & Vicky",
+          bodyText: p.content.map(c => c.text).join("\n\n")
+        }));
+        const formattedLocal = localPosts.map(p => ({
+          ...p,
+          bodyText: p.content.map(c => c.text).join("\n\n")
+        }));
+        mergeTestimonies = [...formattedLocal, ...formattedStatic];
+      }
+
+      setStreak(currentStreak);
+      setHighlights(userHighlights);
+      setHomepageTestimonies(mergeTestimonies.slice(0, 4));
+
+      // Calculate active plans
+      const activeList = Object.keys(activeProgress)
+        .map((id) => {
+          const detail = devotionals[id];
+          if (!detail) return null;
+          const prog = activeProgress[id];
+          const currentDayIdx = Math.min(detail.days.length - 1, prog.completedDays.length);
+          const previewText = detail.days[currentDayIdx]?.reflection || "";
+          return {
+            id,
+            title: detail.title,
+            days: detail.days.length,
+            completed: prog.completedDays.length,
+            isCompleted: prog.isCompleted,
+            percent: Math.round((prog.completedDays.length / detail.days.length) * 100),
+            preview: previewText
+          };
+        })
+        .filter((plan) => plan && !plan.isCompleted); // Only show ongoing plans
+      
+      setActivePlans(activeList);
+
+      // Deterministic Verse of the Day (Day of the Year rotation)
+      const today = new Date();
+      const start = new Date(today.getFullYear(), 0, 0);
+      const diff = (today - start) + ((start.getTimezoneOffset() - today.getTimezoneOffset()) * 60 * 1000);
+      const oneDay = 1000 * 60 * 60 * 24;
+      const dayOfYear = Math.floor(diff / oneDay);
+      const verseIndex = dayOfYear % verses.length;
+      const currentVerse = verses[verseIndex] || verses[0];
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const formattedId = `votd_${month}_${day}`;
+      
+      setVerseOfTheDay({
+        ...currentVerse,
+        id: formattedId
+      });
+      
+      const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
+      setDayOfWeek(dayName);
+    }
+
+    initUserAndState();
   }, [updateTrigger]);
 
   const isLoading = !verseOfTheDay;

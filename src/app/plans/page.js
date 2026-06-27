@@ -2,8 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getPlansProgress, getSavedPlans, toggleSavePlan } from "@/data/userState";
+import { 
+  getPlansProgress, 
+  getSavedPlans, 
+  toggleSavePlan 
+} from "@/data/userState";
 import { devotionals } from "@/data/devotionals";
+import { getMe } from "@/app/actions/authActions";
+import { 
+  getDevotionalProgress as getDevotionalProgressDb, 
+  getSavedPlans as getSavedPlansDb, 
+  toggleSavedPlan as toggleSavedPlanDb 
+} from "@/app/actions/dbActions";
 
 const CATEGORIES = [
   "All",
@@ -57,15 +67,33 @@ export default function PlansDashboard() {
   const [progress, setProgress] = useState({});
   const [savedPlans, setSavedPlans] = useState([]);
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    setProgress(getPlansProgress());
-    setSavedPlans(getSavedPlans());
+    async function loadPlansState() {
+      const currentUser = await getMe();
+      setUser(currentUser);
+      
+      if (currentUser) {
+        const dbProgress = await getDevotionalProgressDb();
+        const dbSaved = await getSavedPlansDb();
+        setProgress(dbProgress || {});
+        setSavedPlans(dbSaved || []);
+      } else {
+        setProgress(getPlansProgress());
+        setSavedPlans(getSavedPlans());
+      }
+    }
+    loadPlansState();
   }, [updateTrigger]);
 
-  const handleToggleSave = (e, planId) => {
+  const handleToggleSave = async (e, planId) => {
     e.preventDefault(); // Prevent navigating to detail page if clicking bookmark button
-    toggleSavePlan(planId);
+    if (user) {
+      await toggleSavedPlanDb(planId);
+    } else {
+      toggleSavePlan(planId);
+    }
     setUpdateTrigger(prev => prev + 1);
   };
 

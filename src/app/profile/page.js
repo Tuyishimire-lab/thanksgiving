@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStreak, getHighlights, getNotes, getPlansProgress } from "@/data/userState";
 import { devotionals } from "@/data/devotionals";
+import { getMe } from "@/app/actions/authActions";
+import { getNotebookData, getDevotionalProgress } from "@/app/actions/dbActions";
 
 const HIGHLIGHT_COLOR_NAMES = {
   "highlight-yellow": "Yellow",
@@ -19,16 +21,38 @@ export default function PersonalProfile() {
   const [plansProg, setPlansProg] = useState({});
   const [activeTab, setActiveTab] = useState("notebook");
   const [dayOfWeek, setDayOfWeek] = useState("");
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
-    setStreak(getStreak());
-    setHighlights(getHighlights());
-    setNotes(getNotes());
-    setPlansProg(getPlansProgress());
+    async function loadUserData() {
+      const currentUser = await getMe();
+      setUser(currentUser);
+      
+      const today = new Date();
+      const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
+      setDayOfWeek(dayName);
 
-    const today = new Date();
-    const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
-    setDayOfWeek(dayName);
+      if (currentUser) {
+        // Load data from DB
+        setStreak({ count: currentUser.streak_count, lastActive: currentUser.last_active });
+        const notebook = await getNotebookData();
+        setNotes(notebook.notes || {});
+        setHighlights(notebook.highlights || {});
+        
+        const progress = await getDevotionalProgress();
+        setPlansProg(progress || {});
+      } else {
+        // Fallback to local storage for guests
+        setStreak(getStreak());
+        setHighlights(getHighlights());
+        setNotes(getNotes());
+        setPlansProg(getPlansProgress());
+      }
+      setLoadingUser(false);
+    }
+    
+    loadUserData();
   }, []);
 
   const hasNotes = Object.keys(notes).length > 0;
@@ -61,6 +85,92 @@ export default function PersonalProfile() {
     return key;
   };
 
+  if (loadingUser) {
+    return (
+      <div className="place-items-center" style={{ width: "100%", height: "80vh", color: "var(--light-color-alt)" }}>
+        Loading profile...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <section className="section" style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", paddingBlock: "4rem" }}>
+        <div 
+          style={{
+            maxWidth: "600px",
+            width: "100%",
+            textAlign: "center",
+            background: "var(--secondary-background-color)",
+            padding: "5rem 4rem",
+            borderRadius: "16px",
+            boxShadow: "0 10px 45px rgba(0,0,0,0.15)",
+            border: "1px solid var(--transparent-light-color)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "2.5rem"
+          }}
+        >
+          <div 
+            style={{ 
+              width: "8.5rem", 
+              height: "8.5rem", 
+              borderRadius: "50%", 
+              background: "radial-gradient(circle, rgba(79, 207, 112, 0.15) 0%, transparent 70%)",
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              fontSize: "4rem",
+              color: "var(--accent-color)",
+              border: "1px solid rgba(79, 207, 112, 0.2)"
+            }}
+          >
+            <i className="ri-lock-2-line"></i>
+          </div>
+          <div>
+            <h2 style={{ fontSize: "2.4rem", color: "var(--light-color)", fontWeight: "700", marginBottom: "1rem" }}>
+              Your Sacred Notebook
+            </h2>
+            <p style={{ fontSize: "1.5rem", color: "var(--light-color-alt)", lineHeight: "1.6", maxWidth: "450px", margin: "0 auto" }}>
+              Create an account or log in to sync your study notes, scripture highlights, habit streaks, and devotional progress securely in the cloud.
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "1.5rem", width: "100%", justifyContent: "center", marginTop: "1rem" }}>
+            <Link 
+              href="/login" 
+              style={{ 
+                background: "var(--accent-color)", 
+                color: "#131417", 
+                padding: "1.2rem 3.5rem", 
+                borderRadius: "30px", 
+                fontWeight: "700", 
+                fontSize: "1.4rem",
+                boxShadow: "0 4px 15px rgba(79, 207, 112, 0.2)"
+              }}
+            >
+              Sign In
+            </Link>
+            <Link 
+              href="/signup" 
+              style={{ 
+                background: "rgba(255,255,255,0.05)", 
+                color: "var(--light-color)", 
+                padding: "1.2rem 3.5rem", 
+                borderRadius: "30px", 
+                fontWeight: "600", 
+                fontSize: "1.4rem",
+                border: "1px solid var(--transparent-light-color)"
+              }}
+            >
+              Create Account
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="section" style={{ minHeight: "80vh", paddingBlock: "4rem" }}>
       <div className="container" style={{ maxWidth: "800px" }}>
@@ -77,14 +187,14 @@ export default function PersonalProfile() {
                   {streak.count} Day Streak!
                 </h3>
                 <p style={{ fontSize: "1.3rem", color: "var(--light-color-alt)" }}>
-                  Nourish your soul daily
+                  A daily habit of scripture and prayer &bull; Welcome, {user.name}
                 </p>
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
               <span style={{ fontSize: "1.1rem", display: "block", color: "var(--light-color-alt)" }}>LAST ACTIVE</span>
               <span style={{ fontSize: "1.4rem", fontWeight: "600", color: "var(--light-color)" }}>
-                {streak.lastActive ? streak.lastActive.split(" ").slice(1, 3).join(" ") : "Not active yet"}
+                {streak.lastActive ? streak.lastActive.split(" ").slice(1, 3).join(" ") : "Today"}
               </span>
             </div>
           </div>

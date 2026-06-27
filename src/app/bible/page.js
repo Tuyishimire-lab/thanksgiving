@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { bibleBooks } from "@/data/bibleBooks";
 import { getHighlights } from "@/data/userState";
 import VerseActionsModal from "@/components/VerseActionsModal";
+import { getMe } from "@/app/actions/authActions";
+import { getNotebookData } from "@/app/actions/dbActions";
 
 const TRANSLATIONS = [
   { id: "web", name: "World English Bible (WEB)" },
@@ -34,9 +36,15 @@ function BibleReaderContent() {
     setSelectedChapter(1);
   }, [selectedBook]);
 
-  // Load highlights from localStorage
-  const refreshHighlights = () => {
-    setHighlights(getHighlights());
+  // Load highlights from DB or localStorage
+  const refreshHighlights = async () => {
+    const user = await getMe();
+    if (user) {
+      const notebook = await getNotebookData();
+      setHighlights(notebook.highlights || {});
+    } else {
+      setHighlights(getHighlights());
+    }
   };
 
   useEffect(() => {

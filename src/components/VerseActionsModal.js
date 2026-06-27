@@ -1,7 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { toggleHighlight, saveNote, getHighlights, getNotes } from "@/data/userState";
+import { 
+  toggleHighlight as toggleHighlightLocal, 
+  saveNote as saveNoteLocal, 
+  getHighlights as getHighlightsLocal, 
+  getNotes as getNotesLocal 
+} from "@/data/userState";
+import { getMe } from "@/app/actions/authActions";
+import { 
+  toggleHighlight as toggleHighlightDb, 
+  saveNote as saveNoteDb,
+  getNotebookData
+} from "@/app/actions/dbActions";
 import VerseImageCreator from "./VerseImageCreator";
 
 const HIGHLIGHT_COLORS = [
@@ -15,38 +26,74 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
   const [activeHighlight, setActiveHighlight] = useState(null);
   const [noteText, setNoteText] = useState("");
   const [showImageCreator, setShowImageCreator] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Load existing highlight and note for this specific verse
-    const highlights = getHighlights();
-    const notes = getNotes();
-    
-    if (highlights[verseId]) {
-      setActiveHighlight(highlights[verseId]);
+    async function loadState() {
+      const currentUser = await getMe();
+      setUser(currentUser);
+
+      if (currentUser) {
+        // Load existing highlight and note for this specific verse from DB
+        const notebook = await getNotebookData();
+        const dbHighlights = notebook.highlights || {};
+        const dbNotes = notebook.notes || {};
+        
+        if (dbHighlights[verseId]) {
+          setActiveHighlight(dbHighlights[verseId]);
+        }
+        
+        if (dbNotes[verseId]) {
+          setNoteText(dbNotes[verseId].text);
+        }
+      } else {
+        // Load existing highlight and note for this specific verse from local storage
+        const highlights = getHighlightsLocal();
+        const notes = getNotesLocal();
+        
+        if (highlights[verseId]) {
+          setActiveHighlight(highlights[verseId]);
+        }
+        
+        if (notes[verseId]) {
+          setNoteText(notes[verseId].text);
+        }
+      }
     }
-    
-    if (notes[verseId]) {
-      setNoteText(notes[verseId].text);
-    }
+    loadState();
   }, [verseId]);
 
-  const handleColorClick = (colorClass) => {
-    const newHighlights = toggleHighlight(verseId, colorClass);
-    const newColor = newHighlights[verseId] || null;
-    setActiveHighlight(newColor);
+  const handleColorClick = async (colorClass) => {
+    if (user) {
+      const res = await toggleHighlightDb(verseId, colorClass);
+      setActiveHighlight(res.color);
+    } else {
+      const newHighlights = toggleHighlightLocal(verseId, colorClass);
+      const newColor = newHighlights[verseId] || null;
+      setActiveHighlight(newColor);
+    }
     if (onStateChange) onStateChange();
   };
 
-  const handleNoteChange = (e) => {
+  const handleNoteChange = async (e) => {
     const text = e.target.value;
     setNoteText(text);
-    saveNote(verseId, text);
+    if (user) {
+      await saveNoteDb(verseId, text);
+    } else {
+      saveNoteLocal(verseId, text);
+    }
     if (onStateChange) onStateChange();
   };
 
-  const clearHighlight = () => {
-    toggleHighlight(verseId, null);
-    setActiveHighlight(null);
+  const clearHighlight = async () => {
+    if (user) {
+      await toggleHighlightDb(verseId, null);
+      setActiveHighlight(null);
+    } else {
+      toggleHighlightLocal(verseId, null);
+      setActiveHighlight(null);
+    }
     if (onStateChange) onStateChange();
   };
 
@@ -153,24 +200,10 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display: "flex", gap: "1.5rem", marginTop: "2rem" }}>
+            <div className="drawer-actions">
               <button
                 onClick={() => setShowImageCreator(true)}
-                style={{
-                  flex: 1,
-                  background: "var(--accent-color)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "30px",
-                  padding: "1.2rem",
-                  fontSize: "1.5rem",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.8rem"
-                }}
+                className="btn-action btn-primary"
               >
                 <i className="ri-image-line" style={{ fontSize: "1.8rem" }}></i>
                 Create Visual Card
@@ -181,19 +214,7 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
                   navigator.clipboard.writeText(`"${verseText}" - ${verseTag}`);
                   alert("Copied verse to clipboard!");
                 }}
-                style={{
-                  padding: "1.2rem 2.5rem",
-                  borderRadius: "30px",
-                  border: "2px solid var(--transparent-light-color)",
-                  background: "transparent",
-                  color: "var(--light-color)",
-                  fontSize: "1.5rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.8rem"
-                }}
+                className="btn-action btn-secondary"
               >
                 <i className="ri-file-copy-line" style={{ fontSize: "1.8rem" }}></i>
                 Copy Text

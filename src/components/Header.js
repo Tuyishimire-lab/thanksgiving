@@ -3,12 +3,28 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getMe, logout } from "@/app/actions/authActions";
 
 export default function Header() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      const currentUser = await getMe();
+      setUser(currentUser);
+    }
+    loadUser();
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    setUser(null);
+    window.location.href = "/";
+  };
 
   // Add scroll event listener for header activation
   useEffect(() => {
@@ -92,15 +108,38 @@ export default function Header() {
                   Feed
                 </Link>
               </li>
-              <li className="list-item">
-                <Link
-                  href="/profile"
-                  className={`list-link ${pathname === "/profile" ? "current" : ""}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Profile
-                </Link>
-              </li>
+              {user ? (
+                <>
+                  <li className="list-item">
+                    <Link
+                      href="/profile"
+                      className={`list-link ${pathname === "/profile" ? "current" : ""}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                  </li>
+                  <li className="list-item">
+                    <button
+                      onClick={handleLogout}
+                      className="list-link"
+                      style={{ cursor: "pointer", background: "none", border: "none", font: "inherit", padding: "0" }}
+                    >
+                      Log Out
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <li className="list-item">
+                  <Link
+                    href="/login"
+                    className={`list-link ${pathname === "/login" ? "current" : ""}`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Log In
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 

@@ -4,7 +4,22 @@ import { useState, useEffect, use, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { devotionals } from "@/data/devotionals";
-import { getPlansProgress, startPlan, completePlanDay, getHighlights, getPlanReflections, savePlanReflection } from "@/data/userState";
+import { 
+  getPlansProgress as getPlansProgressLocal, 
+  startPlan as startPlanLocal, 
+  completePlanDay as completePlanDayLocal, 
+  getHighlights as getHighlightsLocal, 
+  getPlanReflections as getPlanReflectionsLocal, 
+  savePlanReflection as savePlanReflectionLocal 
+} from "@/data/userState";
+import { getMe } from "@/app/actions/authActions";
+import { 
+  getDevotionalProgress as getDevotionalProgressDb, 
+  updateDevotionalProgress as updateDevotionalProgressDb,
+  savePlanReflection as savePlanReflectionDb,
+  getPlanReflections as getPlanReflectionsDb,
+  getNotebookData
+} from "@/app/actions/dbActions";
 import VerseActionsModal from "@/components/VerseActionsModal";
 
 function PlanPlayerContent({ params }) {
@@ -32,47 +47,106 @@ function PlanPlayerContent({ params }) {
   const [updateTrigger, setUpdateTrigger] = useState(0);
   const [reflectionText, setReflectionText] = useState("");
   const [showReflectionInput, setShowReflectionInput] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Start the plan if not already started
-    const planProg = startPlan(planId);
-    setProgress(planProg);
-    
-    // Default to the first uncompleted day
-    if (planProg.isCompleted) {
-      setActiveDayNum(1);
-    } else {
-      setActiveDayNum(planProg.currentDay);
+    async function initPlanPlayer() {
+      const currentUser = await getMe();
+      setUser(currentUser);
+
+      let planProg = null;
+      if (currentUser) {
+        // Logged in: fetch plans progress from DB
+        const dbProgress = await getDevotionalProgressDb();
+        planProg = dbProgress[planId];
+        
+        if (!planProg) {
+          // Initialize in DB if not started
+          await updateDevotionalProgressDb(planId, [], false, 1);
+          planProg = {
+            planId,
+            currentDay: 1,
+            completedDays: [],
+            isCompleted: false,
+            startDate: new Date().toLocaleDateString()
+          };
+        }
+      } else {
+        // Guest: start using local storage
+        planProg = startPlanLocal(planId);
+      }
+
+      setProgress(planProg);
+
+      // Default to the first uncompleted day
+      if (planProg.isCompleted) {
+        setActiveDayNum(1);
+      } else {
+        setActiveDayNum(planProg.currentDay);
+      }
     }
+    initPlanPlayer();
   }, [planId]);
 
   useEffect(() => {
-    setHighlights(getHighlights());
-  }, [updateTrigger]);
+    async function loadHighlightsAndReflections() {
+      let activeHighlights = {};
+      let activeReflections = {};
 
-  useEffect(() => {
-    const reflections = getPlanReflections();
-    const currentKey = `${planId}_${activeDayNum}`;
-    const savedRef = reflections[currentKey];
-    setReflectionText(savedRef ? savedRef.text : "");
-    setShowReflectionInput(false);
-  }, [planId, activeDayNum, updateTrigger]);
+      if (user) {
+        const notebook = await getNotebookData();
+        activeHighlights = notebook.highlights || {};
+        activeReflections = await getPlanReflectionsDb();
+      } else {
+        activeHighlights = getHighlightsLocal();
+        activeReflections = getPlanReflectionsLocal();
+      }
 
-  const handleSaveReflection = () => {
-    savePlanReflection(planId, activeDayNum, reflectionText);
+      setHighlights(activeHighlights);
+      
+      const currentKey = `${planId}_${activeDayNum}`;
+      const savedRef = activeReflections[currentKey];
+      setReflectionText(savedRef ? savedRef.text : "");
+      setShowReflectionInput(false);
+    }
+    loadHighlightsAndReflections();
+  }, [planId, activeDayNum, user, updateTrigger]);
+
+  const handleSaveReflection = async () => {
+    if (user) {
+      await savePlanReflectionDb(planId, activeDayNum, reflectionText);
+    } else {
+      savePlanReflectionLocal(planId, activeDayNum, reflectionText);
+    }
     setShowReflectionInput(false);
     setUpdateTrigger(prev => prev + 1);
   };
 
-  const refreshProgress = () => {
-    const progressMap = getPlansProgress();
-    setProgress(progressMap[planId] || null);
-  };
-
-  const handleMarkDayComplete = () => {
+  const handleMarkDayComplete = async () => {
     const totalDays = planData.days.length;
-    completePlanDay(planId, activeDayNum, totalDays);
-    refreshProgress();
+    
+    if (user) {
+      const completedDays = [...progress.completedDays];
+      if (!completedDays.includes(activeDayNum)) {
+        completedDays.push(activeDayNum);
+      }
+      const isCompleted = completedDays.length >= totalDays;
+      const nextDay = Math.min(totalDays, progress.currentDay + 1);
+      
+      await updateDevotionalProgressDb(planId, completedDays, isCompleted, nextDay);
+      
+      setProgress({
+        ...progress,
+        completedDays,
+        isCompleted,
+        currentDay: nextDay
+      });
+    } else {
+      completePlanDayLocal(planId, activeDayNum, totalDays);
+      const progressMap = getPlansProgressLocal();
+      setProgress(progressMap[planId] || null);
+    }
+
     setUpdateTrigger(prev => prev + 1);
 
     if (activeDayNum < totalDays) {

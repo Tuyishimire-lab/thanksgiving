@@ -1274,7 +1274,94 @@ textarea:hover {
     color: var(--light-color);
     max-height: 90vh;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) rgba(255, 255, 255, 0.02);
 }
+
+.drawer-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.drawer-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+}
+
+.drawer-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    transition: background 0.2s ease;
+}
+
+.drawer-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Responsive Action Buttons inside drawer */
+.drawer-actions {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.drawer-actions .btn-action {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    padding: 1.2rem 2rem;
+    border-radius: 30px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.drawer-actions .btn-primary {
+    background: var(--accent-color);
+    color: #131417;
+}
+
+.drawer-actions .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 207, 112, 0.35);
+}
+
+.drawer-actions .btn-primary:active {
+    transform: translateY(0);
+}
+
+.drawer-actions .btn-secondary {
+    border: 2px solid var(--transparent-light-color);
+    background: transparent;
+    color: var(--light-color);
+}
+
+.drawer-actions .btn-secondary:hover {
+    background: var(--transparent-light-color);
+    transform: translateY(-2px);
+    border-color: var(--light-color-alt);
+}
+
+.drawer-actions .btn-secondary:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+    .drawer-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .drawer-actions .btn-action {
+        width: 100%;
+        padding: 1.1rem;
+        font-size: 1.35rem;
+    }
+}
+
 
 @keyframes slideUp {
     from {
