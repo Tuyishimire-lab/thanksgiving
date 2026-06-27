@@ -5,6 +5,6 @@ export default function robots() {
       allow: "/",
       disallow: ["/profile", "/login", "/signup"],
     },
-    sitemap: "https://thanksgivings.org/sitemap.xml",
+    sitemap: "https://thanksgivings.vercel.app/sitemap.xml",
   };
 }

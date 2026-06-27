@@ -13,7 +13,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://thanksgivings.org"),
+  metadataBase: new URL("https://thanksgivings.vercel.app"),
   title: {
     template: "%s | ThanksGivings",
     default: "ThanksGivings | A Sanctuary of Gratitude & Faith",
