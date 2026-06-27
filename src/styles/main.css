@@ -1240,6 +1240,9 @@ textarea:hover {
     .section-header-offset {
         padding-bottom: 7rem !important; /* Make room for bottom nav */
     }
+    .footer {
+        padding-bottom: 9rem !important; /* Make room for bottom nav on mobile */
+    }
     .screen-md-nav-hidden {
         display: none !important;
     }
