@@ -64,6 +64,10 @@ export default function CommunityFeed() {
             router.push("/login?redirect=/feed?share=true");
           } else {
             setShowModal(true);
+            // Immediately clean up URL query parameter so refreshes or back-navigation don't trigger it again
+            const url = new URL(window.location.href);
+            url.searchParams.delete("share");
+            window.history.replaceState(null, "", url.pathname + url.search);
           }
         });
       }
