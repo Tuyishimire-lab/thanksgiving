@@ -25,6 +25,9 @@ const HIGHLIGHT_COLORS = [
 export default function VerseActionsModal({ verseText, verseTag, verseId, onClose, onStateChange }) {
   const [activeHighlight, setActiveHighlight] = useState(null);
   const [noteText, setNoteText] = useState("");
+  const [originalNoteText, setOriginalNoteText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [showImageCreator, setShowImageCreator] = useState(false);
   const [user, setUser] = useState(null);
 
@@ -44,7 +47,9 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
         }
         
         if (dbNotes[verseId]) {
-          setNoteText(dbNotes[verseId].text);
+          const loadedText = dbNotes[verseId].text || "";
+          setNoteText(loadedText);
+          setOriginalNoteText(loadedText);
         }
       } else {
         // Load existing highlight and note for this specific verse from local storage
@@ -56,7 +61,9 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
         }
         
         if (notes[verseId]) {
-          setNoteText(notes[verseId].text);
+          const loadedText = notes[verseId].text || "";
+          setNoteText(loadedText);
+          setOriginalNoteText(loadedText);
         }
       }
     }
@@ -75,15 +82,23 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
     if (onStateChange) onStateChange();
   };
 
-  const handleNoteChange = async (e) => {
-    const text = e.target.value;
-    setNoteText(text);
+  const handleNoteChange = (e) => {
+    setNoteText(e.target.value);
+  };
+
+  const handleSaveNote = async () => {
+    setIsSaving(true);
+    setSaveSuccess(false);
     if (user) {
-      await saveNoteDb(verseId, text);
+      await saveNoteDb(verseId, noteText);
     } else {
-      saveNoteLocal(verseId, text);
+      saveNoteLocal(verseId, noteText);
     }
+    setOriginalNoteText(noteText);
+    setIsSaving(false);
+    setSaveSuccess(true);
     if (onStateChange) onStateChange();
+    setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   const clearHighlight = async () => {
@@ -109,7 +124,7 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
           <>
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-              <h3 style={{ fontSize: "2rem", color: "var(--light-color)" }}>Verse Options</h3>
+              <h3 style={{ fontSize: "1.6rem", fontWeight: "700", color: "var(--light-color)" }}>Scripture Study</h3>
               <button onClick={onClose} style={{ cursor: "pointer", color: "var(--light-color-alt)" }}>
                 <i className="ri-close-line" style={{ fontSize: "2.4rem" }}></i>
               </button>
@@ -197,6 +212,40 @@ export default function VerseActionsModal({ verseText, verseTag, verseId, onClos
                   resize: "vertical"
                 }}
               />
+              
+              {/* Save Reflections button and status */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
+                <div>
+                  {saveSuccess && (
+                    <span style={{ color: "var(--accent-color)", fontSize: "1.2rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <i className="ri-checkbox-circle-line" style={{ fontSize: "1.6rem" }}></i>
+                      Reflections saved successfully!
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={handleSaveNote}
+                  disabled={isSaving || noteText === originalNoteText}
+                  style={{
+                    background: noteText !== originalNoteText ? "var(--accent-color)" : "var(--transparent-light-color)",
+                    color: noteText !== originalNoteText ? "#131417" : "var(--light-color-alt)",
+                    border: "none",
+                    borderRadius: "20px",
+                    padding: "0.8rem 2rem",
+                    fontSize: "1.3rem",
+                    fontWeight: "700",
+                    cursor: noteText !== originalNoteText ? "pointer" : "not-allowed",
+                    transition: "all 0.25s",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    outline: "none"
+                  }}
+                >
+                  <i className="ri-save-line" style={{ fontSize: "1.6rem" }}></i>
+                  {isSaving ? "Saving..." : "Save Reflections"}
+                </button>
+              </div>
             </div>
 
             {/* Action Buttons */}

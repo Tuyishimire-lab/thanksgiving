@@ -246,7 +246,8 @@ export async function getDevotionalProgress() {
         currentDay: r.current_day,
         completedDays: JSON.parse(r.completed_days),
         isCompleted: r.is_completed === 1,
-        startDate: r.start_date
+        startDate: r.start_date,
+        lastCompletedDate: r.last_completed_date
       };
     });
 
@@ -257,7 +258,7 @@ export async function getDevotionalProgress() {
   }
 }
 
-export async function updateDevotionalProgress(planId, completedDays, isCompleted, currentDay) {
+export async function updateDevotionalProgress(planId, completedDays, isCompleted, currentDay, lastCompletedDate) {
   try {
     const userId = await getCurrentUserId();
     if (!userId) return { error: "User not logged in." };
@@ -268,13 +269,14 @@ export async function updateDevotionalProgress(planId, completedDays, isComplete
 
     const db = await getDb();
     await db.execute({
-      sql: `INSERT INTO plans_progress (user_id, plan_id, completed_days, is_completed, current_day, start_date)
-            VALUES (?, ?, ?, ?, ?, ?)
+      sql: `INSERT INTO plans_progress (user_id, plan_id, completed_days, is_completed, current_day, start_date, last_completed_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(user_id, plan_id) DO UPDATE SET 
               completed_days = excluded.completed_days,
               is_completed = excluded.is_completed,
-              current_day = excluded.current_day`,
-      args: [userId, planId, completedDaysStr, isCompletedInt, currentDay, todayStr]
+              current_day = excluded.current_day,
+              last_completed_date = excluded.last_completed_date`,
+      args: [userId, planId, completedDaysStr, isCompletedInt, currentDay, todayStr, lastCompletedDate || null]
     });
 
     return { success: true };
@@ -675,17 +677,19 @@ export async function getProfileData() {
       return { user: null };
     }
 
-    const [notebook, progress, savedPlans] = await Promise.all([
+    const [notebook, progress, savedPlans, reflections] = await Promise.all([
       getNotebookData(),
       getDevotionalProgress(),
-      getSavedPlans()
+      getSavedPlans(),
+      getPlanReflections()
     ]);
 
     return {
       user,
       notebook,
       progress,
-      savedPlans
+      savedPlans,
+      reflections
     };
   } catch (error) {
     console.error("Error fetching profile data:", error);

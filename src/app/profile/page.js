@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getStreak, getHighlights, getNotes, getPlansProgress } from "@/data/userState";
+import { getStreak, getHighlights, getNotes, getPlansProgress, getPlanReflections as getPlanReflectionsLocal } from "@/data/userState";
 import { devotionals } from "@/data/devotionals";
 import { getProfileData } from "@/app/actions/dbActions";
 
@@ -18,7 +18,9 @@ export default function PersonalProfile() {
   const [highlights, setHighlights] = useState({});
   const [notes, setNotes] = useState({});
   const [plansProg, setPlansProg] = useState({});
+  const [reflections, setReflections] = useState({});
   const [activeTab, setActiveTab] = useState("notebook");
+  const [notebookSubTab, setNotebookSubTab] = useState("bible-notes");
   const [dayOfWeek, setDayOfWeek] = useState("");
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -39,12 +41,14 @@ export default function PersonalProfile() {
         setNotes(data.notebook?.notes || {});
         setHighlights(data.notebook?.highlights || {});
         setPlansProg(data.progress || {});
+        setReflections(data.reflections || {});
       } else {
         // Fallback to local storage for guests
         setStreak(getStreak());
         setHighlights(getHighlights());
         setNotes(getNotes());
         setPlansProg(getPlansProgress());
+        setReflections(getPlanReflectionsLocal());
       }
       setLoadingUser(false);
     }
@@ -278,11 +282,12 @@ export default function PersonalProfile() {
             display: "flex", 
             borderBottom: "2px solid var(--transparent-light-color)",
             marginBottom: "3rem",
-            gap: "2rem"
+            gap: "0.8rem",
+            justifyContent: "space-between"
           }}
         >
           {[
-            { id: "notebook", label: "My Notebook", icon: "ri-booklet-line" },
+            { id: "notebook", label: "Notebook", icon: "ri-booklet-line" },
             { id: "highlights", label: "Highlights", icon: "ri-markup-line" },
             { id: "plans", label: "My Plans", icon: "ri-calendar-todo-line" }
           ].map((tab) => (
@@ -292,19 +297,23 @@ export default function PersonalProfile() {
               style={{
                 background: "transparent",
                 border: "none",
-                paddingBlock: "1.5rem",
+                paddingBlock: "1.2rem",
                 color: activeTab === tab.id ? "var(--light-color)" : "var(--light-color-alt)",
                 borderBottom: activeTab === tab.id ? "3px solid var(--accent-color)" : "3px solid transparent",
-                fontSize: "1.5rem",
+                fontSize: "1.3rem",
                 fontWeight: activeTab === tab.id ? "700" : "500",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                gap: "0.8rem",
+                justifyContent: "center",
+                gap: "0.6rem",
+                flex: 1,
+                textAlign: "center",
+                whiteSpace: "nowrap",
                 transition: "all 0.25s"
               }}
             >
-              <i className={tab.icon} style={{ fontSize: "1.8rem" }}></i>
+              <i className={tab.icon} style={{ fontSize: "1.6rem" }}></i>
               {tab.label}
             </button>
           ))}
@@ -314,44 +323,158 @@ export default function PersonalProfile() {
         <div>
           {/* 1. Notebook Tab */}
           {activeTab === "notebook" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-              {!hasNotes ? (
-                <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
-                  <i className="ri-quill-pen-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
-                  <p style={{ fontSize: "1.5rem" }}>You haven't written any reflections yet.</p>
-                  <Link href="/bible" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
-                    Read the Bible & Add Notes
-                  </Link>
-                </div>
-              ) : (
-                Object.keys(notes).map((key) => {
-                  const note = notes[key];
-                  const citation = formatVerseRef(key);
-                  return (
-                    <div 
-                      key={key} 
-                      style={{
-                        background: "var(--secondary-background-color)",
-                        padding: "3rem",
-                        borderRadius: "10px",
-                        borderLeft: "4px solid #a767e5",
-                        boxShadow: "0 4px 15px rgba(0,0,0,0.05)"
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-                        <span style={{ fontSize: "1.4rem", fontWeight: "700", color: "#a767e5", textTransform: "uppercase" }}>
-                          {citation}
-                        </span>
-                        <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
-                          {note.timestamp}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: "1.5rem", lineHeight: "1.6", color: "var(--light-color)" }}>
-                        {note.text}
-                      </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+              {/* Sub-tab Pill Selectors */}
+              <div 
+                style={{ 
+                  display: "inline-flex", 
+                  background: "rgba(255, 255, 255, 0.03)", 
+                  padding: "0.4rem", 
+                  borderRadius: "24px",
+                  border: "1px solid var(--transparent-light-color)",
+                  width: "100%",
+                  maxWidth: "480px"
+                }}
+              >
+                <button 
+                  onClick={() => setNotebookSubTab("bible-notes")}
+                  style={{
+                    background: notebookSubTab === "bible-notes" ? "var(--secondary-background-color)" : "transparent",
+                    color: notebookSubTab === "bible-notes" ? "#fad648" : "var(--light-color-alt)",
+                    border: "none",
+                    padding: "0.8rem 1.4rem",
+                    borderRadius: "20px",
+                    fontSize: "1.2rem",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    flex: 1,
+                    textAlign: "center",
+                    transition: "all 0.2s",
+                    outline: "none"
+                  }}
+                >
+                  Bible Notes ({Object.keys(notes).length})
+                </button>
+                <button 
+                  onClick={() => setNotebookSubTab("devotionals")}
+                  style={{
+                    background: notebookSubTab === "devotionals" ? "var(--secondary-background-color)" : "transparent",
+                    color: notebookSubTab === "devotionals" ? "#fad648" : "var(--light-color-alt)",
+                    border: "none",
+                    padding: "0.8rem 1.4rem",
+                    borderRadius: "20px",
+                    fontSize: "1.2rem",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    flex: 1,
+                    textAlign: "center",
+                    transition: "all 0.2s",
+                    outline: "none"
+                  }}
+                >
+                  Reflections ({Object.keys(reflections).length})
+                </button>
+              </div>
+
+              {/* Render Bible Notes */}
+              {notebookSubTab === "bible-notes" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                  {!hasNotes ? (
+                    <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
+                      <i className="ri-quill-pen-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
+                      <p style={{ fontSize: "1.5rem" }}>You haven't written any Bible notes yet.</p>
+                      <Link href="/bible" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
+                        Read the Bible & Add Notes
+                      </Link>
                     </div>
-                  );
-                })
+                  ) : (
+                    Object.keys(notes).map((key) => {
+                      const note = notes[key];
+                      const citation = formatVerseRef(key);
+                      return (
+                        <div 
+                          key={key} 
+                          style={{
+                            background: "var(--secondary-background-color)",
+                            padding: "3rem",
+                            borderRadius: "10px",
+                            borderLeft: "4px solid #a767e5",
+                            boxShadow: "0 4px 15px rgba(0,0,0,0.05)"
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                            <span style={{ fontSize: "1.4rem", fontWeight: "700", color: "#a767e5", textTransform: "uppercase" }}>
+                              {citation}
+                            </span>
+                            <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
+                              {note.timestamp}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: "1.5rem", lineHeight: "1.6", color: "var(--light-color)" }}>
+                            {note.text}
+                          </p>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* Render Devotional Reflections */}
+              {notebookSubTab === "devotionals" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                  {Object.keys(reflections).length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
+                      <i className="ri-book-read-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
+                      <p style={{ fontSize: "1.5rem" }}>You haven't saved any devotional reflections yet.</p>
+                      <Link href="/plans" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
+                        Browse Devotional Plans
+                      </Link>
+                    </div>
+                  ) : (
+                    Object.keys(reflections).map((key) => {
+                      const reflection = reflections[key];
+                      const lastUnderscoreIdx = key.lastIndexOf("_");
+                      const planId = key.substring(0, lastUnderscoreIdx);
+                      const dayNum = parseInt(key.substring(lastUnderscoreIdx + 1), 10);
+                      
+                      const plan = devotionals[planId];
+                      const planTitle = plan ? plan.title : "Devotional Plan";
+                      const dayObj = plan ? plan.days.find(d => d.day === dayNum) : null;
+                      const dayTitle = dayObj ? dayObj.title : `Day ${dayNum}`;
+
+                      return (
+                        <div 
+                          key={key} 
+                          style={{
+                            background: "var(--secondary-background-color)",
+                            padding: "3rem",
+                            borderRadius: "10px",
+                            borderLeft: "4px solid #fad648",
+                            boxShadow: "0 4px 15px rgba(0,0,0,0.05)"
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+                            <div>
+                              <span style={{ fontSize: "1.4rem", fontWeight: "700", color: "#fad648", textTransform: "uppercase", display: "block", marginBottom: "0.2rem" }}>
+                                {planTitle}
+                              </span>
+                              <span style={{ fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color)" }}>
+                                Day {dayNum}: {dayTitle}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
+                              {reflection.timestamp}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: "1.5rem", lineHeight: "1.6", color: "var(--light-color)", fontStyle: "italic" }}>
+                            "{reflection.text}"
+                          </p>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               )}
             </div>
           )}

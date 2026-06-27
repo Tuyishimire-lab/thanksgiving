@@ -49,44 +49,51 @@ function PlanPlayerContent({ params }) {
   const [showReflectionInput, setShowReflectionInput] = useState(false);
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    async function initPlanPlayer() {
-      const currentUser = await getMe();
-      setUser(currentUser);
+      useEffect(() => {
+        async function initPlanPlayer() {
+          const currentUser = await getMe();
+          setUser(currentUser);
 
-      let planProg = null;
-      if (currentUser) {
-        // Logged in: fetch plans progress from DB
-        const dbProgress = await getDevotionalProgressDb();
-        planProg = dbProgress[planId];
-        
-        if (!planProg) {
-          // Initialize in DB if not started
-          await updateDevotionalProgressDb(planId, [], false, 1);
-          planProg = {
-            planId,
-            currentDay: 1,
-            completedDays: [],
-            isCompleted: false,
-            startDate: new Date().toLocaleDateString()
-          };
+          let planProg = null;
+          if (currentUser) {
+            // Logged in: fetch plans progress from DB
+            const dbProgress = await getDevotionalProgressDb();
+            planProg = dbProgress[planId];
+            
+            if (!planProg) {
+              // Initialize in DB if not started
+              await updateDevotionalProgressDb(planId, [], false, 1);
+              planProg = {
+                planId,
+                currentDay: 1,
+                completedDays: [],
+                isCompleted: false,
+                startDate: new Date().toLocaleDateString(),
+                lastCompletedDate: null
+              };
+            }
+          } else {
+            // Guest: start using local storage
+            planProg = startPlanLocal(planId);
+          }
+
+          setProgress(planProg);
+
+          // Default to the first uncompleted day, unless they completed a day today
+          if (planProg.isCompleted) {
+            setActiveDayNum(1);
+          } else {
+            const todayStr = new Date().toLocaleDateString();
+            const hasCompletedToday = planProg.lastCompletedDate === todayStr;
+            if (hasCompletedToday && planProg.completedDays && planProg.completedDays.length > 0) {
+              setActiveDayNum(Math.max(...planProg.completedDays));
+            } else {
+              setActiveDayNum(planProg.currentDay);
+            }
+          }
         }
-      } else {
-        // Guest: start using local storage
-        planProg = startPlanLocal(planId);
-      }
-
-      setProgress(planProg);
-
-      // Default to the first uncompleted day
-      if (planProg.isCompleted) {
-        setActiveDayNum(1);
-      } else {
-        setActiveDayNum(planProg.currentDay);
-      }
-    }
-    initPlanPlayer();
-  }, [planId]);
+        initPlanPlayer();
+      }, [planId]);
 
   useEffect(() => {
     async function loadHighlightsAndReflections() {
@@ -127,6 +134,13 @@ function PlanPlayerContent({ params }) {
 
   const handleMarkDayComplete = async () => {
     const totalDays = planData.days.length;
+    const todayStr = new Date().toLocaleDateString();
+
+    const hasCompletedToday = progress && progress.lastCompletedDate === todayStr;
+    if (hasCompletedToday) {
+      alert("You have already completed a day of this plan today. Take time to reflect and return tomorrow to continue.");
+      return;
+    }
     
     if (user) {
       const completedDays = [...progress.completedDays];
@@ -136,25 +150,24 @@ function PlanPlayerContent({ params }) {
       const isCompleted = completedDays.length >= totalDays;
       const nextDay = Math.min(totalDays, progress.currentDay + 1);
       
-      await updateDevotionalProgressDb(planId, completedDays, isCompleted, nextDay);
+      await updateDevotionalProgressDb(planId, completedDays, isCompleted, nextDay, todayStr);
       
       setProgress({
         ...progress,
         completedDays,
         isCompleted,
-        currentDay: nextDay
+        currentDay: nextDay,
+        lastCompletedDate: todayStr
       });
     } else {
-      completePlanDayLocal(planId, activeDayNum, totalDays);
+      completePlanDayLocal(planId, activeDayNum, totalDays, todayStr);
       const progressMap = getPlansProgressLocal();
       setProgress(progressMap[planId] || null);
     }
 
     setUpdateTrigger(prev => prev + 1);
 
-    if (activeDayNum < totalDays) {
-      setActiveDayNum(activeDayNum + 1);
-    } else {
+    if (activeDayNum >= totalDays) {
       alert("Congratulations! You have completed the plan: " + planData.title);
       router.push("/plans");
     }
@@ -169,6 +182,9 @@ function PlanPlayerContent({ params }) {
       </div>
     );
   }
+
+  const todayStr = new Date().toLocaleDateString();
+  const hasCompletedToday = progress && progress.lastCompletedDate === todayStr;
 
   return (
     <section className="section" style={{ paddingBlock: "4rem" }}>
@@ -213,8 +229,9 @@ function PlanPlayerContent({ params }) {
             const isCompleted = progress.completedDays.includes(dayObj.day);
             const isActive = activeDayNum === dayObj.day;
             
-            // Allow clicking days that are completed, or the current uncompleted day
-            const isSelectable = isCompleted || dayObj.day <= (progress.completedDays.length + 1);
+            // Allow clicking days that are completed.
+            // If they haven't completed a day today, they can also click the current/next uncompleted day.
+            const isSelectable = isCompleted || (!hasCompletedToday && dayObj.day <= (progress.completedDays.length + 1));
 
             let statusClass = "locked";
             if (isCompleted) statusClass = "completed";
@@ -440,9 +457,34 @@ function PlanPlayerContent({ params }) {
               borderTop: "1px solid var(--transparent-light-color)", 
               paddingTop: "3rem",
               display: "flex",
-              justifyContent: "flex-end"
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: "1.5rem"
             }}
           >
+            {hasCompletedToday && (
+              <div 
+                style={{ 
+                  color: "#fad648", 
+                  fontSize: "1.4rem", 
+                  fontWeight: "600",
+                  textAlign: "left",
+                  background: "rgba(250, 214, 72, 0.08)",
+                  padding: "1.5rem 2rem",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(250, 214, 72, 0.2)",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem"
+                }}
+              >
+                <i className="ri-information-line" style={{ fontSize: "1.8rem", color: "#fad648" }}></i>
+                <span>
+                  Great job completing today's reading! Take time to reflect on the scripture. Return tomorrow to unlock the next day's devotional.
+                </span>
+              </div>
+            )}
             <button
               onClick={handleMarkDayComplete}
               disabled={progress.completedDays.includes(activeDayNum)}

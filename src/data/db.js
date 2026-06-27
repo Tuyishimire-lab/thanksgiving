@@ -85,10 +85,19 @@ export async function getDb() {
           current_day INTEGER NOT NULL DEFAULT 1,
           is_completed INTEGER NOT NULL DEFAULT 0,
           start_date TEXT NOT NULL,
+          last_completed_date TEXT,
           PRIMARY KEY (user_id, plan_id),
           FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         )
       `);
+
+      try {
+        await client.execute(`
+          ALTER TABLE plans_progress ADD COLUMN last_completed_date TEXT
+        `);
+      } catch (err) {
+        // Column already exists or table doesn't exist yet
+      }
 
       await client.execute(`
         CREATE TABLE IF NOT EXISTS plan_reflections (

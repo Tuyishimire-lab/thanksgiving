@@ -115,14 +115,15 @@ export const startPlan = (planId) => {
       currentDay: 1,
       completedDays: [],
       isCompleted: false,
-      startDate: new Date().toLocaleDateString()
+      startDate: new Date().toLocaleDateString(),
+      lastCompletedDate: null
     };
     saveToStorage("thanksgiving_plans_progress", progress);
   }
   return progress[planId];
 };
 
-export const completePlanDay = (planId, dayNumber, totalDays = 5) => {
+export const completePlanDay = (planId, dayNumber, totalDays = 5, lastCompletedDate) => {
   const progress = getPlansProgress();
   if (!progress[planId]) {
     startPlan(planId);
@@ -132,6 +133,8 @@ export const completePlanDay = (planId, dayNumber, totalDays = 5) => {
   if (!planProg.completedDays.includes(dayNumber)) {
     planProg.completedDays.push(dayNumber);
   }
+
+  planProg.lastCompletedDate = lastCompletedDate || new Date().toLocaleDateString();
 
   if (planProg.completedDays.length >= totalDays) {
     planProg.isCompleted = true;
