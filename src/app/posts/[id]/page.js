@@ -1,12 +1,50 @@
 import { posts } from "@/data/posts";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 
 // Generate static params for static site generation support
 export async function generateStaticParams() {
   return posts.map((post) => ({
     id: post.id,
   }));
+}
+
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const post = posts.find((p) => p.id === id);
+
+  if (!post) {
+    return {
+      title: "Post Not Found",
+    };
+  }
+
+  const firstParagraph = post.content.find(c => c.type === "paragraph")?.text || "";
+  const cleanDescription = firstParagraph.replace(/<[^>]*>/g, "").substring(0, 160) + "...";
+
+  return {
+    title: post.title,
+    description: cleanDescription,
+    openGraph: {
+      title: `${post.title} | ThanksGivings`,
+      description: cleanDescription,
+      type: "article",
+      publishedTime: post.date,
+      images: [
+        {
+          url: post.image,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${post.title} | ThanksGivings`,
+      description: cleanDescription,
+      images: [post.image],
+    },
+  };
 }
 
 export default async function PostPage({ params }) {
@@ -22,16 +60,16 @@ export default async function PostPage({ params }) {
     <section className="blog-post section-header-offset" style={{ paddingBlock: "4rem 6rem" }}>
       <div className="blog-post-container container" style={{ maxWidth: "900px" }}>
         <div className="blog-post-data" style={{ textAlign: "center", marginBottom: "4rem" }}>
-          <h3 className="title blog-post-title" style={{ fontSize: "var(--font-size-xl)", color: "var(--light-color)", marginBlock: "2rem 1rem" }}>
+          <h1 className="title blog-post-title" style={{ fontSize: "var(--font-size-xl)", color: "var(--light-color)", marginBlock: "2rem 1rem" }}>
             {post.title}
-          </h3>
+          </h1>
           <div className="article-data" style={{ justifyContent: "center", marginBottom: "3rem" }}>
             <span>{post.date}</span>
             <span className="article-data-spacer"></span>
             <span>{post.readTime}</span>
           </div>
           <div style={{ borderRadius: "10px", overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
-            <img src={post.image} alt={post.title} style={{ width: "100%", height: "auto", display: "block" }} />
+            <Image src={post.image} alt={post.title} width={900} height={500} style={{ width: "100%", height: "auto", display: "block" }} priority />
           </div>
         </div>
 
@@ -79,8 +117,8 @@ export default async function PostPage({ params }) {
 
           {/* Author Card */}
           <div className="author d-grid" style={{ marginTop: "6rem", background: "var(--secondary-background-color)", padding: "3rem", borderRadius: "12px" }}>
-            <div className="author-image-box" style={{ width: "8rem", height: "8rem", borderRadius: "50%", overflow: "hidden" }}>
-              <img src="/assets/images/thanksgivings.jpeg" alt="ThanksGivings" className="article-image" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <div className="author-image-box" style={{ width: "8rem", height: "8rem", borderRadius: "50%", overflow: "hidden", position: "relative" }}>
+              <Image src="/assets/images/thanksgivings.jpeg" alt="ThanksGivings" fill className="article-image" style={{ objectFit: "cover" }} />
             </div>
             <div className="author-about">
               <h3 className="author-name" style={{ color: "var(--light-color)", fontSize: "1.8rem", marginBottom: "0.5rem" }}>

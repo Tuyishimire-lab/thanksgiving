@@ -13,10 +13,33 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "ThanksGivings | Home",
-  description: "Stories about faith and how it has impacted our lives.",
+  metadataBase: new URL("https://thanksgivings.org"),
+  title: {
+    template: "%s | ThanksGivings",
+    default: "ThanksGivings | A Sanctuary of Gratitude & Faith",
+  },
+  description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
   icons: {
     icon: "/assets/images/thanksgivings.jpeg",
+  },
+  openGraph: {
+    title: "ThanksGivings | A Sanctuary of Gratitude & Faith",
+    description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
+    images: [
+      {
+        url: "/assets/images/thanksgivings.jpeg",
+        width: 1200,
+        height: 630,
+        alt: "ThanksGivings Logo",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ThanksGivings | A Sanctuary of Gratitude & Faith",
+    description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
+    images: ["/assets/images/thanksgivings.jpeg"],
   },
 };
 
