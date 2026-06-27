@@ -9,6 +9,7 @@ const poppins = Poppins({
   weight: ["300", "400", "600", "700"],
   variable: "--font-family", // Bind to custom property used in main.css
   display: "swap",
+  preload: false,
 });
 
 export const metadata = {

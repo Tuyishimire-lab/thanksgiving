@@ -402,12 +402,31 @@ export default function Home() {
       {activePlans.length > 0 && (
         <section className="section" style={{ paddingBlock: "2rem" }}>
           <div className="container" style={{ maxWidth: "1000px" }}>
-            <h2 className="title section-title" data-name="Devotionals" style={{ marginBottom: "2rem" }}>
-              My Active Plans
-            </h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
+              <h2 className="title section-title" data-name="Devotionals" style={{ margin: 0 }}>
+                My Active Plans
+              </h2>
+              {activePlans.length > 3 && (
+                <Link 
+                  href="/plans" 
+                  style={{ 
+                    fontSize: "1.4rem", 
+                    color: "var(--accent-color)", 
+                    fontWeight: "600",
+                    textDecoration: "none",
+                    borderBottom: "1px solid transparent",
+                    transition: "border-color 0.2s"
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.borderColor = "var(--accent-color)"}
+                  onMouseOut={(e) => e.currentTarget.style.borderColor = "transparent"}
+                >
+                  View All ({activePlans.length}) &rarr;
+                </Link>
+              )}
+            </div>
 
             <div className="active-plans-grid">
-              {activePlans.map((plan) => (
+              {activePlans.slice(0, 3).map((plan) => (
                 <Link 
                   href={`/plans/${plan.id}`}
                   key={plan.id}
@@ -469,29 +488,60 @@ export default function Home() {
 
       {/* 4. Testimonies Section */}
       <section className="older-posts section" style={{ paddingBlock: "4rem" }}>
-        <div className="container">
+        <div className="container" style={{ maxWidth: "1000px" }}>
           <h2 className="title section-title" data-name="Stories">
             Testimonies
           </h2>
 
-          <div className="older-posts-grid-wrapper d-grid">
+          <div className="testimonies-grid">
             {homepageTestimonies.map((post) => (
-              <Link href={`/feed`} key={post.id} className="article d-grid">
-                <div className="older-posts-article-image-wrapper">
-                  <img src={post.image} alt={post.title} className="article-image" />
+              <Link href={`/feed`} key={post.id} className="testimony-tile-card">
+                <div className="testimony-image-wrapper">
+                  <img src={post.image} alt={post.title} />
                 </div>
 
-                <div className="article-data-container">
-                  <div className="article-data">
-                    <span>{post.date}</span>
-                    <span className="article-data-spacer"></span>
-                    <span>{post.readTime}</span>
-                    <span className="article-data-spacer"></span>
-                    <span style={{ color: "var(--accent-color)", fontWeight: "600" }}>By {post.author}</span>
+                <div className="testimony-content">
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                    <div className="article-data" style={{ margin: 0, padding: 0 }}>
+                      <span style={{ fontSize: "1rem" }}>{post.date}</span>
+                      <span className="article-data-spacer"></span>
+                      <span style={{ fontSize: "1rem" }}>{post.readTime}</span>
+                    </div>
+                    <h4 style={{ 
+                      fontSize: "1.4rem", 
+                      fontWeight: "700", 
+                      color: "var(--light-color)",
+                      lineHeight: "1.3",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      marginBlock: "0.2rem"
+                    }}>
+                      {post.title}
+                    </h4>
+                    <p style={{ 
+                      fontSize: "1.1rem", 
+                      lineHeight: "1.4", 
+                      color: "var(--light-color-alt)",
+                      opacity: 0.85,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden"
+                    }}>
+                      {post.excerpt}
+                    </p>
                   </div>
-
-                  <h3 className="title article-title">{post.title}</h3>
-                  <p className="article-description">{post.excerpt}</p>
+                  
+                  <span style={{ 
+                    color: "var(--accent-color)", 
+                    fontWeight: "600", 
+                    fontSize: "1.1rem",
+                    marginBlockStart: "0.5rem" 
+                  }}>
+                    By {post.author}
+                  </span>
                 </div>
               </Link>
             ))}
@@ -501,12 +551,12 @@ export default function Home() {
 
       {/* 5. Six Beacons Section (Reading Plans Shortcuts) */}
       <section className="popular-tags section" style={{ paddingBlock: "4rem" }}>
-        <div className="container">
+        <div className="container" style={{ maxWidth: "1000px" }}>
           <h2 className="title section-title" data-name="Plans">
             Our Six Beacons
           </h2>
 
-          <div className="popular-tags-container d-grid" style={{ gap: "2rem" }}>
+          <div className="popular-tags-container d-grid" style={{ gap: "1.5rem" }}>
             {PLANS_MAPPING.map((beacon) => (
               <Link 
                 href={`/plans/${beacon.id}`} 
@@ -555,7 +605,7 @@ export default function Home() {
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "flex-end",
-                    padding: "2rem",
+                    padding: "1.2rem",
                     transition: "background 0.3s ease"
                   }}
                 >
@@ -566,12 +616,12 @@ export default function Home() {
                       WebkitBackdropFilter: "blur(8px)",
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "var(--accent-color)",
-                      padding: "0.5rem 1.2rem",
+                      padding: "0.3rem 0.8rem",
                       borderRadius: "20px",
-                      fontSize: "1.3rem",
+                      fontSize: "1.1rem",
                       fontWeight: "700",
                       alignSelf: "flex-start",
-                      marginBottom: "0.8rem",
+                      marginBottom: "0.4rem",
                       letterSpacing: "0.5px"
                     }}
                   >
@@ -579,7 +629,7 @@ export default function Home() {
                   </span>
                   <span 
                     style={{ 
-                      fontSize: "1.2rem", 
+                      fontSize: "1.1rem", 
                       color: "var(--light-color-alt)",
                       fontWeight: "500"
                     }}

@@ -151,7 +151,7 @@ export const getLocalTestimonies = () => {
   return getFromStorage("thanksgiving_local_testimonies", []);
 };
 
-export const saveTestimony = (title, author, contentText) => {
+export const saveTestimony = (title, author, contentText, tag = "Gratitude") => {
   const testimonies = getLocalTestimonies();
   const newPost = {
     id: `local_${Date.now()}`,
@@ -161,6 +161,7 @@ export const saveTestimony = (title, author, contentText) => {
     author: author || "Grateful Heart",
     image: "/assets/images/featured/featured-2.jpg", // Default placeholder image from project assets
     excerpt: contentText.substring(0, 100) + "...",
+    tag,
     content: [
       {
         type: "paragraph",
