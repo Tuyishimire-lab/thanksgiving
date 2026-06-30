@@ -10,7 +10,7 @@ import crypto from "node:crypto";
 async function updateStreakInternal(userId) {
   const db = await getDb();
   const res = await db.execute({
-    sql: "SELECT streak_count, last_active FROM users WHERE id = ?",
+    sql: "SELECT streak_count, last_active, streak_freezes_count FROM users WHERE id = ?",
     args: [userId]
   });
   const user = res.rows[0];
@@ -21,11 +21,15 @@ async function updateStreakInternal(userId) {
   if (user.last_active === todayStr) {
     return {
       streak_count: user.streak_count,
-      last_active: user.last_active
+      last_active: user.last_active,
+      streak_freezes_count: user.streak_freezes_count ?? 1
     };
   }
 
   let newCount = 1;
+  let freezeUsed = false;
+  let newFreezesCount = user.streak_freezes_count !== undefined && user.streak_freezes_count !== null ? user.streak_freezes_count : 1;
+
   if (user.last_active) {
     const lastDate = new Date(user.last_active);
     const todayDate = new Date(todayStr);
@@ -36,16 +40,23 @@ async function updateStreakInternal(userId) {
 
     if (diffDays === 1) {
       newCount = (user.streak_count || 0) + 1;
+    } else if (diffDays > 1 && newFreezesCount > 0) {
+      // Consume a streak freeze!
+      newFreezesCount = Math.max(0, newFreezesCount - 1);
+      newCount = (user.streak_count || 0) + 1; // Preserve the streak chain
+      freezeUsed = true;
     }
   }
 
   await db.execute({
-    sql: "UPDATE users SET streak_count = ?, last_active = ? WHERE id = ?",
-    args: [newCount, todayStr, userId]
+    sql: "UPDATE users SET streak_count = ?, last_active = ?, streak_freezes_count = ? WHERE id = ?",
+    args: [newCount, todayStr, newFreezesCount, userId]
   });
   return {
     streak_count: newCount,
-    last_active: todayStr
+    last_active: todayStr,
+    streak_freezes_count: newFreezesCount,
+    freeze_used: freezeUsed
   };
 }
 
@@ -61,7 +72,7 @@ export async function getMe() {
     const now = new Date().toISOString();
     const db = await getDb();
     const res = await db.execute({
-      sql: `SELECT s.user_id, u.name, u.email, u.streak_count, u.last_active 
+      sql: `SELECT s.user_id, u.name, u.email, u.streak_count, u.last_active, u.streak_freezes_count 
             FROM sessions s 
             JOIN users u ON s.user_id = u.id 
             WHERE s.id = ? AND s.expires_at > ?`,
@@ -76,7 +87,8 @@ export async function getMe() {
       name: session.name,
       email: session.email,
       streak_count: session.streak_count,
-      last_active: session.last_active
+      last_active: session.last_active,
+      streak_freezes_count: session.streak_freezes_count ?? 1
     };
   } catch (error) {
     console.error("Error in getMe server action:", error);
@@ -115,8 +127,8 @@ export async function signup(name, email, password) {
     const todayStr = new Date().toDateString();
 
     await db.execute({
-      sql: `INSERT INTO users (id, name, email, password_hash, streak_count, last_active)
-            VALUES (?, ?, ?, ?, 1, ?)`,
+      sql: `INSERT INTO users (id, name, email, password_hash, streak_count, last_active, streak_freezes_count)
+            VALUES (?, ?, ?, ?, 1, ?, 1)`,
       args: [userId, name.trim(), normalizedEmail, passwordHash, todayStr]
     });
 
@@ -146,7 +158,8 @@ export async function signup(name, email, password) {
         id: userId,
         name: name.trim(),
         email: normalizedEmail,
-        streak_count: 1
+        streak_count: 1,
+        streak_freezes_count: 1
       }
     };
   } catch (error) {

@@ -141,6 +141,59 @@ export async function getDb() {
         )
       `);
 
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS gratitude_journal (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          prompt TEXT NOT NULL,
+          entry_text TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS prayers (
+          id TEXT PRIMARY KEY,
+          user_id TEXT,
+          author_name TEXT NOT NULL,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          is_anonymous INTEGER NOT NULL DEFAULT 0,
+          status TEXT DEFAULT 'active',
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS prayer_support (
+          user_id TEXT NOT NULL,
+          prayer_id TEXT NOT NULL,
+          PRIMARY KEY (user_id, prayer_id),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY(prayer_id) REFERENCES prayers(id) ON DELETE CASCADE
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS user_badges (
+          user_id TEXT NOT NULL,
+          badge_id TEXT NOT NULL,
+          unlocked_at TEXT NOT NULL,
+          PRIMARY KEY (user_id, badge_id),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
+      try {
+        await client.execute(`
+          ALTER TABLE users ADD COLUMN streak_freezes_count INTEGER DEFAULT 1
+        `);
+      } catch (err) {
+        // Column already exists or table doesn't exist yet
+      }
+
       // 2. Insert initial static posts if they don't exist
       for (const post of posts) {
         const existing = await client.execute({

@@ -26,11 +26,11 @@ const saveToStorage = (key, value) => {
 // ================= STREAK MANAGEMENT =================
 
 export const getStreak = () => {
-  return getFromStorage("thanksgiving_streak", { count: 0, lastActive: null });
+  return getFromStorage("thanksgiving_streak", { count: 0, lastActive: null, freezes: 1 });
 };
 
 export const updateStreak = () => {
-  if (!isClient()) return { count: 0, lastActive: null };
+  if (!isClient()) return { count: 0, lastActive: null, freezes: 1 };
   const streak = getStreak();
   const todayStr = new Date().toDateString(); // E.g., "Fri Jun 26 2026"
   
@@ -39,6 +39,9 @@ export const updateStreak = () => {
   }
 
   const newStreak = { ...streak };
+  if (newStreak.freezes === undefined) {
+    newStreak.freezes = 1;
+  }
 
   if (streak.lastActive) {
     const lastDate = new Date(streak.lastActive);
@@ -51,8 +54,13 @@ export const updateStreak = () => {
     if (diffDays === 1) {
       // Visited yesterday, increment streak
       newStreak.count += 1;
+    } else if (diffDays > 1 && newStreak.freezes > 0) {
+      // Consume streak freeze locally
+      newStreak.freezes = Math.max(0, newStreak.freezes - 1);
+      newStreak.count += 1; // Preserve streak
+      newStreak.freezeUsed = true;
     } else if (diffDays > 1) {
-      // Skipped a day, reset streak to 1
+      // Skipped a day and no freezes, reset streak to 1
       newStreak.count = 1;
     }
   } else {
@@ -211,5 +219,69 @@ export const savePlanReflection = (planId, dayNumber, text) => {
   }
   saveToStorage("thanksgiving_plan_reflections", reflections);
   return reflections;
+};
+
+// ================= GRATITUDE JOURNAL (LOCAL) =================
+
+export const getLocalJournalEntries = () => {
+  return getFromStorage("thanksgiving_journal", []);
+};
+
+export const saveLocalJournalEntry = (prompt, text) => {
+  const entries = getLocalJournalEntries();
+  const newEntry = {
+    id: `local_journal_${Date.now()}`,
+    prompt,
+    text,
+    date: new Date().toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" }),
+    created_at: new Date().toISOString()
+  };
+  entries.unshift(newEntry);
+  saveToStorage("thanksgiving_journal", entries);
+  
+  // Try checking local badges
+  checkLocalBadges();
+
+  return entries;
+};
+
+// ================= BADGES (LOCAL) =================
+
+export const getLocalBadges = () => {
+  return getFromStorage("thanksgiving_badges", []);
+};
+
+export const saveLocalBadge = (badgeId) => {
+  const badges = getLocalBadges();
+  const dateStr = new Date().toLocaleDateString();
+  if (!badges.some(b => b.badgeId === badgeId)) {
+    badges.push({ badgeId, unlockedAt: dateStr });
+    saveToStorage("thanksgiving_badges", badges);
+    
+    // Reward freeze
+    if (badgeId === "first_journal" || badgeId === "streak_7") {
+      const streak = getStreak();
+      streak.freezes = (streak.freezes || 0) + 1;
+      saveToStorage("thanksgiving_streak", streak);
+    }
+  }
+  return badges;
+};
+
+export const checkLocalBadges = () => {
+  const notes = getNotes();
+  const journal = getLocalJournalEntries();
+  const plans = getPlansProgress();
+  const streak = getStreak();
+
+  const notesCount = Object.keys(notes).length;
+  const journalCount = journal.length;
+  const completedPlansCount = Object.keys(plans).filter(id => plans[id].isCompleted).length;
+  const streakCount = streak.count;
+
+  if (journalCount >= 1) saveLocalBadge("first_journal");
+  if (streakCount >= 7) saveLocalBadge("streak_7");
+  if (notesCount >= 1) saveLocalBadge("first_note");
+  if (completedPlansCount >= 1) saveLocalBadge("devotional_complete");
 };
 

@@ -617,6 +617,39 @@ export async function syncLocalData(localData) {
       }
     }
 
+    // 7. Sync local gratitude journal entries
+    if (Array.isArray(localData.journalEntries)) {
+      for (const entry of localData.journalEntries) {
+        if (!entry || !entry.text) continue;
+        const entryId = entry.id.startsWith("journal_") ? entry.id : `journal_${entry.id}`;
+        
+        const existing = await db.execute({
+          sql: "SELECT 1 FROM gratitude_journal WHERE id = ?",
+          args: [entryId]
+        });
+        if (!existing.rows[0]) {
+          await db.execute({
+            sql: "INSERT INTO gratitude_journal (id, user_id, prompt, entry_text, created_at) VALUES (?, ?, ?, ?, ?)",
+            args: [entryId, userId, entry.prompt || "Gratitude Reflection", entry.text, entry.created_at || new Date().toISOString()]
+          });
+        }
+      }
+    }
+
+    // 8. Sync local unlocked badges
+    if (Array.isArray(localData.unlockedBadges)) {
+      for (const badge of localData.unlockedBadges) {
+        if (!badge || !badge.badgeId) continue;
+        await db.execute({
+          sql: "INSERT OR IGNORE INTO user_badges (user_id, badge_id, unlocked_at) VALUES (?, ?, ?)",
+          args: [userId, badge.badgeId, badge.unlockedAt || todayStr]
+        });
+      }
+    }
+
+    // Run safe badge checks at the end of sync
+    await checkAndUnlockBadges(userId);
+
     return { success: true };
   } catch (error) {
     console.error("Error syncing local data:", error);
@@ -637,27 +670,31 @@ export async function getHomepageData() {
         streak: null,
         progress: {},
         highlights: {},
-        testimonies: testimonies.slice(0, 4)
+        testimonies: testimonies.slice(0, 4),
+        badges: []
       };
     }
 
     // Logged in: fetch everything concurrently on the server
-    const [streakData, progress, notebook, testimonies] = await Promise.all([
+    const [streakData, progress, notebook, testimonies, badges] = await Promise.all([
       updateStreakAction(),
       getDevotionalProgress(),
       getNotebookData(),
-      getTestimonies()
+      getTestimonies(),
+      getUnlockedBadges()
     ]);
 
     return {
       user,
       streak: {
         count: streakData ? streakData.streak_count : user.streak_count,
-        lastActive: streakData ? streakData.last_active : user.last_active
+        lastActive: streakData ? streakData.last_active : user.last_active,
+        freezes: streakData ? streakData.streak_freezes_count : user.streak_freezes_count
       },
       progress,
       highlights: notebook.highlights || {},
-      testimonies: testimonies.slice(0, 4)
+      testimonies: testimonies.slice(0, 4),
+      badges: badges || []
     };
   } catch (error) {
     console.error("Error fetching homepage data:", error);
@@ -666,7 +703,8 @@ export async function getHomepageData() {
       streak: null,
       progress: {},
       highlights: {},
-      testimonies: []
+      testimonies: [],
+      badges: []
     };
   }
 }
@@ -678,11 +716,13 @@ export async function getProfileData() {
       return { user: null };
     }
 
-    const [notebook, progress, savedPlans, reflections] = await Promise.all([
+    const [notebook, progress, savedPlans, reflections, journalEntries, badges] = await Promise.all([
       getNotebookData(),
       getDevotionalProgress(),
       getSavedPlans(),
-      getPlanReflections()
+      getPlanReflections(),
+      getJournalEntries(),
+      getUnlockedBadges()
     ]);
 
     return {
@@ -690,7 +730,9 @@ export async function getProfileData() {
       notebook,
       progress,
       savedPlans,
-      reflections
+      reflections,
+      journalEntries,
+      badges
     };
   } catch (error) {
     console.error("Error fetching profile data:", error);
@@ -718,5 +760,312 @@ export async function getPlansDashboardData() {
   } catch (error) {
     console.error("Error fetching plans dashboard data:", error);
     return { user: null, progress: {}, savedPlans: [] };
+  }
+}
+
+// ================= NEW JOURNAL & GRATITUDE ACTIONS =================
+
+export async function getJournalEntries() {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const db = await getDb();
+    const res = await db.execute({
+      sql: "SELECT * FROM gratitude_journal WHERE user_id = ? ORDER BY created_at DESC",
+      args: [userId]
+    });
+    return res.rows.map(r => ({
+      id: r.id,
+      prompt: r.prompt,
+      text: r.entry_text,
+      date: new Date(r.created_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" }),
+      created_at: r.created_at
+    }));
+  } catch (error) {
+    console.error("Error fetching journal entries:", error);
+    return [];
+  }
+}
+
+export async function saveJournalEntry(prompt, text) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return { error: "User not logged in." };
+
+    if (!text || text.trim() === "") {
+      return { error: "Journal entry content cannot be empty." };
+    }
+
+    const id = `journal_${Date.now()}`;
+    const dateStr = new Date().toISOString();
+    const db = await getDb();
+    
+    await db.execute({
+      sql: "INSERT INTO gratitude_journal (id, user_id, prompt, entry_text, created_at) VALUES (?, ?, ?, ?, ?)",
+      args: [id, userId, prompt.trim(), text.trim(), dateStr]
+    });
+
+    // Check badges after journaling
+    await checkAndUnlockBadges(userId);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving journal entry:", error);
+    return { error: "Could not save journal entry. Please try again." };
+  }
+}
+
+// ================= PRAYER BOARD ACTIONS =================
+
+export async function getPrayers() {
+  try {
+    const currentUserId = await getCurrentUserId();
+    const db = await getDb();
+
+    const res = await db.execute(`
+      SELECT p.*,
+             (SELECT COUNT(*) FROM prayer_support WHERE prayer_id = p.id) as support_count
+      FROM prayers p
+      ORDER BY p.created_at DESC
+    `);
+    const rows = res.rows;
+
+    let supportedSet = new Set();
+    if (currentUserId) {
+      const supportRes = await db.execute({
+        sql: "SELECT prayer_id FROM prayer_support WHERE user_id = ?",
+        args: [currentUserId]
+      });
+      supportRes.rows.forEach(s => supportedSet.add(s.prayer_id));
+    }
+
+    return rows.map(r => ({
+      id: r.id,
+      user_id: r.user_id,
+      author: r.is_anonymous === 1 ? "Anonymous" : r.author_name,
+      title: r.title,
+      content: r.content,
+      isAnonymous: r.is_anonymous === 1,
+      status: r.status,
+      date: new Date(r.created_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" }),
+      supportCount: r.support_count,
+      isSupportedByUser: supportedSet.has(r.id)
+    }));
+  } catch (error) {
+    console.error("Error fetching prayers:", error);
+    return [];
+  }
+}
+
+export async function createPrayer(title, content, isAnonymous = false) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) return { error: "Please log in to share a prayer request." };
+
+    if (!title || !content) return { error: "Please fill in all fields." };
+
+    const id = `prayer_${Date.now()}`;
+    const dateStr = new Date().toISOString();
+    const isAnonInt = isAnonymous ? 1 : 0;
+    const db = await getDb();
+
+    await db.execute({
+      sql: `INSERT INTO prayers (id, user_id, author_name, title, content, is_anonymous, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'active', ?)`,
+      args: [id, user.user_id, user.name, title.trim(), content.trim(), isAnonInt, dateStr]
+    });
+
+    // Check badges after posting prayer
+    await checkAndUnlockBadges(user.user_id);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating prayer:", error);
+    return { error: "Could not submit prayer. Please try again." };
+  }
+}
+
+export async function toggleSupportPrayer(prayerId) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return { error: "Please log in to support prayers." };
+
+    const db = await getDb();
+    
+    // Check if support exists
+    const existingRes = await db.execute({
+      sql: "SELECT 1 FROM prayer_support WHERE user_id = ? AND prayer_id = ?",
+      args: [userId, prayerId]
+    });
+    const existing = existingRes.rows[0];
+
+    let isSupported = false;
+    if (existing) {
+      await db.execute({
+        sql: "DELETE FROM prayer_support WHERE user_id = ? AND prayer_id = ?",
+        args: [userId, prayerId]
+      });
+    } else {
+      await db.execute({
+        sql: "INSERT INTO prayer_support (user_id, prayer_id) VALUES (?, ?)",
+        args: [userId, prayerId]
+      });
+      isSupported = true;
+    }
+
+    // Check badges after supporting a prayer
+    await checkAndUnlockBadges(userId);
+
+    return { success: true, isSupported };
+  } catch (error) {
+    console.error("Error toggling prayer support:", error);
+    return { error: "Could not register support. Please try again." };
+  }
+}
+
+export async function markPrayerAsAnswered(prayerId, testimonyTitle, testimonyContent) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) return { error: "Please log in to update your prayer request." };
+
+    const db = await getDb();
+
+    // Verify ownership
+    const prayerRes = await db.execute({
+      sql: "SELECT user_id FROM prayers WHERE id = ?",
+      args: [prayerId]
+    });
+    const prayer = prayerRes.rows[0];
+    if (!prayer || prayer.user_id !== user.user_id) {
+      return { error: "You can only update your own prayer requests." };
+    }
+
+    // Update prayer status
+    await db.execute({
+      sql: "UPDATE prayers SET status = 'answered' WHERE id = ?",
+      args: [prayerId]
+    });
+
+    // Create a public testimony automatically
+    if (testimonyTitle && testimonyContent) {
+      await createTestimony(testimonyTitle, testimonyContent, "Answered Prayer");
+    }
+
+    // Check badges
+    await checkAndUnlockBadges(user.user_id);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error marking prayer as answered:", error);
+    return { error: "Could not update prayer request." };
+  }
+}
+
+// ================= BADGES / MILESTONES ENGINE =================
+
+export async function getUnlockedBadges() {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const db = await getDb();
+    const res = await db.execute({
+      sql: "SELECT badge_id, unlocked_at FROM user_badges WHERE user_id = ?",
+      args: [userId]
+    });
+    return res.rows.map(r => ({
+      badgeId: r.badge_id,
+      unlockedAt: r.unlocked_at
+    }));
+  } catch (error) {
+    console.error("Error fetching unlocked badges:", error);
+    return [];
+  }
+}
+
+export async function checkAndUnlockBadges(userId) {
+  try {
+    if (!userId) return [];
+
+    const db = await getDb();
+    
+    // Fetch stats in parallel
+    const [notesRes, journalRes, progressRes, supportRes, streakRes] = await Promise.all([
+      db.execute({
+        sql: "SELECT COUNT(*) as count FROM notes WHERE user_id = ?",
+        args: [userId]
+      }),
+      db.execute({
+        sql: "SELECT COUNT(*) as count FROM gratitude_journal WHERE user_id = ?",
+        args: [userId]
+      }),
+      db.execute({
+        sql: "SELECT COUNT(*) as count FROM plans_progress WHERE user_id = ? AND is_completed = 1",
+        args: [userId]
+      }),
+      db.execute({
+        sql: "SELECT COUNT(*) as count FROM prayer_support WHERE user_id = ?",
+        args: [userId]
+      }),
+      db.execute({
+        sql: "SELECT streak_count FROM users WHERE id = ?",
+        args: [userId]
+      })
+    ]);
+
+    const notesCount = notesRes.rows[0]?.count || 0;
+    const journalCount = journalRes.rows[0]?.count || 0;
+    const completedPlansCount = progressRes.rows[0]?.count || 0;
+    const supportedPrayersCount = supportRes.rows[0]?.count || 0;
+    const streakCount = streakRes.rows[0]?.streak_count || 0;
+
+    // Fetch already unlocked badges
+    const existingRes = await db.execute({
+      sql: "SELECT badge_id FROM user_badges WHERE user_id = ?",
+      args: [userId]
+    });
+    const unlockedSet = new Set(existingRes.rows.map(r => r.badge_id));
+
+    const newlyUnlocked = [];
+    const dateStr = new Date().toLocaleDateString();
+
+    const tryUnlock = async (badgeId, condition, grantFreeze = false) => {
+      if (condition && !unlockedSet.has(badgeId)) {
+        await db.execute({
+          sql: "INSERT INTO user_badges (user_id, badge_id, unlocked_at) VALUES (?, ?, ?)",
+          args: [userId, badgeId, dateStr]
+        });
+        
+        if (grantFreeze) {
+          await db.execute({
+            sql: "UPDATE users SET streak_freezes_count = streak_freezes_count + 1 WHERE id = ?",
+            args: [userId]
+          });
+        }
+        
+        newlyUnlocked.push(badgeId);
+      }
+    };
+
+    // 1. Submit first gratitude entry
+    await tryUnlock("first_journal", journalCount >= 1, true);
+    
+    // 2. 7-day streak
+    await tryUnlock("streak_7", streakCount >= 7, true);
+
+    // 3. First note
+    await tryUnlock("first_note", notesCount >= 1, false);
+
+    // 4. Complete a devotional plan
+    await tryUnlock("devotional_complete", completedPlansCount >= 1, false);
+
+    // 5. Support 5 prayers
+    await tryUnlock("prayer_partner", supportedPrayersCount >= 5, false);
+
+    return newlyUnlocked;
+  } catch (error) {
+    console.error("Error checking and unlocking badges:", error);
+    return [];
   }
 }

@@ -108,6 +108,15 @@ export default function Header() {
                   Feed
                 </Link>
               </li>
+              <li className="list-item">
+                <Link
+                  href="/prayers"
+                  className={`list-link ${pathname === "/prayers" ? "current" : ""}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Prayers
+                </Link>
+              </li>
               {user ? (
                 <>
                   <li className="list-item">
@@ -197,6 +206,12 @@ export default function Header() {
             <Link href="/plans" className={`nav-link ${pathname === "/plans" ? "active" : ""}`}>
               <i className="ri-calendar-check-line"></i>
               <span>Plans</span>
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link href="/prayers" className={`nav-link ${pathname === "/prayers" ? "active" : ""}`}>
+              <i className="ri-chat-heart-line"></i>
+              <span>Prayers</span>
             </Link>
           </li>
           <li className="nav-item">

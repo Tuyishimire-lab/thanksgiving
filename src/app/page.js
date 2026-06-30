@@ -2,12 +2,21 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getStreak, updateStreak, getPlansProgress, getHighlights, getLocalTestimonies, saveTestimony } from "@/data/userState";
+import { 
+  getStreak, 
+  updateStreak, 
+  getPlansProgress, 
+  getHighlights, 
+  getLocalTestimonies, 
+  saveTestimony,
+  saveLocalJournalEntry
+} from "@/data/userState";
 import { verses } from "@/data/verses";
 import { devotionals } from "@/data/devotionals";
 import { posts } from "@/data/posts";
 import VerseActionsModal from "@/components/VerseActionsModal";
-import { getHomepageData } from "@/app/actions/dbActions";
+import { getHomepageData, saveJournalEntry } from "@/app/actions/dbActions";
+import { JOURNAL_PROMPTS } from "@/data/journalPrompts";
 
 const PLANS_MAPPING = [
   { id: "love", title: "#Love", subtitle: "Walk in Love • 5 Days", image: "/assets/images/tags/travel-tag.jpg" },
@@ -28,6 +37,10 @@ export default function Home() {
   const [updateTrigger, setUpdateTrigger] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
   const [homepageTestimonies, setHomepageTestimonies] = useState([]);
+  const [journalText, setJournalText] = useState("");
+  const [journalPrompt, setJournalPrompt] = useState("");
+  const [isJournalSaving, setIsJournalSaving] = useState(false);
+  const [journalSaved, setJournalSaved] = useState(false);
 
   useEffect(() => {
     async function initUserAndState() {
@@ -107,6 +120,9 @@ export default function Home() {
         id: formattedId
       });
       
+      const promptIndex = dayOfYear % JOURNAL_PROMPTS.length;
+      setJournalPrompt(JOURNAL_PROMPTS[promptIndex]);
+      
       const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
       setDayOfWeek(dayName);
     }
@@ -115,6 +131,27 @@ export default function Home() {
   }, [updateTrigger]);
 
   const isLoading = !verseOfTheDay;
+
+  const handleSaveJournal = async () => {
+    if (!journalText.trim()) return;
+    setIsJournalSaving(true);
+    if (currentUser) {
+      const res = await saveJournalEntry(journalPrompt, journalText);
+      if (res.error) {
+        alert(res.error);
+      } else {
+        setJournalSaved(true);
+        setJournalText("");
+      }
+    } else {
+      saveLocalJournalEntry(journalPrompt, journalText);
+      setJournalSaved(true);
+      setJournalText("");
+    }
+    setIsJournalSaving(false);
+    setUpdateTrigger(prev => prev + 1);
+    setTimeout(() => setJournalSaved(false), 4000);
+  };
 
   return (
     <>
@@ -254,21 +291,37 @@ export default function Home() {
                   )}
                 </div>
               </div>
-              <div style={{ textAlign: "right" }}>
+              <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "0.6rem", alignItems: "flex-end" }}>
                 {isLoading ? (
                   <span className="shimmer" style={{ width: "60px", height: "2rem", borderRadius: "30px", display: "inline-block" }}></span>
                 ) : (
-                  <span style={{
-                    background: "rgba(79, 207, 112, 0.12)",
-                    color: "var(--accent-color)",
-                    padding: "0.4rem 1.2rem",
-                    borderRadius: "30px",
-                    fontSize: "1.2rem",
-                    fontWeight: "600",
-                    letterSpacing: "0.5px"
-                  }}>
-                    ACTIVE
-                  </span>
+                  <>
+                    <span style={{
+                      background: "rgba(79, 207, 112, 0.12)",
+                      color: "var(--accent-color)",
+                      padding: "0.4rem 1.2rem",
+                      borderRadius: "30px",
+                      fontSize: "1.2rem",
+                      fontWeight: "600",
+                      letterSpacing: "0.5px"
+                    }}>
+                      ACTIVE
+                    </span>
+                    <span style={{
+                      background: "rgba(18, 188, 254, 0.12)",
+                      color: "#12bcfe",
+                      padding: "0.2rem 1rem",
+                      borderRadius: "20px",
+                      fontSize: "1.1rem",
+                      fontWeight: "700",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.4rem"
+                    }}>
+                      <i className="ri-snowflake-line"></i>
+                      {currentUser ? (currentUser.streak_freezes_count ?? 1) : (streak.freezes ?? 1)} Freezes
+                    </span>
+                  </>
                 )}
               </div>
             </div>
@@ -405,6 +458,118 @@ export default function Home() {
               </div>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* 2.5 Daily Gratitude Journal Prompt Widget */}
+      <section style={{ paddingTop: "0.5rem", paddingBottom: "2rem" }}>
+        <div className="container" style={{ maxWidth: "1000px" }}>
+          <div 
+            style={{
+              background: "var(--secondary-background-color)",
+              padding: "3rem",
+              borderRadius: "12px",
+              border: "1px solid var(--transparent-light-color)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "2rem"
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                <i className="ri-booklet-line" style={{ fontSize: "2.4rem", color: "var(--accent-color)" }}></i>
+                <h3 style={{ fontSize: "1.8rem", fontWeight: "700", color: "var(--light-color)" }}>
+                  Daily Gratitude Journal
+                </h3>
+              </div>
+              <span style={{
+                background: "rgba(18, 188, 254, 0.08)",
+                color: "#12bcfe",
+                padding: "0.3rem 1rem",
+                borderRadius: "20px",
+                fontSize: "1.1rem",
+                fontWeight: "700"
+              }}>
+                {currentUser ? "SECURED IN CLOUD" : "GUEST MODE (LOCAL)"}
+              </span>
+            </div>
+
+            <div style={{ 
+              background: "var(--primary-background-color)", 
+              padding: "2rem", 
+              borderRadius: "8px", 
+              borderLeft: "4px solid #12bcfe" 
+            }}>
+              <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)", fontWeight: "600", display: "block", marginBottom: "0.5rem", letterSpacing: "1px" }}>
+                TODAY'S PROMPT
+              </span>
+              <p style={{ fontSize: "1.5rem", color: "var(--light-color)", lineHeight: "1.5", fontWeight: "500" }}>
+                {journalPrompt || "What is a small blessing you experienced today?"}
+              </p>
+            </div>
+
+            {journalSaved ? (
+              <div style={{ 
+                background: "rgba(79, 207, 112, 0.08)", 
+                border: "1px solid rgba(79, 207, 112, 0.2)", 
+                padding: "2rem", 
+                borderRadius: "8px", 
+                color: "var(--accent-color)", 
+                fontSize: "1.40rem",
+                textAlign: "center",
+                fontWeight: "600"
+              }}>
+                <i className="ri-checkbox-circle-fill" style={{ fontSize: "2.2rem", display: "block", marginBottom: "0.5rem" }}></i>
+                Praise report saved successfully! Your entry is logged in your notebook.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+                <textarea
+                  rows="3"
+                  placeholder="Type your thankfulness reflection here..."
+                  value={journalText}
+                  onChange={(e) => setJournalText(e.target.value)}
+                  style={{
+                    background: "var(--primary-background-color)",
+                    color: "var(--light-color)",
+                    border: "1px solid var(--transparent-light-color)",
+                    borderRadius: "8px",
+                    padding: "1.5rem",
+                    fontSize: "1.4rem",
+                    outline: "none",
+                    resize: "vertical",
+                    lineHeight: "1.5",
+                    fontFamily: "inherit"
+                  }}
+                />
+                
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+                  <span style={{ fontSize: "1.15rem", color: "var(--light-color-alt)", maxWidth: "550px" }}>
+                    {!currentUser && "💡 Your entry will save locally in this browser. Register or sign in to back up your journal."}
+                  </span>
+                  <button
+                    onClick={handleSaveJournal}
+                    disabled={isJournalSaving || !journalText.trim()}
+                    style={{
+                      background: journalText.trim() ? "var(--accent-color)" : "rgba(255,255,255,0.03)",
+                      color: journalText.trim() ? "#131417" : "var(--light-color-alt)",
+                      border: "none",
+                      padding: "1rem 2.2rem",
+                      borderRadius: "30px",
+                      fontSize: "1.3rem",
+                      fontWeight: "700",
+                      cursor: journalText.trim() ? "pointer" : "default",
+                      transition: "all 0.25s",
+                      boxShadow: journalText.trim() ? "0 4px 15px rgba(79, 207, 112, 0.2)" : "none"
+                    }}
+                  >
+                    {isJournalSaving ? "Saving..." : "Log Reflection"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

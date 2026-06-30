@@ -6,6 +6,8 @@ import { getHighlights } from "@/data/userState";
 import VerseActionsModal from "@/components/VerseActionsModal";
 import { getMe } from "@/app/actions/authActions";
 import { getNotebookData } from "@/app/actions/dbActions";
+import { MOOD_TAGS } from "@/data/verseMoods";
+import { verses as allStaticVerses } from "@/data/verses";
 
 const TRANSLATIONS = [
   { id: "web", name: "World English Bible (WEB)" },
@@ -26,6 +28,7 @@ function BibleReaderContent() {
   const [activeVerse, setActiveVerse] = useState(null);
   const [highlights, setHighlights] = useState({});
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [selectedMood, setSelectedMood] = useState(null);
 
   // Get current book details
   const currentBook = bibleBooks.find(b => b.name === selectedBook) || bibleBooks[0];
@@ -113,10 +116,146 @@ function BibleReaderContent() {
     }
   };
 
+  const navigateToVerse = (tag) => {
+    const lastSpaceIdx = tag.lastIndexOf(" ");
+    if (lastSpaceIdx === -1) return;
+    
+    let book = tag.substring(0, lastSpaceIdx).trim();
+    let ref = tag.substring(lastSpaceIdx + 1).trim();
+    
+    if (["NIV", "ESV", "NKJV", "KJV", "NLT", "NASB"].includes(ref)) {
+      const remainingTag = tag.substring(0, lastSpaceIdx).trim();
+      const secondLastSpaceIdx = remainingTag.lastIndexOf(" ");
+      if (secondLastSpaceIdx !== -1) {
+        book = remainingTag.substring(0, secondLastSpaceIdx).trim();
+        ref = remainingTag.substring(secondLastSpaceIdx + 1).trim();
+      }
+    }
+
+    const colonIdx = ref.indexOf(":");
+    let chapter = 1;
+    if (colonIdx !== -1) {
+      chapter = parseInt(ref.substring(0, colonIdx), 10);
+    } else {
+      chapter = parseInt(ref, 10);
+    }
+
+    if (book && !isNaN(chapter)) {
+      const matched = bibleBooks.find(b => 
+        b.name.toLowerCase() === book.toLowerCase() || 
+        b.name.toLowerCase().replace(/\s+/g, "") === book.toLowerCase().replace(/\s+/g, "")
+      );
+      if (matched) {
+        setSelectedBook(matched.name);
+        setSelectedChapter(chapter);
+        
+        // Scroll to the main text panel
+        const pane = document.getElementById("scripture-reading-pane");
+        if (pane) {
+          pane.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }
+  };
+
+  const getVersesForMood = (mood) => {
+    const refs = MOOD_TAGS[mood] || [];
+    const matched = [];
+    refs.forEach(ref => {
+      const match = allStaticVerses.find(v => v.tag.includes(ref));
+      if (match) {
+        matched.push(match);
+      } else {
+        matched.push({
+          verse: `Find comfort and strength in God's promises.`,
+          tag: ref
+        });
+      }
+    });
+    return matched;
+  };
+
   return (
     <section className="section" style={{ minHeight: "80vh", paddingBlock: "4rem" }}>
       <div className="container" style={{ maxWidth: "800px" }}>
         
+        {/* Mood Selector bar */}
+        <div style={{
+          background: "var(--secondary-background-color)",
+          padding: "2.5rem",
+          borderRadius: "12px",
+          boxShadow: "0 5px 15px rgba(0,0,0,0.15)",
+          marginBottom: "3rem"
+        }}>
+          <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)", fontWeight: "600", display: "block", marginBottom: "1.2rem", letterSpacing: "1px" }}>
+            HOW IS YOUR SOUL TODAY?
+          </span>
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+            {Object.keys(MOOD_TAGS).map((mood) => (
+              <button
+                key={mood}
+                onClick={() => setSelectedMood(selectedMood === mood ? null : mood)}
+                style={{
+                  background: selectedMood === mood ? "var(--accent-color)" : "rgba(255, 255, 255, 0.05)",
+                  color: selectedMood === mood ? "#131417" : "var(--light-color)",
+                  border: "1px solid",
+                  borderColor: selectedMood === mood ? "var(--accent-color)" : "var(--transparent-light-color)",
+                  padding: "0.6rem 1.6rem",
+                  borderRadius: "20px",
+                  fontSize: "1.2rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.25s"
+                }}
+              >
+                {mood}
+              </button>
+            ))}
+          </div>
+
+          {selectedMood && (
+            <div style={{ 
+              marginTop: "2rem", 
+              paddingTop: "1.5rem", 
+              borderTop: "1px solid var(--transparent-light-color)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1.2rem"
+            }}>
+              <span style={{ fontSize: "1.15rem", color: "var(--light-color-alt)", fontStyle: "italic" }}>
+                Scriptures for comfort and guidance when feeling <strong style={{ color: "var(--accent-color)" }}>{selectedMood}</strong>:
+              </span>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.2rem" }}>
+                {getVersesForMood(selectedMood).map((v, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => navigateToVerse(v.tag)}
+                    style={{
+                      background: "rgba(255, 255, 255, 0.02)",
+                      border: "1px solid var(--transparent-light-color)",
+                      borderRadius: "8px",
+                      padding: "1.2rem",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      transition: "all 0.25s",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.6rem"
+                    }}
+                  >
+                    <p style={{ fontSize: "1.25rem", color: "var(--light-color)", lineHeight: "1.4", fontStyle: "italic", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      "{v.verse}"
+                    </p>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--accent-color)" }}>
+                      {v.tag} &rarr;
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Selectors Bar */}
         <div 
           style={{ 
@@ -202,6 +341,7 @@ function BibleReaderContent() {
 
         {/* Text Reader Interface */}
         <div 
+          id="scripture-reading-pane"
           style={{ 
             background: "var(--secondary-background-color)",
             padding: "4rem 3rem",

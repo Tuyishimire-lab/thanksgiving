@@ -2,9 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getStreak, getHighlights, getNotes, getPlansProgress, getPlanReflections as getPlanReflectionsLocal } from "@/data/userState";
+import { 
+  getStreak, 
+  getHighlights, 
+  getNotes, 
+  getPlansProgress, 
+  getPlanReflections as getPlanReflectionsLocal,
+  getLocalJournalEntries,
+  getLocalBadges
+} from "@/data/userState";
 import { devotionals } from "@/data/devotionals";
 import { getProfileData } from "@/app/actions/dbActions";
+import { BADGES } from "@/data/badges";
 
 const HIGHLIGHT_COLOR_NAMES = {
   "highlight-yellow": "Yellow",
@@ -14,11 +23,13 @@ const HIGHLIGHT_COLOR_NAMES = {
 };
 
 export default function PersonalProfile() {
-  const [streak, setStreak] = useState({ count: 0, lastActive: null });
+  const [streak, setStreak] = useState({ count: 0, lastActive: null, freezes: 1 });
   const [highlights, setHighlights] = useState({});
   const [notes, setNotes] = useState({});
   const [plansProg, setPlansProg] = useState({});
   const [reflections, setReflections] = useState({});
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [unlockedBadges, setUnlockedBadges] = useState([]);
   const [activeTab, setActiveTab] = useState("notebook");
   const [notebookSubTab, setNotebookSubTab] = useState("bible-notes");
   const [dayOfWeek, setDayOfWeek] = useState("");
@@ -37,18 +48,27 @@ export default function PersonalProfile() {
 
       if (currentUser) {
         // Load data from DB consolidated payload
-        setStreak({ count: currentUser.streak_count, lastActive: currentUser.last_active });
+        setStreak({ 
+          count: currentUser.streak_count, 
+          lastActive: currentUser.last_active,
+          freezes: currentUser.streak_freezes_count ?? 1
+        });
         setNotes(data.notebook?.notes || {});
         setHighlights(data.notebook?.highlights || {});
         setPlansProg(data.progress || {});
         setReflections(data.reflections || {});
+        setJournalEntries(data.journalEntries || []);
+        setUnlockedBadges(data.badges || []);
       } else {
         // Fallback to local storage for guests
-        setStreak(getStreak());
+        const localStreak = getStreak();
+        setStreak(localStreak);
         setHighlights(getHighlights());
         setNotes(getNotes());
         setPlansProg(getPlansProgress());
         setReflections(getPlanReflectionsLocal());
+        setJournalEntries(getLocalJournalEntries());
+        setUnlockedBadges(getLocalBadges());
       }
       setLoadingUser(false);
     }
@@ -187,8 +207,22 @@ export default function PersonalProfile() {
                 <h3 style={{ fontSize: "2.4rem", color: "var(--light-color)" }}>
                   {streak.count} Day Streak!
                 </h3>
-                <p style={{ fontSize: "1.3rem", color: "var(--light-color-alt)" }}>
-                  A daily habit of scripture and prayer &bull; Welcome, {user.name}
+                <p style={{ fontSize: "1.3rem", color: "var(--light-color-alt)", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
+                  <span>A daily habit of scripture and prayer &bull; Welcome, {user.name}</span>
+                  <span style={{
+                    background: "rgba(18, 188, 254, 0.12)",
+                    color: "#12bcfe",
+                    padding: "0.2rem 1rem",
+                    borderRadius: "20px",
+                    fontSize: "1.1rem",
+                    fontWeight: "700",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.5rem"
+                  }}>
+                    <i className="ri-snowflake-line"></i>
+                    {streak.freezes} Freezes
+                  </span>
                 </p>
               </div>
             </div>
@@ -212,7 +246,7 @@ export default function PersonalProfile() {
               gap: "1.5rem"
             }}>
               <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600", letterSpacing: "1px" }}>
-                THIS WEEK'S WALK:
+                {"THIS WEEK'S WALK:"}
               </span>
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayAbbr, idx) => {
@@ -282,14 +316,19 @@ export default function PersonalProfile() {
             display: "flex", 
             borderBottom: "2px solid var(--transparent-light-color)",
             marginBottom: "3rem",
-            gap: "0.8rem",
-            justifyContent: "space-between"
+            gap: "1.2rem",
+            overflowX: "auto",
+            scrollbarWidth: "none",
+            WebkitOverflowScrolling: "touch",
+            paddingBottom: "0.2rem"
           }}
+          className="no-scrollbar"
         >
           {[
             { id: "notebook", label: "Notebook", icon: "ri-booklet-line" },
             { id: "highlights", label: "Highlights", icon: "ri-markup-line" },
-            { id: "plans", label: "My Plans", icon: "ri-calendar-todo-line" }
+            { id: "plans", label: "My Plans", icon: "ri-calendar-todo-line" },
+            { id: "badges", label: "Milestones", icon: "ri-award-line" }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -298,6 +337,7 @@ export default function PersonalProfile() {
                 background: "transparent",
                 border: "none",
                 paddingBlock: "1.2rem",
+                paddingInline: "1rem",
                 color: activeTab === tab.id ? "var(--light-color)" : "var(--light-color-alt)",
                 borderBottom: activeTab === tab.id ? "3px solid var(--accent-color)" : "3px solid transparent",
                 fontSize: "1.3rem",
@@ -307,7 +347,7 @@ export default function PersonalProfile() {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "0.6rem",
-                flex: 1,
+                flex: "1 0 auto",
                 textAlign: "center",
                 whiteSpace: "nowrap",
                 transition: "all 0.25s"
@@ -327,14 +367,19 @@ export default function PersonalProfile() {
               {/* Sub-tab Pill Selectors */}
               <div 
                 style={{ 
-                  display: "inline-flex", 
+                  display: "flex", 
                   background: "rgba(255, 255, 255, 0.03)", 
                   padding: "0.4rem", 
                   borderRadius: "24px",
                   border: "1px solid var(--transparent-light-color)",
                   width: "100%",
-                  maxWidth: "480px"
+                  maxWidth: "600px",
+                  overflowX: "auto",
+                  scrollbarWidth: "none",
+                  WebkitOverflowScrolling: "touch",
+                  gap: "0.2rem"
                 }}
+                className="no-scrollbar"
               >
                 <button 
                   onClick={() => setNotebookSubTab("bible-notes")}
@@ -347,7 +392,8 @@ export default function PersonalProfile() {
                     fontSize: "1.2rem",
                     fontWeight: "700",
                     cursor: "pointer",
-                    flex: 1,
+                    flex: "1 0 auto",
+                    whiteSpace: "nowrap",
                     textAlign: "center",
                     transition: "all 0.2s",
                     outline: "none"
@@ -366,13 +412,34 @@ export default function PersonalProfile() {
                     fontSize: "1.2rem",
                     fontWeight: "700",
                     cursor: "pointer",
-                    flex: 1,
+                    flex: "1 0 auto",
+                    whiteSpace: "nowrap",
                     textAlign: "center",
                     transition: "all 0.2s",
                     outline: "none"
                   }}
                 >
                   Reflections ({Object.keys(reflections).length})
+                </button>
+                <button 
+                  onClick={() => setNotebookSubTab("journal")}
+                  style={{
+                    background: notebookSubTab === "journal" ? "var(--secondary-background-color)" : "transparent",
+                    color: notebookSubTab === "journal" ? "#fad648" : "var(--light-color-alt)",
+                    border: "none",
+                    padding: "0.8rem 1.4rem",
+                    borderRadius: "20px",
+                    fontSize: "1.2rem",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    flex: "1 0 auto",
+                    whiteSpace: "nowrap",
+                    textAlign: "center",
+                    transition: "all 0.2s",
+                    outline: "none"
+                  }}
+                >
+                  Journal ({journalEntries.length})
                 </button>
               </div>
 
@@ -382,7 +449,7 @@ export default function PersonalProfile() {
                   {!hasNotes ? (
                     <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
                       <i className="ri-quill-pen-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
-                      <p style={{ fontSize: "1.5rem" }}>You haven't written any Bible notes yet.</p>
+                      <p style={{ fontSize: "1.5rem" }}>{"You haven't written any Bible notes yet."}</p>
                       <Link href="/bible" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
                         Read the Bible & Add Notes
                       </Link>
@@ -426,7 +493,7 @@ export default function PersonalProfile() {
                   {Object.keys(reflections).length === 0 ? (
                     <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
                       <i className="ri-book-read-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
-                      <p style={{ fontSize: "1.5rem" }}>You haven't saved any devotional reflections yet.</p>
+                      <p style={{ fontSize: "1.5rem" }}>{"You haven't saved any devotional reflections yet."}</p>
                       <Link href="/plans" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
                         Browse Devotional Plans
                       </Link>
@@ -468,11 +535,53 @@ export default function PersonalProfile() {
                             </span>
                           </div>
                           <p style={{ fontSize: "1.5rem", lineHeight: "1.6", color: "var(--light-color)", fontStyle: "italic" }}>
-                            "{reflection.text}"
+                            &quot;{reflection.text}&quot;
                           </p>
                         </div>
                       );
                     })
+                  )}
+                </div>
+              )}
+
+              {/* Render Gratitude Journal Entries */}
+              {notebookSubTab === "journal" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                  {journalEntries.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
+                      <i className="ri-booklet-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
+                      <p style={{ fontSize: "1.5rem" }}>{"You haven't written any gratitude entries yet."}</p>
+                      <Link href="/" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
+                        Reflect on Today's Prompt
+                      </Link>
+                    </div>
+                  ) : (
+                    journalEntries.map((entry) => (
+                      <div 
+                        key={entry.id} 
+                        style={{
+                          background: "var(--secondary-background-color)",
+                          padding: "3rem",
+                          borderRadius: "10px",
+                          borderLeft: "4px solid #12bcfe",
+                          boxShadow: "0 4px 15px rgba(0,0,0,0.05)"
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+                          <div>
+                            <span style={{ fontSize: "1.25rem", fontWeight: "700", color: "#12bcfe", textTransform: "uppercase", display: "block", marginBottom: "0.2rem" }}>
+                              Prompt: {entry.prompt}
+                            </span>
+                          </div>
+                          <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
+                            {entry.date}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: "1.5rem", lineHeight: "1.6", color: "var(--light-color)" }}>
+                          {entry.text}
+                        </p>
+                      </div>
+                    ))
                   )}
                 </div>
               )}
@@ -485,7 +594,7 @@ export default function PersonalProfile() {
               {!hasHighlights ? (
                 <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
                   <i className="ri-markup-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
-                  <p style={{ fontSize: "1.5rem" }}>You haven't highlighted any scriptures yet.</p>
+                  <p style={{ fontSize: "1.5rem" }}>{"You haven't highlighted any scriptures yet."}</p>
                   <Link href="/bible" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
                     Browse Bible
                   </Link>
@@ -543,7 +652,7 @@ export default function PersonalProfile() {
               {activePlanList.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
                   <i className="ri-calendar-todo-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>
-                  <p style={{ fontSize: "1.5rem" }}>You aren't enrolled in any reading plans.</p>
+                  <p style={{ fontSize: "1.5rem" }}>{"You aren't enrolled in any reading plans."}</p>
                   <Link href="/plans" style={{ display: "inline-block", marginTop: "2rem", padding: "1rem 2rem", background: "var(--accent-color)", color: "white", borderRadius: "30px", fontWeight: "600" }}>
                     Find a Devotional Plan
                   </Link>
@@ -596,6 +705,115 @@ export default function PersonalProfile() {
                   </div>
                 ))
               )}
+            </div>
+          )}
+
+          {/* 4. Badges/Milestones Tab */}
+          {activeTab === "badges" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+              <div style={{ textAlign: "center", marginBottom: "1rem" }}>
+                <h3 style={{ fontSize: "1.8rem", fontWeight: "700", color: "var(--light-color)" }}>Milestone Badges</h3>
+                <p style={{ fontSize: "1.3rem", color: "var(--light-color-alt)", marginTop: "0.5rem" }}>
+                  Earn milestone badges and unlock rewards (like Streak Freezes) by engaging in daily reading, writing notes, journaling, and standing in prayer with others.
+                </p>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "2.5rem" }}>
+                {BADGES.map((badge) => {
+                  const unlockInfo = unlockedBadges.find(b => b.badgeId === badge.id);
+                  const isUnlocked = !!unlockInfo;
+                  
+                  return (
+                    <div 
+                      key={badge.id}
+                      style={{
+                        background: "var(--secondary-background-color)",
+                        padding: "3rem 2.5rem",
+                        borderRadius: "12px",
+                        border: isUnlocked ? "1px solid rgba(79, 207, 112, 0.25)" : "1px solid var(--transparent-light-color)",
+                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "2rem",
+                        opacity: isUnlocked ? 1 : 0.45,
+                        filter: isUnlocked ? "none" : "grayscale(80%)",
+                        transition: "all 0.3s ease",
+                        position: "relative",
+                        overflow: "hidden"
+                      }}
+                    >
+                      {/* Badge Glow Effect if unlocked */}
+                      {isUnlocked && (
+                        <div style={{
+                          position: "absolute",
+                          width: "80px",
+                          height: "80px",
+                          background: "radial-gradient(circle, rgba(79, 207, 112, 0.15) 0%, transparent 70%)",
+                          top: "-20px",
+                          left: "-20px",
+                          pointerEvents: "none"
+                        }} />
+                      )}
+
+                      {/* Badge Icon */}
+                      <div style={{
+                        width: "5.5rem",
+                        height: "5.5rem",
+                        borderRadius: "50%",
+                        background: isUnlocked ? "rgba(79, 207, 112, 0.12)" : "rgba(255, 255, 255, 0.05)",
+                        border: isUnlocked ? "1.5px solid var(--accent-color)" : "1px solid transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "2.4rem",
+                        color: isUnlocked ? "var(--accent-color)" : "var(--light-color-alt)",
+                        flexShrink: 0
+                      }}>
+                        <i className={badge.icon}></i>
+                      </div>
+
+                      {/* Badge Meta details */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                        <h4 style={{ 
+                          fontSize: "1.5rem", 
+                          fontWeight: "700", 
+                          color: "var(--light-color)"
+                        }}>
+                          {badge.title}
+                        </h4>
+                        <p style={{ fontSize: "1.15rem", color: "var(--light-color-alt)", lineHeight: "1.4" }}>
+                          {badge.desc}
+                        </p>
+                        
+                        {isUnlocked ? (
+                          <span style={{ 
+                            color: "var(--accent-color)", 
+                            fontSize: "1rem", 
+                            fontWeight: "700", 
+                            marginTop: "0.2rem",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.4rem"
+                          }}>
+                            <i className="ri-checkbox-circle-fill"></i>
+                            Unlocked {unlockInfo.unlockedAt}
+                          </span>
+                        ) : (
+                          <span style={{ 
+                            color: "var(--light-color-alt)", 
+                            fontSize: "1.1rem", 
+                            fontWeight: "600", 
+                            marginTop: "0.2rem",
+                            opacity: 0.8
+                          }}>
+                            Reward: {badge.reward}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
