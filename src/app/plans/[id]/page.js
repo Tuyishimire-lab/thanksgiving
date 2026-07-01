@@ -18,7 +18,8 @@ import {
   updateDevotionalProgress as updateDevotionalProgressDb,
   savePlanReflection as savePlanReflectionDb,
   getPlanReflections as getPlanReflectionsDb,
-  getNotebookData
+  getNotebookData,
+  getCustomDevotionalById
 } from "@/app/actions/dbActions";
 import VerseActionsModal from "@/components/VerseActionsModal";
 
@@ -26,19 +27,22 @@ function PlanPlayerContent({ params }) {
   const router = useRouter();
   const unwrappedParams = use(params);
   const planId = unwrappedParams.id;
-  const planData = devotionals[planId];
 
-  if (!planData) {
-    return (
-      <div className="container" style={{ paddingBlock: "8rem", textAlign: "center" }}>
-        <h2>Plan Not Found</h2>
-        <p style={{ marginBlock: "2rem" }}>We couldn't find the reading plan you were looking for.</p>
-        <Link href="/plans" style={{ color: "var(--accent-color)", textDecoration: "underline", fontSize: "1.6rem" }}>
-          Back to Reading Plans
-        </Link>
-      </div>
-    );
-  }
+  const [planData, setPlanData] = useState(devotionals[planId] || null);
+  const [loadingPlan, setLoadingPlan] = useState(!devotionals[planId]);
+
+  useEffect(() => {
+    async function loadCustomPlan() {
+      if (!planData && planId) {
+        const res = await getCustomDevotionalById(planId);
+        if (res.success && res.plan) {
+          setPlanData(res.plan);
+        }
+        setLoadingPlan(false);
+      }
+    }
+    loadCustomPlan();
+  }, [planId, planData]);
 
   const [progress, setProgress] = useState(null);
   const [activeDayNum, setActiveDayNum] = useState(1);
@@ -172,6 +176,26 @@ function PlanPlayerContent({ params }) {
       router.push("/plans");
     }
   };
+
+  if (loadingPlan) {
+    return (
+      <div className="container" style={{ paddingBlock: "8rem", textAlign: "center", color: "var(--light-color-alt)" }}>
+        Loading devotional plan...
+      </div>
+    );
+  }
+
+  if (!planData) {
+    return (
+      <div className="container" style={{ paddingBlock: "8rem", textAlign: "center" }}>
+        <h2>Plan Not Found</h2>
+        <p style={{ marginBlock: "2rem" }}>We couldn't find the reading plan you were looking for.</p>
+        <Link href="/plans" style={{ color: "var(--accent-color)", textDecoration: "underline", fontSize: "1.6rem" }}>
+          Back to Reading Plans
+        </Link>
+      </div>
+    );
+  }
 
   const dayContent = planData.days.find(d => d.day === activeDayNum) || planData.days[0];
 

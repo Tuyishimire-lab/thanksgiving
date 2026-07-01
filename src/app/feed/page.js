@@ -50,6 +50,22 @@ export default function CommunityFeed() {
       }
     });
     setLikedPosts(initialLikes);
+
+    // Auto-open specific post from query parameter (e.g. from Admin eye link)
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const targetPostId = searchParams.get("post");
+      if (targetPostId) {
+        const found = testimonies.find(post => post.id === targetPostId);
+        if (found) {
+          setSelectedPost(found);
+          // Clean query parameter from address bar
+          const url = new URL(window.location.href);
+          url.searchParams.delete("post");
+          window.history.replaceState(null, "", url.pathname + url.search);
+        }
+      }
+    }
   };
 
   useEffect(() => {

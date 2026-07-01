@@ -825,7 +825,8 @@ export async function getPrayers() {
 
     const res = await db.execute(`
       SELECT p.*,
-             (SELECT COUNT(*) FROM prayer_support WHERE prayer_id = p.id) as support_count
+             (SELECT COUNT(*) FROM prayer_support WHERE prayer_id = p.id) as support_count,
+             (SELECT COUNT(*) FROM prayer_encouragements WHERE prayer_id = p.id) as encouragement_count
       FROM prayers p
       ORDER BY p.created_at DESC
     `);
@@ -850,7 +851,8 @@ export async function getPrayers() {
       status: r.status,
       date: new Date(r.created_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" }),
       supportCount: r.support_count,
-      isSupportedByUser: supportedSet.has(r.id)
+      isSupportedByUser: supportedSet.has(r.id),
+      encouragementCount: r.encouragement_count || 0
     }));
   } catch (error) {
     console.error("Error fetching prayers:", error);
@@ -1067,5 +1069,100 @@ export async function checkAndUnlockBadges(userId) {
   } catch (error) {
     console.error("Error checking and unlocking badges:", error);
     return [];
+  }
+}
+
+export async function getCustomDevotionals() {
+  try {
+    const db = await getDb();
+    const res = await db.execute("SELECT id, title, category, days, created_at FROM custom_devotionals ORDER BY created_at DESC");
+    const plans = res.rows.map(r => ({
+      id: r.id,
+      title: r.title,
+      category: r.category,
+      days: JSON.parse(r.days),
+      created_at: r.created_at,
+      isCustom: true
+    }));
+    return { success: true, plans };
+  } catch (error) {
+    console.error("Error fetching custom devotionals:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getCustomDevotionalById(id) {
+  try {
+    const db = await getDb();
+    const res = await db.execute({
+      sql: "SELECT id, title, category, days, created_at FROM custom_devotionals WHERE id = ?",
+      args: [id]
+    });
+    const r = res.rows[0];
+    if (!r) return { error: "Plan not found." };
+    const plan = {
+      id: r.id,
+      title: r.title,
+      category: r.category,
+      days: JSON.parse(r.days),
+      created_at: r.created_at,
+      isCustom: true
+    };
+    return { success: true, plan };
+  } catch (error) {
+    console.error("Error fetching custom devotional by id:", error);
+    return { error: error.message };
+  }
+}
+
+export async function getPrayerEncouragements(prayerId) {
+  try {
+    const db = await getDb();
+    const res = await db.execute({
+      sql: `SELECT id, prayer_id, user_id, author_name, content, created_at 
+            FROM prayer_encouragements 
+            WHERE prayer_id = ? 
+            ORDER BY created_at ASC`,
+      args: [prayerId]
+    });
+    
+    return res.rows.map(r => ({
+      id: r.id,
+      prayerId: r.prayer_id,
+      userId: r.user_id,
+      authorName: r.author_name,
+      content: r.content,
+      date: new Date(r.created_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    }));
+  } catch (error) {
+    console.error("Error fetching prayer encouragements:", error);
+    return [];
+  }
+}
+
+export async function addPrayerEncouragement(prayerId, content) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) return { error: "Please log in to leave an encouragement." };
+
+    if (!content || !content.trim()) return { error: "Encouragement content cannot be empty." };
+
+    const id = `enc_${Date.now()}`;
+    const dateStr = new Date().toISOString();
+    const db = await getDb();
+
+    await db.execute({
+      sql: `INSERT INTO prayer_encouragements (id, prayer_id, user_id, author_name, content, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [id, prayerId, user.user_id, user.name, content.trim(), dateStr]
+    });
+
+    // Check badges after encouraging others
+    await checkAndUnlockBadges(user.user_id);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error adding prayer encouragement:", error);
+    return { error: "Could not add encouragement. Please try again." };
   }
 }

@@ -119,6 +119,18 @@ export default function Header() {
               </li>
               {user ? (
                 <>
+                  {user.role === "admin" && (
+                    <li className="list-item">
+                      <Link
+                        href="/admin"
+                        className={`list-link ${pathname === "/admin" ? "current" : ""}`}
+                        onClick={() => setIsMenuOpen(false)}
+                        style={{ color: "#fad648", fontWeight: "600" }}
+                      >
+                        Admin
+                      </Link>
+                    </li>
+                  )}
                   <li className="list-item">
                     <Link
                       href="/profile"
@@ -226,6 +238,14 @@ export default function Header() {
               <span>Profile</span>
             </Link>
           </li>
+          {user && user.role === "admin" && (
+            <li className="nav-item">
+              <Link href="/admin" className={`nav-link ${pathname === "/admin" ? "active" : ""}`} style={{ color: "#fad648" }}>
+                <i className="ri-shield-user-line"></i>
+                <span>Admin</span>
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
 

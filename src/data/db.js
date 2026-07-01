@@ -25,7 +25,8 @@ export async function getDb() {
           password_hash TEXT NOT NULL,
           streak_count INTEGER DEFAULT 0,
           last_active TEXT,
-          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          role TEXT DEFAULT 'user'
         )
       `);
 
@@ -186,9 +187,40 @@ export async function getDb() {
         )
       `);
 
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS custom_devotionals (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          category TEXT NOT NULL,
+          days TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS prayer_encouragements (
+          id TEXT PRIMARY KEY,
+          prayer_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          author_name TEXT NOT NULL,
+          content TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(prayer_id) REFERENCES prayers(id) ON DELETE CASCADE,
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
       try {
         await client.execute(`
           ALTER TABLE users ADD COLUMN streak_freezes_count INTEGER DEFAULT 1
+        `);
+      } catch (err) {
+        // Column already exists or table doesn't exist yet
+      }
+
+      try {
+        await client.execute(`
+          ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'
         `);
       } catch (err) {
         // Column already exists or table doesn't exist yet

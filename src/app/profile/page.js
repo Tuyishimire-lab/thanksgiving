@@ -36,6 +36,7 @@ export default function PersonalProfile() {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
+
   useEffect(() => {
     async function loadUserData() {
       const data = await getProfileData();
@@ -223,6 +224,22 @@ export default function PersonalProfile() {
                     <i className="ri-snowflake-line"></i>
                     {streak.freezes} Freezes
                   </span>
+                  {user.role === "admin" && (
+                    <span style={{
+                      background: "rgba(250, 214, 72, 0.12)",
+                      color: "#fad648",
+                      padding: "0.2rem 1rem",
+                      borderRadius: "20px",
+                      fontSize: "1.1rem",
+                      fontWeight: "700",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.5rem"
+                    }}>
+                      <i className="ri-shield-user-line"></i>
+                      Admin
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -308,6 +325,7 @@ export default function PersonalProfile() {
               </div>
             </div>
           )}
+
         </div>
 
         {/* Navigation Tabs */}
@@ -649,6 +667,37 @@ export default function PersonalProfile() {
           {/* 3. Plans Tab */}
           {activeTab === "plans" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+              {activePlanList.length > 0 && (
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "1.5rem",
+                  background: "rgba(255, 255, 255, 0.02)",
+                  padding: "2rem",
+                  borderRadius: "10px",
+                  border: "1px solid var(--transparent-light-color)"
+                }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                    <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)", fontWeight: "600", textTransform: "uppercase" }}>Active Plans</span>
+                    <span style={{ fontSize: "2.2rem", fontWeight: "700", color: "#fad648" }}>
+                      {activePlanList.filter(p => !p.isCompleted).length}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                    <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)", fontWeight: "600", textTransform: "uppercase" }}>Completed Plans</span>
+                    <span style={{ fontSize: "2.2rem", fontWeight: "700", color: "var(--accent-color)" }}>
+                      {activePlanList.filter(p => p.isCompleted).length}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                    <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)", fontWeight: "600", textTransform: "uppercase" }}>Total Days Read</span>
+                    <span style={{ fontSize: "2.2rem", fontWeight: "700", color: "#12bcfe" }}>
+                      {activePlanList.reduce((acc, curr) => acc + curr.completed, 0)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {activePlanList.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--light-color-alt)" }}>
                   <i className="ri-calendar-todo-line" style={{ fontSize: "5rem", display: "block", marginBottom: "1.5rem" }}></i>

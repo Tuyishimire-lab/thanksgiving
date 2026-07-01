@@ -10,7 +10,8 @@ import {
 import { devotionals } from "@/data/devotionals";
 import { 
   toggleSavedPlan as toggleSavedPlanDb, 
-  getPlansDashboardData 
+  getPlansDashboardData,
+  getCustomDevotionals
 } from "@/app/actions/dbActions";
 
 const CATEGORIES = [
@@ -66,10 +67,14 @@ export default function PlansDashboard() {
   const [savedPlans, setSavedPlans] = useState([]);
   const [updateTrigger, setUpdateTrigger] = useState(0);
   const [user, setUser] = useState(null);
+  const [customPlans, setCustomPlans] = useState([]);
 
   useEffect(() => {
     async function loadPlansState() {
-      const data = await getPlansDashboardData();
+      const [data, customRes] = await Promise.all([
+        getPlansDashboardData(),
+        getCustomDevotionals()
+      ]);
       setUser(data.user);
       
       if (data.user) {
@@ -78,6 +83,10 @@ export default function PlansDashboard() {
       } else {
         setProgress(getPlansProgress());
         setSavedPlans(getSavedPlans());
+      }
+
+      if (customRes.success) {
+        setCustomPlans(customRes.plans || []);
       }
     }
     loadPlansState();
@@ -94,7 +103,7 @@ export default function PlansDashboard() {
   };
 
   // ---------------- MY PLANS SPLITS ----------------
-  const plansList = Object.values(devotionals);
+  const plansList = [...Object.values(devotionals), ...customPlans];
 
   // 1. In Progress
   const inProgressPlans = plansList.filter(plan => {
@@ -112,6 +121,10 @@ export default function PlansDashboard() {
     const prog = progress[plan.id];
     return prog && prog.isCompleted;
   });
+
+  const totalDaysCompleted = Object.values(progress).reduce((acc, curr) => {
+    return acc + (curr && curr.completedDays ? curr.completedDays.length : 0);
+  }, 0);
 
   // ---------------- FIND PLANS FILTERS ----------------
   const filteredFindPlans = selectedCategory === "All"
@@ -182,8 +195,84 @@ export default function PlansDashboard() {
 
         {/* ==================== TAB CONTENT: MY PLANS ==================== */}
         {activeTab === "my-plans" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "4rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "3rem" }}>
             
+            {/* Devotional Progress Tracking Stats Dashboard */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "2.5rem",
+              background: "var(--secondary-background-color)",
+              padding: "2.5rem",
+              borderRadius: "12px",
+              border: "1px solid var(--transparent-light-color)",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+              marginBottom: "1rem"
+            }}>
+              {/* Stat 1 */}
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+                <div style={{
+                  width: "4.5rem",
+                  height: "4.5rem",
+                  borderRadius: "50%",
+                  background: "rgba(250, 214, 72, 0.12)",
+                  color: "#fad648",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2rem"
+                }}>
+                  <i className="ri-book-open-line"></i>
+                </div>
+                <div>
+                  <span style={{ display: "block", fontSize: "1.1rem", color: "var(--light-color-alt)", fontWeight: "600", textTransform: "uppercase" }}>Active Plans</span>
+                  <span style={{ fontSize: "2rem", fontWeight: "700", color: "var(--light-color)" }}>{inProgressPlans.length}</span>
+                </div>
+              </div>
+
+              {/* Stat 2 */}
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+                <div style={{
+                  width: "4.5rem",
+                  height: "4.5rem",
+                  borderRadius: "50%",
+                  background: "rgba(79, 207, 112, 0.12)",
+                  color: "var(--accent-color)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2rem"
+                }}>
+                  <i className="ri-checkbox-circle-line"></i>
+                </div>
+                <div>
+                  <span style={{ display: "block", fontSize: "1.1rem", color: "var(--light-color-alt)", fontWeight: "600", textTransform: "uppercase" }}>Completed</span>
+                  <span style={{ fontSize: "2rem", fontWeight: "700", color: "var(--light-color)" }}>{completedPlans.length}</span>
+                </div>
+              </div>
+
+              {/* Stat 3 */}
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+                <div style={{
+                  width: "4.5rem",
+                  height: "4.5rem",
+                  borderRadius: "50%",
+                  background: "rgba(18, 188, 254, 0.12)",
+                  color: "#12bcfe",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2rem"
+                }}>
+                  <i className="ri-calendar-check-line"></i>
+                </div>
+                <div>
+                  <span style={{ display: "block", fontSize: "1.1rem", color: "var(--light-color-alt)", fontWeight: "600", textTransform: "uppercase" }}>Days Read</span>
+                  <span style={{ fontSize: "2rem", fontWeight: "700", color: "var(--light-color)" }}>{totalDaysCompleted}</span>
+                </div>
+              </div>
+            </div>
+
             {/* 1. In Progress Section */}
             <div>
               <h3 style={{ fontSize: "1.8rem", color: "var(--light-color)", borderBottom: "1px solid var(--transparent-light-color)", paddingBottom: "1rem", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "1rem" }}>

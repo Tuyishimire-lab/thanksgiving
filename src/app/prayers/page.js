@@ -7,7 +7,9 @@ import {
   getPrayers, 
   createPrayer, 
   toggleSupportPrayer, 
-  markPrayerAsAnswered 
+  markPrayerAsAnswered,
+  getPrayerEncouragements,
+  addPrayerEncouragement
 } from "@/app/actions/dbActions";
 
 export default function PrayerBoard() {
@@ -28,6 +30,12 @@ export default function PrayerBoard() {
   const [testimonyTitle, setTestimonyTitle] = useState("");
   const [testimonyContent, setTestimonyContent] = useState("");
   const [isAnswering, setIsAnswering] = useState(false);
+
+  // Encouragement states
+  const [expandedPrayerId, setExpandedPrayerId] = useState(null);
+  const [encouragements, setEncouragements] = useState([]);
+  const [loadingEncouragements, setLoadingEncouragements] = useState(false);
+  const [newEncouragementText, setNewEncouragementText] = useState("");
 
   async function loadData() {
     setIsLoading(true);
@@ -111,6 +119,39 @@ export default function PrayerBoard() {
       setTestimonyTitle("");
       setTestimonyContent("");
       loadData();
+    }
+  };
+
+  const toggleEncouragementThread = async (prayerId) => {
+    if (expandedPrayerId === prayerId) {
+      setExpandedPrayerId(null);
+      setEncouragements([]);
+    } else {
+      setExpandedPrayerId(prayerId);
+      setLoadingEncouragements(true);
+      setNewEncouragementText("");
+      const list = await getPrayerEncouragements(prayerId);
+      setEncouragements(list);
+      setLoadingEncouragements(false);
+    }
+  };
+
+  const handleSubmitEncouragement = async (e) => {
+    e.preventDefault();
+    if (!newEncouragementText.trim()) return;
+
+    const currentId = expandedPrayerId;
+    const content = newEncouragementText;
+    setNewEncouragementText("");
+
+    const res = await addPrayerEncouragement(currentId, content);
+    if (res.error) {
+      alert(res.error);
+    } else {
+      const list = await getPrayerEncouragements(currentId);
+      setEncouragements(list);
+      const listPrayers = await getPrayers();
+      setPrayers(listPrayers);
     }
   };
 
@@ -324,40 +365,77 @@ export default function PrayerBoard() {
                     paddingTop: "1.5rem",
                     marginTop: "0.5rem"
                   }}>
-                    {/* Support Button */}
-                    <button
-                      onClick={() => handleSupport(prayer.id)}
-                      style={{
-                        background: prayer.isSupportedByUser ? "rgba(79, 207, 112, 0.12)" : "rgba(255, 255, 255, 0.03)",
-                        border: prayer.isSupportedByUser ? "1px solid rgba(79, 207, 112, 0.3)" : "1px solid var(--transparent-light-color)",
-                        padding: "0.6rem 1.5rem",
-                        borderRadius: "20px",
-                        fontSize: "1.2rem",
-                        fontWeight: "600",
-                        color: prayer.isSupportedByUser ? "var(--accent-color)" : "var(--light-color)",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.6rem",
-                        transition: "all 0.2s"
-                      }}
-                    >
-                      <i className={prayer.isSupportedByUser ? "ri-hand-heart-fill" : "ri-hand-heart-line"} style={{ fontSize: "1.5rem" }}></i>
-                      <span>{prayer.isSupportedByUser ? "Praying" : "Stand in Prayer"}</span>
-                      {prayer.supportCount > 0 && (
-                        <span style={{
-                          background: prayer.isSupportedByUser ? "var(--accent-color)" : "rgba(255, 255, 255, 0.1)",
-                          color: prayer.isSupportedByUser ? "#131417" : "var(--light-color)",
-                          padding: "0.1rem 0.6rem",
-                          borderRadius: "10px",
-                          fontSize: "1rem",
-                          fontWeight: "700",
-                          marginLeft: "0.2rem"
-                        }}>
-                          {prayer.supportCount}
-                        </span>
-                      )}
-                    </button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                      {/* Support Button */}
+                      <button
+                        onClick={() => handleSupport(prayer.id)}
+                        style={{
+                          background: prayer.isSupportedByUser ? "rgba(79, 207, 112, 0.12)" : "rgba(255, 255, 255, 0.03)",
+                          border: prayer.isSupportedByUser ? "1px solid rgba(79, 207, 112, 0.3)" : "1px solid var(--transparent-light-color)",
+                          padding: "0.6rem 1.5rem",
+                          borderRadius: "20px",
+                          fontSize: "1.2rem",
+                          fontWeight: "600",
+                          color: prayer.isSupportedByUser ? "var(--accent-color)" : "var(--light-color)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.6rem",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        <i className={prayer.isSupportedByUser ? "ri-hand-heart-fill" : "ri-hand-heart-line"} style={{ fontSize: "1.5rem" }}></i>
+                        <span>{prayer.isSupportedByUser ? "Praying" : "Stand in Prayer"}</span>
+                        {prayer.supportCount > 0 && (
+                          <span style={{
+                            background: prayer.isSupportedByUser ? "var(--accent-color)" : "rgba(255, 255, 255, 0.1)",
+                            color: prayer.isSupportedByUser ? "#131417" : "var(--light-color)",
+                            padding: "0.1rem 0.6rem",
+                            borderRadius: "10px",
+                            fontSize: "1rem",
+                            fontWeight: "700",
+                            marginLeft: "0.2rem"
+                          }}>
+                            {prayer.supportCount}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* Encourage Comment Button */}
+                      <button
+                        onClick={() => toggleEncouragementThread(prayer.id)}
+                        style={{
+                          background: expandedPrayerId === prayer.id ? "rgba(18, 188, 254, 0.12)" : "rgba(255, 255, 255, 0.03)",
+                          border: expandedPrayerId === prayer.id ? "1px solid rgba(18, 188, 254, 0.3)" : "1px solid var(--transparent-light-color)",
+                          padding: "0.6rem 1.5rem",
+                          borderRadius: "20px",
+                          fontSize: "1.2rem",
+                          fontWeight: "600",
+                          color: expandedPrayerId === prayer.id ? "#12bcfe" : "var(--light-color)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.6rem",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        <i className="ri-chat-smile-3-line" style={{ fontSize: "1.5rem" }}></i>
+                        <span>Encourage</span>
+                        {prayer.encouragementCount > 0 && (
+                          <span style={{
+                            background: expandedPrayerId === prayer.id ? "#12bcfe" : "rgba(255, 255, 255, 0.1)",
+                            color: expandedPrayerId === prayer.id ? "#131417" : "var(--light-color)",
+                            padding: "0.1rem 0.6rem",
+                            borderRadius: "10px",
+                            fontSize: "1rem",
+                            fontWeight: "700",
+                            marginLeft: "0.2rem"
+                          }}>
+                            {prayer.encouragementCount}
+                          </span>
+                        )}
+                      </button>
+                    </div>
 
                     {/* Owner Answered Actions */}
                     {isOwner && prayer.status === "active" && (
@@ -383,6 +461,98 @@ export default function PrayerBoard() {
                       </button>
                     )}
                   </div>
+
+                  {/* Encouragements sub-panel thread */}
+                  {expandedPrayerId === prayer.id && (
+                    <div style={{
+                      marginTop: "2rem",
+                      paddingTop: "2rem",
+                      borderTop: "1px dashed var(--transparent-light-color)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1.5rem"
+                    }}>
+                      <h4 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#12bcfe", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <i className="ri-heart-line"></i> Words of Comfort & Encouragement
+                      </h4>
+                      
+                      {loadingEncouragements ? (
+                        <div style={{ color: "var(--light-color-alt)", fontSize: "1.2rem", paddingBlock: "1rem" }}>
+                          Loading encouragement...
+                        </div>
+                      ) : encouragements.length === 0 ? (
+                        <div style={{ color: "var(--light-color-alt)", fontSize: "1.3rem", fontStyle: "italic", paddingBlock: "1rem" }}>
+                          No messages of encouragement yet. Be the first to leave a message or scripture of comfort!
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+                          {encouragements.map((enc) => (
+                            <div 
+                              key={enc.id} 
+                              style={{ 
+                                background: "var(--primary-background-color)", 
+                                padding: "1.5rem", 
+                                borderRadius: "8px", 
+                                border: "1px solid var(--transparent-light-color)"
+                              }}
+                            >
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.6rem", fontSize: "1.1rem" }}>
+                                <span style={{ fontWeight: "700", color: "var(--light-color)" }}>{enc.authorName}</span>
+                                <span style={{ color: "var(--light-color-alt)" }}>{enc.date}</span>
+                              </div>
+                              <p style={{ fontSize: "1.3rem", lineHeight: "1.5", color: "var(--light-color-alt)", whiteSpace: "pre-wrap" }}>
+                                {enc.content}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Add Encouragement Form */}
+                      {currentUser ? (
+                        <form onSubmit={handleSubmitEncouragement} style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
+                          <input
+                            type="text"
+                            placeholder="Type a word of comfort or scripture..."
+                            value={newEncouragementText}
+                            onChange={(e) => setNewEncouragementText(e.target.value)}
+                            style={{
+                              flex: 1,
+                              background: "var(--primary-background-color)",
+                              color: "var(--light-color)",
+                              border: "1px solid var(--transparent-light-color)",
+                              borderRadius: "20px",
+                              padding: "0.8rem 1.5rem",
+                              fontSize: "1.3rem",
+                              outline: "none"
+                            }}
+                          />
+                          <button
+                            type="submit"
+                            style={{
+                              background: "var(--accent-color)",
+                              color: "#131417",
+                              border: "none",
+                              borderRadius: "20px",
+                              padding: "0.8rem 1.8rem",
+                              fontWeight: "700",
+                              fontSize: "1.3rem",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.4rem"
+                            }}
+                          >
+                            <i className="ri-send-plane-fill"></i> Send
+                          </button>
+                        </form>
+                      ) : (
+                        <p style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontStyle: "italic", textAlign: "center", marginTop: "1rem" }}>
+                          Please <Link href="/login" style={{ color: "var(--accent-color)", textDecoration: "underline" }}>log in</Link> to leave a message of encouragement.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

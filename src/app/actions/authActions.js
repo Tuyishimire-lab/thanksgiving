@@ -72,7 +72,7 @@ export async function getMe() {
     const now = new Date().toISOString();
     const db = await getDb();
     const res = await db.execute({
-      sql: `SELECT s.user_id, u.name, u.email, u.streak_count, u.last_active, u.streak_freezes_count 
+      sql: `SELECT s.user_id, u.name, u.email, u.streak_count, u.last_active, u.streak_freezes_count, u.role 
             FROM sessions s 
             JOIN users u ON s.user_id = u.id 
             WHERE s.id = ? AND s.expires_at > ?`,
@@ -88,7 +88,8 @@ export async function getMe() {
       email: session.email,
       streak_count: session.streak_count,
       last_active: session.last_active,
-      streak_freezes_count: session.streak_freezes_count ?? 1
+      streak_freezes_count: session.streak_freezes_count ?? 1,
+      role: session.role || "user"
     };
   } catch (error) {
     console.error("Error in getMe server action:", error);
@@ -126,10 +127,17 @@ export async function signup(name, email, password) {
     const passwordHash = hashPassword(password);
     const todayStr = new Date().toDateString();
 
+    // Check if user email is in the admin whitelist
+    const adminEmails = (process.env.ADMIN_EMAILS || "admin@thanksgiving.com")
+      .split(",")
+      .map(e => e.trim().toLowerCase());
+    const isEmailAdmin = adminEmails.includes(normalizedEmail);
+    const role = isEmailAdmin ? "admin" : "user";
+
     await db.execute({
-      sql: `INSERT INTO users (id, name, email, password_hash, streak_count, last_active, streak_freezes_count)
-            VALUES (?, ?, ?, ?, 1, ?, 1)`,
-      args: [userId, name.trim(), normalizedEmail, passwordHash, todayStr]
+      sql: `INSERT INTO users (id, name, email, password_hash, streak_count, last_active, streak_freezes_count, role)
+            VALUES (?, ?, ?, ?, 1, ?, 1, ?)`,
+      args: [userId, name.trim(), normalizedEmail, passwordHash, todayStr, role]
     });
 
     // Create session
@@ -159,7 +167,8 @@ export async function signup(name, email, password) {
         name: name.trim(),
         email: normalizedEmail,
         streak_count: 1,
-        streak_freezes_count: 1
+        streak_freezes_count: 1,
+        role: role
       }
     };
   } catch (error) {
@@ -216,6 +225,27 @@ export async function login(email, password) {
       path: "/"
     });
 
+    // Sync admin role dynamically based on environment whitelist
+    const adminEmails = (process.env.ADMIN_EMAILS || "admin@thanksgiving.com")
+      .split(",")
+      .map(e => e.trim().toLowerCase());
+    const isEmailAdmin = adminEmails.includes(normalizedEmail);
+    
+    let updatedRole = user.role || "user";
+    if (isEmailAdmin && user.role !== "admin") {
+      await db.execute({
+        sql: "UPDATE users SET role = 'admin' WHERE id = ?",
+        args: [user.id]
+      });
+      updatedRole = "admin";
+    } else if (!isEmailAdmin && user.role === "admin") {
+      await db.execute({
+        sql: "UPDATE users SET role = 'user' WHERE id = ?",
+        args: [user.id]
+      });
+      updatedRole = "user";
+    }
+
     // Update daily streak on login
     const updated = await updateStreakInternal(user.id);
 
@@ -225,7 +255,8 @@ export async function login(email, password) {
         id: user.id,
         name: user.name,
         email: user.email,
-        streak_count: updated ? updated.streak_count : user.streak_count
+        streak_count: updated ? updated.streak_count : user.streak_count,
+        role: updatedRole
       }
     };
   } catch (error) {
