@@ -1,7 +1,7 @@
 import { posts } from "@/data/posts";
 
 export default async function sitemap() {
-  const baseUrl = "https://thanksgivings.vercel.app";
+  const baseUrl = "https://praisepage.com";
 
   const staticUrls = [
     "",

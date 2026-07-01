@@ -29,33 +29,33 @@ const caveat = Caveat({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://thanksgivings.vercel.app"),
+  metadataBase: new URL("https://praisepage.com"),
   title: {
-    template: "%s | ThanksGivings",
-    default: "ThanksGivings | A Sanctuary of Gratitude & Faith",
+    template: "%s | PraisePage",
+    default: "PraisePage | A Sanctuary of Gratitude & Faith",
   },
   description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
   icons: {
-    icon: "/assets/images/thanksgivings.jpeg",
+    icon: "/assets/images/praisepage.jpeg",
   },
   openGraph: {
-    title: "ThanksGivings | A Sanctuary of Gratitude & Faith",
+    title: "PraisePage | A Sanctuary of Gratitude & Faith",
     description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
     images: [
       {
-        url: "/assets/images/thanksgivings.jpeg",
+        url: "/assets/images/praisepage.jpeg",
         width: 1200,
         height: 630,
-        alt: "ThanksGivings Logo",
+        alt: "PraisePage Logo",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ThanksGivings | A Sanctuary of Gratitude & Faith",
+    title: "PraisePage | A Sanctuary of Gratitude & Faith",
     description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
-    images: ["/assets/images/thanksgivings.jpeg"],
+    images: ["/assets/images/praisepage.jpeg"],
   },
 };
 
@@ -63,11 +63,11 @@ export default function RootLayout({ children }) {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "ThanksGivings",
-    "url": "https://thanksgivings.vercel.app",
+    "name": "PraisePage",
+    "url": "https://praisepage.com",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://thanksgivings.vercel.app/bible?q={search_term_string}",
+      "target": "https://praisepage.com/bible?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   };
@@ -75,9 +75,9 @@ export default function RootLayout({ children }) {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "ThanksGivings",
-    "url": "https://thanksgivings.vercel.app",
-    "logo": "https://thanksgivings.vercel.app/assets/images/thanksgivings.jpeg"
+    "name": "PraisePage",
+    "url": "https://praisepage.com",
+    "logo": "https://praisepage.com/assets/images/praisepage.jpeg"
   };
 
   return (

@@ -150,7 +150,7 @@ export async function signup(name, email, password) {
     const todayStr = new Date().toDateString();
 
     // Check if user email is in the admin whitelist
-    const adminEmails = (process.env.ADMIN_EMAILS || "admin@thanksgiving.com")
+    const adminEmails = (process.env.ADMIN_EMAILS || "admin@praisepage.com")
       .split(",")
       .map(e => e.trim().toLowerCase());
     const isEmailAdmin = adminEmails.includes(normalizedEmail);
@@ -249,7 +249,7 @@ export async function login(email, password) {
     });
 
     // Sync admin role dynamically based on environment whitelist
-    const adminEmails = (process.env.ADMIN_EMAILS || "admin@thanksgiving.com")
+    const adminEmails = (process.env.ADMIN_EMAILS || "admin@praisepage.com")
       .split(",")
       .map(e => e.trim().toLowerCase());
     const isEmailAdmin = adminEmails.includes(normalizedEmail);

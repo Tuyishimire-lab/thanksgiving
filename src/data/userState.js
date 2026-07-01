@@ -26,7 +26,7 @@ const saveToStorage = (key, value) => {
 // ================= STREAK MANAGEMENT =================
 
 export const getStreak = () => {
-  return getFromStorage("thanksgiving_streak", { count: 0, lastActive: null, freezes: 1 });
+  return getFromStorage("praisepage_streak", { count: 0, lastActive: null, freezes: 1 });
 };
 
 export const updateStreak = () => {
@@ -69,14 +69,14 @@ export const updateStreak = () => {
   }
 
   newStreak.lastActive = todayStr;
-  saveToStorage("thanksgiving_streak", newStreak);
+  saveToStorage("praisepage_streak", newStreak);
   return newStreak;
 };
 
 // ================= HIGHLIGHTS MANAGEMENT =================
 
 export const getHighlights = () => {
-  return getFromStorage("thanksgiving_highlights", {});
+  return getFromStorage("praisepage_highlights", {});
 };
 
 export const toggleHighlight = (verseId, color) => {
@@ -86,14 +86,14 @@ export const toggleHighlight = (verseId, color) => {
   } else {
     highlights[verseId] = color;
   }
-  saveToStorage("thanksgiving_highlights", highlights);
+  saveToStorage("praisepage_highlights", highlights);
   return highlights;
 };
 
 // ================= NOTES MANAGEMENT =================
 
 export const getNotes = () => {
-  return getFromStorage("thanksgiving_notes", {});
+  return getFromStorage("praisepage_notes", {});
 };
 
 export const saveNote = (verseId, text) => {
@@ -106,14 +106,14 @@ export const saveNote = (verseId, text) => {
       timestamp: new Date().toLocaleDateString()
     };
   }
-  saveToStorage("thanksgiving_notes", notes);
+  saveToStorage("praisepage_notes", notes);
   return notes;
 };
 
 // ================= DEVOTIONAL PLANS MANAGEMENT =================
 
 export const getPlansProgress = () => {
-  return getFromStorage("thanksgiving_plans_progress", {});
+  return getFromStorage("praisepage_plans_progress", {});
 };
 
 export const startPlan = (planId) => {
@@ -127,7 +127,7 @@ export const startPlan = (planId) => {
       startDate: new Date().toLocaleDateString(),
       lastCompletedDate: null
     };
-    saveToStorage("thanksgiving_plans_progress", progress);
+    saveToStorage("praisepage_plans_progress", progress);
   }
   return progress[planId];
 };
@@ -153,14 +153,14 @@ export const completePlanDay = (planId, dayNumber, totalDays = 5, lastCompletedD
   }
 
   progress[planId] = planProg;
-  saveToStorage("thanksgiving_plans_progress", progress);
+  saveToStorage("praisepage_plans_progress", progress);
   return progress;
 };
 
 // ================= LOCAL TESTIMONIES =================
 
 export const getLocalTestimonies = () => {
-  return getFromStorage("thanksgiving_local_testimonies", []);
+  return getFromStorage("praisepage_local_testimonies", []);
 };
 
 export const saveTestimony = (title, author, contentText, tag = "Gratitude") => {
@@ -178,14 +178,14 @@ export const saveTestimony = (title, author, contentText, tag = "Gratitude") => 
   };
   
   testimonies.unshift(newPost);
-  saveToStorage("thanksgiving_local_testimonies", testimonies);
+  saveToStorage("praisepage_local_testimonies", testimonies);
   return testimonies;
 };
 
 // ================= SAVED/BOOKMARKED PLANS =================
 
 export const getSavedPlans = () => {
-  return getFromStorage("thanksgiving_saved_plans", []);
+  return getFromStorage("praisepage_saved_plans", []);
 };
 
 export const toggleSavePlan = (planId) => {
@@ -196,14 +196,14 @@ export const toggleSavePlan = (planId) => {
   } else {
     updated = [...saved, planId];
   }
-  saveToStorage("thanksgiving_saved_plans", updated);
+  saveToStorage("praisepage_saved_plans", updated);
   return updated;
 };
 
 // ================= PLAN REFLECTIONS =================
 
 export const getPlanReflections = () => {
-  return getFromStorage("thanksgiving_plan_reflections", {});
+  return getFromStorage("praisepage_plan_reflections", {});
 };
 
 export const savePlanReflection = (planId, dayNumber, text) => {
@@ -217,14 +217,14 @@ export const savePlanReflection = (planId, dayNumber, text) => {
       timestamp: new Date().toLocaleDateString()
     };
   }
-  saveToStorage("thanksgiving_plan_reflections", reflections);
+  saveToStorage("praisepage_plan_reflections", reflections);
   return reflections;
 };
 
 // ================= GRATITUDE JOURNAL (LOCAL) =================
 
 export const getLocalJournalEntries = () => {
-  return getFromStorage("thanksgiving_journal", []);
+  return getFromStorage("praisepage_journal", []);
 };
 
 export const saveLocalJournalEntry = (prompt, text) => {
@@ -237,7 +237,7 @@ export const saveLocalJournalEntry = (prompt, text) => {
     created_at: new Date().toISOString()
   };
   entries.unshift(newEntry);
-  saveToStorage("thanksgiving_journal", entries);
+  saveToStorage("praisepage_journal", entries);
   
   // Try checking local badges
   checkLocalBadges();
@@ -248,7 +248,7 @@ export const saveLocalJournalEntry = (prompt, text) => {
 // ================= BADGES (LOCAL) =================
 
 export const getLocalBadges = () => {
-  return getFromStorage("thanksgiving_badges", []);
+  return getFromStorage("praisepage_badges", []);
 };
 
 export const saveLocalBadge = (badgeId) => {
@@ -256,13 +256,13 @@ export const saveLocalBadge = (badgeId) => {
   const dateStr = new Date().toLocaleDateString();
   if (!badges.some(b => b.badgeId === badgeId)) {
     badges.push({ badgeId, unlockedAt: dateStr });
-    saveToStorage("thanksgiving_badges", badges);
+    saveToStorage("praisepage_badges", badges);
     
     // Reward freeze
     if (badgeId === "first_journal" || badgeId === "streak_7") {
       const streak = getStreak();
       streak.freezes = (streak.freezes || 0) + 1;
-      saveToStorage("thanksgiving_streak", streak);
+      saveToStorage("praisepage_streak", streak);
     }
   }
   return badges;

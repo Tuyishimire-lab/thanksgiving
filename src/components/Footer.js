@@ -6,10 +6,10 @@ export default function Footer() {
       <div className="footer-container container d-grid">
         <div className="company-data">
           <Link href="/">
-            <h2 className="logo">ThanksGivings</h2>
+            <h2 className="logo">PraisePage</h2>
           </Link>
           <p className="company-description">
-            Stories about faith and how it has impacted our lives. Share your Thanksgiving reflection and touch the hearts of others.
+            Stories about faith and how it has impacted our lives. Share your PraisePage reflection and touch the hearts of others.
           </p>
 
           <ul className="list social-media">

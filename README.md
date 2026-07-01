@@ -1,2 +1,2 @@
-# thanksgiving
+# PraisePage
 A testimony sharing website.

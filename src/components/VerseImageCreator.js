@@ -102,7 +102,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
         ctx.fillText(verseTag.toUpperCase(), canvasWidth / 2, canvasHeight - Math.round(80 * fontScalar));
 
         // Draw the website watermark branding at the bottom-right corner
-        const domainName = typeof window !== "undefined" ? window.location.host : "thanksgivings.vercel.app";
+        const domainName = typeof window !== "undefined" ? window.location.host : "praisepage.com";
         ctx.fillStyle = textColor === "#ffffff" ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.3)";
         ctx.textAlign = "right";
         ctx.font = `italic 600 ${Math.round(12 * fontScalar)}px 'Poppins', sans-serif`;
@@ -175,7 +175,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
       
       const a = document.createElement("a");
       a.href = url;
-      a.download = `ThanksGivings_Verse_${verseTag.replace(/\s+/g, "_")}.${ext}`;
+      a.download = `PraisePage_Verse_${verseTag.replace(/\s+/g, "_")}.${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -192,7 +192,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
     await renderCanvas(canvas);
 
     const ext = fileFormat === "image/jpeg" ? "jpg" : "png";
-    const filename = `ThanksGivings_Verse_${verseTag.replace(/\s+/g, "_")}.${ext}`;
+    const filename = `PraisePage_Verse_${verseTag.replace(/\s+/g, "_")}.${ext}`;
 
     canvas.toBlob(async (blob) => {
       if (!blob) return;
@@ -203,7 +203,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
         try {
           await navigator.share({
             files: [file],
-            title: "Daily Word of Thanksgiving",
+            title: "Daily Word of PraisePage",
             text: `"${verseText}" - ${verseTag}`
           });
         } catch (err) {
@@ -212,7 +212,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
           }
         }
       } else {
-        const shareText = encodeURIComponent(`"${verseText}" - ${verseTag} via thanksgivings.com`);
+        const shareText = encodeURIComponent(`"${verseText}" - ${verseTag} via praisepage.com`);
         const url = encodeURIComponent(window.location.origin);
         
         const method = prompt(
@@ -324,7 +324,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
                 zIndex: 2
               }}
             >
-              {typeof window !== "undefined" ? window.location.host : "thanksgivings.vercel.app"}
+              {typeof window !== "undefined" ? window.location.host : "praisepage.com"}
             </span>
           </div>
           <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)" }}>

@@ -27,7 +27,7 @@ export async function generateMetadata({ params }) {
     title: post.title,
     description: cleanDescription,
     openGraph: {
-      title: `${post.title} | ThanksGivings`,
+      title: `${post.title} | PraisePage`,
       description: cleanDescription,
       type: "article",
       publishedTime: post.date,
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }) {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${post.title} | ThanksGivings`,
+      title: `${post.title} | PraisePage`,
       description: cleanDescription,
       images: [post.image],
     },
@@ -72,26 +72,26 @@ export default async function PostPage({ params }) {
     "headline": post.title,
     "description": cleanDescription,
     "image": [
-      post.image.startsWith("http") ? post.image : `https://thanksgivings.vercel.app${post.image}`
+      post.image.startsWith("http") ? post.image : `https://praisepage.com${post.image}`
     ],
     "datePublished": publishedDate,
     "dateModified": publishedDate,
     "author": {
       "@type": "Person",
-      "name": "ThanksGivings",
-      "url": "https://thanksgivings.vercel.app"
+      "name": "PraisePage",
+      "url": "https://praisepage.com"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ThanksGivings",
+      "name": "PraisePage",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://thanksgivings.vercel.app/assets/images/thanksgivings.jpeg"
+        "url": "https://praisepage.com/assets/images/praisepage.jpeg"
       }
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `https://thanksgivings.vercel.app/posts/${id}`
+      "@id": `https://praisepage.com/posts/${id}`
     }
   };
 
@@ -162,14 +162,14 @@ export default async function PostPage({ params }) {
           {/* Author Card */}
           <div className="author d-grid" style={{ marginTop: "6rem", background: "var(--secondary-background-color)", padding: "3rem", borderRadius: "12px" }}>
             <div className="author-image-box" style={{ width: "8rem", height: "8rem", borderRadius: "50%", overflow: "hidden", position: "relative" }}>
-              <Image src="/assets/images/thanksgivings.jpeg" alt="ThanksGivings" fill className="article-image" style={{ objectFit: "cover" }} />
+              <Image src="/assets/images/praisepage.jpeg" alt="PraisePage" fill className="article-image" style={{ objectFit: "cover" }} />
             </div>
             <div className="author-about">
               <h3 className="author-name" style={{ color: "var(--light-color)", fontSize: "1.8rem", marginBottom: "0.5rem" }}>
-                ThanksGivings
+                PraisePage
               </h3>
               <p style={{ fontSize: "1.4rem", color: "var(--light-color-alt)", marginBottom: "1.5rem" }}>
-                Share Your Testimony! We believe in the power of stories. Share your Thanksgiving reflection and touch the hearts of others on our website.
+                Share Your Testimony! We believe in the power of stories. Share your PraisePage reflection and touch the hearts of others on our website.
               </p>
               <ul className="list social-media" style={{ justifyContent: "flex-start", gap: "1.5rem" }}>
                 <li className="list-item">

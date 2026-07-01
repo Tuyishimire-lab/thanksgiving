@@ -67,7 +67,7 @@ export default function Header() {
       <header className={`header ${isScrolled ? "activated" : ""}`} id="header">
         <nav className="navbar container">
           <Link href="/">
-            <h2 className="logo">ThanksGivings</h2>
+            <h2 className="logo">PraisePage</h2>
           </Link>
 
           <div className={`menu ${isMenuOpen ? "activated" : ""}`} id="menu">

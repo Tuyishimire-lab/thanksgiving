@@ -46,12 +46,12 @@ export default function LoginPage() {
         // Sync local storage state to db
         if (typeof window !== "undefined") {
           try {
-            const savedPlans = JSON.parse(localStorage.getItem("thanksgiving_saved_plans") || "[]");
-            const plansProgress = JSON.parse(localStorage.getItem("thanksgiving_plans_progress") || "{}");
-            const reflections = JSON.parse(localStorage.getItem("thanksgiving_plan_reflections") || "{}");
-            const highlights = JSON.parse(localStorage.getItem("thanksgiving_highlights") || "{}");
-            const notes = JSON.parse(localStorage.getItem("thanksgiving_notes") || "{}");
-            const localTestimonies = JSON.parse(localStorage.getItem("thanksgiving_local_testimonies") || "[]");
+            const savedPlans = JSON.parse(localStorage.getItem("praisepage_saved_plans") || "[]");
+            const plansProgress = JSON.parse(localStorage.getItem("praisepage_plans_progress") || "{}");
+            const reflections = JSON.parse(localStorage.getItem("praisepage_plan_reflections") || "{}");
+            const highlights = JSON.parse(localStorage.getItem("praisepage_highlights") || "{}");
+            const notes = JSON.parse(localStorage.getItem("praisepage_notes") || "{}");
+            const localTestimonies = JSON.parse(localStorage.getItem("praisepage_local_testimonies") || "[]");
 
             const hasLocalData = 
               savedPlans.length > 0 ||
@@ -72,12 +72,12 @@ export default function LoginPage() {
               });
 
               // Clean up local items since they are now stored in SQLite
-              localStorage.removeItem("thanksgiving_saved_plans");
-              localStorage.removeItem("thanksgiving_plans_progress");
-              localStorage.removeItem("thanksgiving_plan_reflections");
-              localStorage.removeItem("thanksgiving_highlights");
-              localStorage.removeItem("thanksgiving_notes");
-              localStorage.removeItem("thanksgiving_local_testimonies");
+              localStorage.removeItem("praisepage_saved_plans");
+              localStorage.removeItem("praisepage_plans_progress");
+              localStorage.removeItem("praisepage_plan_reflections");
+              localStorage.removeItem("praisepage_highlights");
+              localStorage.removeItem("praisepage_notes");
+              localStorage.removeItem("praisepage_local_testimonies");
             }
           } catch (storageError) {
             console.error("Local data sync failed: ", storageError);

@@ -45,7 +45,7 @@ export default function Share() {
               We believe in the power of stories.
             </em>
             <p style={{ fontSize: "1.5rem", color: "var(--light-color-alt)" }}>
-              Share your Thanksgiving reflection and touch the hearts of others on our website.
+              Share your PraisePage reflection and touch the hearts of others on our website.
             </p>
           </div>
 
