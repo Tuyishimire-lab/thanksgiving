@@ -305,19 +305,7 @@ export default function PrayerBoard() {
               return (
                 <div 
                   key={prayer.id}
-                  className="streak-card"
-                  style={{
-                    background: prayer.status === "answered" ? "linear-gradient(135deg, rgba(167, 103, 229, 0.05), var(--secondary-background-color))" : "var(--secondary-background-color)",
-                    borderLeft: prayer.status === "answered" ? "4px solid #a767e5" : "4px solid var(--accent-color)",
-                    padding: "3rem",
-                    borderRadius: "12px",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1.5rem",
-                    transition: "transform 0.25s",
-                    position: "relative"
-                  }}
+                  className={`prayer-card ${prayer.status === "answered" ? "answered" : "active"}`}
                 >
                   {/* Card Header */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
@@ -357,45 +345,17 @@ export default function PrayerBoard() {
                   </p>
 
                   {/* Card Actions */}
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    borderTop: "1px solid var(--transparent-light-color)",
-                    paddingTop: "1.5rem",
-                    marginTop: "0.5rem"
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <div className="prayer-card-actions">
+                    <div className="prayer-card-actions-group">
                       {/* Support Button */}
                       <button
                         onClick={() => handleSupport(prayer.id)}
-                        style={{
-                          background: prayer.isSupportedByUser ? "rgba(79, 207, 112, 0.12)" : "rgba(255, 255, 255, 0.03)",
-                          border: prayer.isSupportedByUser ? "1px solid rgba(79, 207, 112, 0.3)" : "1px solid var(--transparent-light-color)",
-                          padding: "0.6rem 1.5rem",
-                          borderRadius: "20px",
-                          fontSize: "1.2rem",
-                          fontWeight: "600",
-                          color: prayer.isSupportedByUser ? "var(--accent-color)" : "var(--light-color)",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.6rem",
-                          transition: "all 0.2s"
-                        }}
+                        className={`prayer-card-btn prayer-card-btn-support ${prayer.isSupportedByUser ? "active" : ""}`}
                       >
                         <i className={prayer.isSupportedByUser ? "ri-hand-heart-fill" : "ri-hand-heart-line"} style={{ fontSize: "1.5rem" }}></i>
                         <span>{prayer.isSupportedByUser ? "Praying" : "Stand in Prayer"}</span>
                         {prayer.supportCount > 0 && (
-                          <span style={{
-                            background: prayer.isSupportedByUser ? "var(--accent-color)" : "rgba(255, 255, 255, 0.1)",
-                            color: prayer.isSupportedByUser ? "#131417" : "var(--light-color)",
-                            padding: "0.1rem 0.6rem",
-                            borderRadius: "10px",
-                            fontSize: "1rem",
-                            fontWeight: "700",
-                            marginLeft: "0.2rem"
-                          }}>
+                          <span className="prayer-card-badge">
                             {prayer.supportCount}
                           </span>
                         )}
@@ -404,33 +364,12 @@ export default function PrayerBoard() {
                       {/* Encourage Comment Button */}
                       <button
                         onClick={() => toggleEncouragementThread(prayer.id)}
-                        style={{
-                          background: expandedPrayerId === prayer.id ? "rgba(18, 188, 254, 0.12)" : "rgba(255, 255, 255, 0.03)",
-                          border: expandedPrayerId === prayer.id ? "1px solid rgba(18, 188, 254, 0.3)" : "1px solid var(--transparent-light-color)",
-                          padding: "0.6rem 1.5rem",
-                          borderRadius: "20px",
-                          fontSize: "1.2rem",
-                          fontWeight: "600",
-                          color: expandedPrayerId === prayer.id ? "#12bcfe" : "var(--light-color)",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.6rem",
-                          transition: "all 0.2s"
-                        }}
+                        className={`prayer-card-btn prayer-card-btn-encourage ${expandedPrayerId === prayer.id ? "active" : ""}`}
                       >
                         <i className="ri-chat-smile-3-line" style={{ fontSize: "1.5rem" }}></i>
                         <span>Encourage</span>
                         {prayer.encouragementCount > 0 && (
-                          <span style={{
-                            background: expandedPrayerId === prayer.id ? "#12bcfe" : "rgba(255, 255, 255, 0.1)",
-                            color: expandedPrayerId === prayer.id ? "#131417" : "var(--light-color)",
-                            padding: "0.1rem 0.6rem",
-                            borderRadius: "10px",
-                            fontSize: "1rem",
-                            fontWeight: "700",
-                            marginLeft: "0.2rem"
-                          }}>
+                          <span className="prayer-card-badge">
                             {prayer.encouragementCount}
                           </span>
                         )}
@@ -441,23 +380,10 @@ export default function PrayerBoard() {
                     {isOwner && prayer.status === "active" && (
                       <button
                         onClick={() => setAnsweredPrayerId(prayer.id)}
-                        style={{
-                          background: "linear-gradient(45deg, rgba(167, 103, 229, 0.15), rgba(18, 188, 254, 0.15))",
-                          border: "1px solid rgba(167, 103, 229, 0.3)",
-                          color: "#c893f9",
-                          padding: "0.6rem 1.5rem",
-                          borderRadius: "20px",
-                          fontSize: "1.2rem",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.6rem",
-                          transition: "all 0.2s"
-                        }}
+                        className="prayer-card-btn prayer-card-btn-answered"
                       >
                         <i className="ri-checkbox-circle-line" style={{ fontSize: "1.5rem" }}></i>
-                        Mark Answered
+                        <span>Mark Answered</span>
                       </button>
                     )}
                   </div>

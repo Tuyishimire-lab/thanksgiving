@@ -1860,3 +1860,155 @@ textarea:hover {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
 }
+
+/* Prayer Card Custom Styles for Responsiveness */
+.prayer-card {
+    background: var(--secondary-background-color);
+    border-radius: 12px;
+    padding: 3rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    transition: transform 0.25s;
+    position: relative;
+}
+
+.prayer-card.answered {
+    background: linear-gradient(135deg, rgba(167, 103, 229, 0.05), var(--secondary-background-color));
+    border-left: 4px solid #a767e5;
+}
+
+.prayer-card.active {
+    border-left: 4px solid var(--accent-color);
+}
+
+.prayer-card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--transparent-light-color);
+    padding-top: 1.5rem;
+    margin-top: 0.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.prayer-card-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.prayer-card-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 20px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: all 0.2s;
+    white-space: nowrap; /* Prevent text wrapping inside button */
+}
+
+/* Specific button style configurations */
+.prayer-card-btn-support {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--transparent-light-color);
+    color: var(--light-color);
+}
+.prayer-card-btn-support.active {
+    background: rgba(79, 207, 112, 0.12);
+    border: 1px solid rgba(79, 207, 112, 0.3);
+    color: var(--accent-color);
+}
+
+.prayer-card-btn-encourage {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--transparent-light-color);
+    color: var(--light-color);
+}
+.prayer-card-btn-encourage.active {
+    background: rgba(18, 188, 254, 0.12);
+    border: 1px solid rgba(18, 188, 254, 0.3);
+    color: #12bcfe;
+}
+
+.prayer-card-btn-answered {
+    background: linear-gradient(45deg, rgba(167, 103, 229, 0.15), rgba(18, 188, 254, 0.15));
+    border: 1px solid rgba(167, 103, 229, 0.3);
+    color: #c893f9;
+}
+
+/* Badge in button */
+.prayer-card-badge {
+    padding: 0.1rem 0.6rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-left: 0.2rem;
+}
+.prayer-card-btn-support .prayer-card-badge {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--light-color);
+}
+.prayer-card-btn-support.active .prayer-card-badge {
+    background: var(--accent-color);
+    color: #131417;
+}
+.prayer-card-btn-encourage .prayer-card-badge {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--light-color);
+}
+.prayer-card-btn-encourage.active .prayer-card-badge {
+    background: #12bcfe;
+    color: #131417;
+}
+
+/* Small screens responsiveness (<= 600px) */
+@media screen and (max-width: 600px) {
+    .prayer-card {
+        padding: 2rem 1.5rem;
+        gap: 1.2rem;
+    }
+    
+    .prayer-card-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .prayer-card-actions-group {
+        flex-direction: row; /* Keep the left buttons side-by-side but wrapping if needed */
+        width: 100%;
+        justify-content: flex-start;
+        gap: 0.8rem;
+    }
+
+    .prayer-card-btn {
+        flex: 1; /* Stretch buttons slightly or auto */
+        justify-content: center;
+        padding: 0.5rem 1rem;
+        font-size: 1.1rem;
+        height: 3.4rem; /* uniform height */
+    }
+
+    .prayer-card-actions-group .prayer-card-btn {
+        flex: 1;
+    }
+}
+
+/* Super small screens (<= 380px) */
+@media screen and (max-width: 380px) {
+    .prayer-card-actions-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .prayer-card-btn {
+        width: 100%;
+    }
+}
