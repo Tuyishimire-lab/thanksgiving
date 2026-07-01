@@ -3,6 +3,8 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ThemeProvider from "@/components/ThemeProvider";
+import { GoogleAnalytics } from "@next/third-parties/google";
+
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -99,6 +101,7 @@ export default function RootLayout({ children }) {
           <Footer />
         </ThemeProvider>
       </body>
+      <GoogleAnalytics gaId="G-C8TS9EERMJ" />
     </html>
   );
 }
