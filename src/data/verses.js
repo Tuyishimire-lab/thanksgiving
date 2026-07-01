@@ -364,5 +364,40 @@ export const verses = [
     { date: 'extra_27', verse: 'Do not conform to the pattern of this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what God\'s will is—his good, pleasing and perfect will.', tag: 'Romans 12:2 NIV' },
     { date: 'extra_28', verse: 'God is our refuge and strength, an ever-present help in trouble.', tag: 'Psalm 46:1 NIV' },
     { date: 'extra_29', verse: 'There is no fear in love. But perfect love drives out fear, because fear has to do with punishment. The one who fears is not made perfect in love.', tag: '1 John 4:18 NIV' },
-    { date: 'extra_30', verse: 'For the Lord God is a sun and shield; the Lord bestows favor and honor; no good thing does he withhold from those whose walk is blameless.', tag: 'Psalm 84:11 NIV' }
+    { date: 'extra_30', verse: 'For the Lord God is a sun and shield; the Lord bestows favor and honor; no good thing does he withhold from those whose walk is blameless.', tag: 'Psalm 84:11 NIV' },
+    
+    // Custom verses for Mood categories
+    { date: 'mood_anx_1', verse: 'When the cares of my heart are many, your consolations cheer my soul.', tag: 'Psalm 94:19 ESV' },
+    { date: 'mood_anx_2', verse: 'Therefore do not be anxious about tomorrow, for tomorrow will be anxious for itself. Sufficient for the day is its own trouble.', tag: 'Matthew 6:34 ESV' },
+    { date: 'mood_anx_3', verse: 'When I am afraid, I put my trust in you.', tag: 'Psalm 56:3 ESV' },
+    { date: 'mood_anx_4', verse: 'Peace I leave with you; my peace I give to you. Not as the world gives do I give to you. Let not your hearts be troubled, neither let them be afraid.', tag: 'John 14:27 ESV' },
+    { date: 'mood_anx_5', verse: 'Fear not, for I am with you; be not dismayed, for I am your God; I will strengthen you, I will help you, I will uphold you with my righteous right hand.', tag: 'Isaiah 41:10 ESV' },
+    
+    { date: 'mood_grat_1', verse: 'Enter his gates with thanksgiving, and his courts with praise! Give thanks to him; bless his name!', tag: 'Psalm 100:4 ESV' },
+    { date: 'mood_grat_2', verse: 'Oh give thanks to the Lord, for he is good, for his steadfast love endures forever!', tag: 'Psalm 107:1 ESV' },
+    { date: 'mood_grat_3', verse: 'And whatever you do, in word or deed, do everything in the name of the Lord Jesus, giving thanks to God the Father through him.', tag: 'Colossians 3:17 ESV' },
+    { date: 'mood_grat_4', verse: 'Continue steadfastly in prayer, being watchful in it with thanksgiving.', tag: 'Colossians 4:2 ESV' },
+    { date: 'mood_grat_5', verse: 'Let us come into his presence with thanksgiving; let us make a joyful noise to him with songs of praise!', tag: 'Psalm 95:2 ESV' },
+    
+    { date: 'mood_weary_1', verse: 'And let us not grow weary of doing good, for in due season we will reap, if we do not give up.', tag: 'Galatians 6:9 ESV' },
+    { date: 'mood_weary_2', verse: 'He restores my soul. He leads me in paths of righteousness for his name\'s sake.', tag: 'Psalm 23:3 ESV' },
+    { date: 'mood_weary_3', verse: 'For I will satisfy the weary soul, and every languishing soul I will replenish.', tag: 'Jeremiah 31:25 ESV' },
+    { date: 'mood_weary_4', verse: 'What then shall we say to these things? If God is for us, who can be against us?', tag: 'Romans 8:31 ESV' },
+    { date: 'mood_weary_5', verse: 'Come to me, all who labor and are heavy laden, and I will give you rest.', tag: 'Matthew 11:28 ESV' },
+    
+    { date: 'mood_joy_1', verse: 'You make known to me the path of life; in your presence there is fullness of joy; at your right hand are pleasures forevermore.', tag: 'Psalm 16:11 ESV' },
+    { date: 'mood_joy_2', verse: 'Then he said to them, \'Go your way. Eat the fat and drink sweet wine and send portions to anyone who has nothing ready, for this day is holy to our Lord. And do not be grieved, for the joy of the Lord is your strength.\'', tag: 'Nehemiah 8:10 ESV' },
+    { date: 'mood_joy_3', verse: 'yet I will rejoice in the Lord; I will take joy in the God of my salvation.', tag: 'Habakkuk 3:18 ESV' },
+    { date: 'mood_joy_4', verse: 'For his anger is but for a moment, and his favor is for a lifetime. Weeping may tarry for the night, but joy comes with the morning.', tag: 'Psalm 30:5 ESV' },
+    
+    { date: 'mood_grief_1', verse: 'Blessed be the God and Father of our Lord Jesus Christ, the Father of mercies and God of all comfort, who comforts us in all our affliction...', tag: '2 Corinthians 1:3-4 ESV' },
+    { date: 'mood_grief_2', verse: 'He will wipe away every tear from their eyes, and death shall be no more, neither shall there be mourning, nor crying, nor pain anymore, for the former things have passed away.', tag: 'Revelation 21:4 ESV' },
+    { date: 'mood_grief_3', verse: 'He heals the brokenhearted and binds up their wounds.', tag: 'Psalm 147:3 ESV' },
+    { date: 'mood_grief_4', verse: 'Jesus wept.', tag: 'John 11:35 ESV' },
+    
+    { date: 'mood_guide_1', verse: 'Trust in the Lord with all your heart, and do not lean on your own understanding. In all your ways acknowledge him, and he will make straight your paths.', tag: 'Proverbs 3:5-6 ESV' },
+    { date: 'mood_guide_2', verse: 'Let me hear in the morning of your steadfast love, for in you I trust. Make me know the way I should go, for to you I lift up my soul.', tag: 'Psalm 143:8 ESV' },
+    { date: 'mood_guide_3', verse: 'And your ears shall hear a word behind you, saying, \'This is the way, walk in it,\' when you turn to the right or when you turn to the left.', tag: 'Isaiah 30:21 ESV' },
+    { date: 'mood_guide_4', verse: 'Make me to know your ways, O Lord; teach me your paths.', tag: 'Psalm 25:4 ESV' }
 ];
+

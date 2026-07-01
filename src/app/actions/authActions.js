@@ -1,8 +1,29 @@
 "use server";
 
 import { getDb, hashPassword, verifyPassword } from "@/data/db";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import crypto from "node:crypto";
+
+/**
+ * Perform basic CSRF check for mutations
+ */
+async function verifyCsrf() {
+  try {
+    const headersList = await headers();
+    const origin = headersList.get("origin");
+    const host = headersList.get("host");
+    
+    if (origin && host) {
+      const originUrl = new URL(origin);
+      if (originUrl.host !== host) {
+        throw new Error("CSRF check failed: Origin host mismatch");
+      }
+    }
+  } catch (err) {
+    console.warn("CSRF check failed:", err.message);
+    throw new Error("Authentication failed due to suspicious request security origin.");
+  }
+}
 
 /**
  * Helper to update user streak internally (asynchronous)
@@ -102,6 +123,7 @@ export async function getMe() {
  */
 export async function signup(name, email, password) {
   try {
+    await verifyCsrf();
     if (!name || !email || !password) {
       return { error: "Please fill in all fields." };
     }
@@ -182,6 +204,7 @@ export async function signup(name, email, password) {
  */
 export async function login(email, password) {
   try {
+    await verifyCsrf();
     if (!email || !password) {
       return { error: "Please enter your email and password." };
     }
@@ -270,6 +293,7 @@ export async function login(email, password) {
  */
 export async function logout() {
   try {
+    await verifyCsrf();
     const cookieStore = await cookies();
     const token = cookieStore.get("session")?.value;
     

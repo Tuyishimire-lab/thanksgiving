@@ -2012,3 +2012,196 @@ textarea:hover {
         width: 100%;
     }
 }
+
+/* Homepage Welcome Hero Styles */
+.hero-welcome-section {
+    background: radial-gradient(circle at top right, rgba(79, 207, 112, 0.15), transparent 60%), radial-gradient(circle at bottom left, rgba(167, 103, 229, 0.12), transparent 50%);
+    padding-block: 6rem 4rem;
+    border-bottom: 1px solid var(--transparent-light-color);
+    text-align: center;
+}
+
+.hero-welcome-title {
+    font-size: 3.6rem;
+    font-weight: 700;
+    color: var(--light-color);
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.5px;
+}
+
+.hero-welcome-title-accent-green {
+    color: var(--accent-color);
+}
+
+.hero-welcome-title-accent-gradient {
+    background: linear-gradient(45deg, #a767e5, #12bcfe);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-welcome-desc {
+    font-size: 1.6rem;
+    color: var(--light-color-alt);
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto 3rem auto;
+}
+
+.hero-welcome-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.hero-welcome-btn-primary {
+    background: var(--accent-color);
+    color: #131417;
+    padding: 1.2rem 2.5rem;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 1.4rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 15px rgba(79, 207, 112, 0.3);
+}
+.hero-welcome-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 207, 112, 0.4);
+}
+
+.hero-welcome-btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--light-color);
+    padding: 1.2rem 2.5rem;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 1.4rem;
+    border: 1px solid var(--transparent-light-color);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.hero-welcome-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+}
+
+.hero-welcome-btn-accent {
+    background: linear-gradient(45deg, rgba(167, 103, 229, 0.15), rgba(18, 188, 254, 0.15));
+    color: var(--light-color);
+    padding: 1.2rem 2.5rem;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 1.4rem;
+    border: 1px solid rgba(167, 103, 229, 0.3);
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hero-welcome-btn-accent:hover {
+    background: linear-gradient(45deg, rgba(167, 103, 229, 0.25), rgba(18, 188, 254, 0.25));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(167, 103, 229, 0.2);
+}
+
+/* Journal Widget Styles */
+.journal-widget-container {
+    background: var(--secondary-background-color);
+    padding: 3rem;
+    border-radius: 12px;
+    border: 1px solid var(--transparent-light-color);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.journal-prompt-box {
+    background: var(--primary-background-color);
+    padding: 2rem;
+    border-radius: 8px;
+    border-left: 4px solid #12bcfe;
+}
+
+.journal-saved-alert {
+    background: rgba(79, 207, 112, 0.08);
+    border: 1px solid rgba(79, 207, 112, 0.2);
+    padding: 2rem;
+    border-radius: 8px;
+    color: var(--accent-color);
+    font-size: 1.4rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.journal-textarea {
+    background: var(--primary-background-color);
+    color: var(--light-color);
+    border: 1px solid var(--transparent-light-color);
+    borderRadius: 8px;
+    padding: 1.5rem;
+    font-size: 1.4rem;
+    outline: none;
+    resize: vertical;
+    line-height: 1.5;
+    font-family: inherit;
+}
+
+.journal-submit-btn {
+    background: rgba(255,255,255,0.03);
+    color: var(--light-color-alt);
+    border: none;
+    padding: 1rem 2.2rem;
+    borderRadius: 30px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    cursor: default;
+    transition: all 0.25s;
+    box-shadow: none;
+}
+.journal-submit-btn.active {
+    background: var(--accent-color);
+    color: #131417;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(79, 207, 112, 0.2);
+}
+
+/* Verse Section Helper Styles */
+.verse-tap-instruction {
+    font-size: 1.1rem;
+    color: var(--light-color-alt);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.8;
+}
+
+/* Six Beacons Scaling and Overlay Hover Styles */
+.beacon-tile-link {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    aspect-ratio: 4 / 3;
+    display: block;
+}
+.beacon-tile-link:hover {
+    transform: scale(1.03) translateY(-4px);
+    box-shadow: 0 12px 30px rgba(79, 207, 112, 0.25);
+}
+.beacon-tile-link:hover .beacon-overlay {
+    background: linear-gradient(to top, rgba(19, 20, 23, 0.95), rgba(19, 20, 23, 0.4)) !important;
+}
+
+/* Active plans details text alignment helpers */
+.view-all-plans-link {
+    font-size: 1.4rem;
+    color: var(--accent-color);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+.view-all-plans-link:hover {
+    border-color: var(--accent-color);
+}

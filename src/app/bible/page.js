@@ -214,11 +214,6 @@ function BibleReaderContent() {
   const currentBook = bibleBooks.find(b => b.name === selectedBook) || bibleBooks[0];
   const maxChapters = currentBook.chapters;
 
-  // Sync chapter count when book changes
-  useEffect(() => {
-    setSelectedChapter(1);
-  }, [selectedBook]);
-
   // Load highlights from DB or localStorage
   const refreshHighlights = async () => {
     const user = await getMe();
@@ -321,10 +316,15 @@ function BibleReaderContent() {
     }
 
     if (book && !isNaN(chapter)) {
-      const matched = bibleBooks.find(b => 
-        b.name.toLowerCase() === book.toLowerCase() || 
-        b.name.toLowerCase().replace(/\s+/g, "") === book.toLowerCase().replace(/\s+/g, "")
-      );
+      const matched = bibleBooks.find(b => {
+        const name1 = b.name.toLowerCase().replace(/\s+/g, "");
+        const name2 = book.toLowerCase().replace(/\s+/g, "");
+        return name1 === name2 || 
+               name1 === name2 + "s" || 
+               name1 + "s" === name2 ||
+               (name1 === "psalms" && name2 === "psalm") ||
+               (name1 === "psalm" && name2 === "psalms");
+      });
       if (matched) {
         setSelectedBook(matched.name);
         setSelectedChapter(chapter);
@@ -454,7 +454,10 @@ function BibleReaderContent() {
             <label style={{ fontSize: "1.1rem", color: "var(--light-color-alt)", fontWeight: "600" }}>BOOK</label>
             <select
               value={selectedBook}
-              onChange={(e) => setSelectedBook(e.target.value)}
+              onChange={(e) => {
+                setSelectedBook(e.target.value);
+                setSelectedChapter(1);
+              }}
               style={{
                 background: "var(--primary-background-color)",
                 color: "var(--light-color)",
