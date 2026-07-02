@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { bibleBooks } from "@/data/bibleBooks";
 import { getHighlights } from "@/data/userState";
 import VerseActionsModal from "@/components/VerseActionsModal";
@@ -17,10 +18,72 @@ const TRANSLATIONS = [
 ];
 
 function BibleReaderContent() {
+  const searchParams = useSearchParams();
+  const paramBook = searchParams.get("book");
+  const paramChapter = searchParams.get("chapter");
+  const paramQ = searchParams.get("q");
+
   const [selectedBook, setSelectedBook] = useState("John");
   const [selectedChapter, setSelectedChapter] = useState(3);
   const [selectedTranslation, setSelectedTranslation] = useState("web");
   const nextVerseTimerRef = useRef(null);
+
+  // Load book/chapter from query params
+  useEffect(() => {
+    let book = paramBook;
+    let chapter = parseInt(paramChapter, 10);
+
+    if (paramQ) {
+      const trimmedQ = paramQ.trim();
+      const lastSpaceIdx = trimmedQ.lastIndexOf(" ");
+      if (lastSpaceIdx !== -1) {
+        let parsedBook = trimmedQ.substring(0, lastSpaceIdx).trim();
+        let ref = trimmedQ.substring(lastSpaceIdx + 1).trim();
+
+        const colonIdx = ref.indexOf(":");
+        let parsedChapter = 1;
+        if (colonIdx !== -1) {
+          parsedChapter = parseInt(ref.substring(0, colonIdx), 10);
+        } else {
+          parsedChapter = parseInt(ref, 10);
+        }
+
+        if (parsedBook && !isNaN(parsedChapter)) {
+          const matched = bibleBooks.find(b => {
+            const name1 = b.name.toLowerCase().replace(/\s+/g, "");
+            const name2 = parsedBook.toLowerCase().replace(/\s+/g, "");
+            return name1 === name2 || 
+                   name1 === name2 + "s" || 
+                   name1 + "s" === name2 ||
+                   (name1 === "psalms" && name2 === "psalm") ||
+                   (name1 === "psalm" && name2 === "psalms");
+          });
+          if (matched) {
+            book = matched.name;
+            chapter = parsedChapter;
+          }
+        }
+      } else {
+        const matched = bibleBooks.find(b => b.name.toLowerCase() === trimmedQ.toLowerCase());
+        if (matched) {
+          book = matched.name;
+          chapter = 1;
+        }
+      }
+    }
+
+    if (book) {
+      const matchedBook = bibleBooks.find(b => b.name.toLowerCase() === book.toLowerCase());
+      if (matchedBook) {
+        setSelectedBook(matchedBook.name);
+        if (!isNaN(chapter) && chapter > 0 && chapter <= matchedBook.chapters) {
+          setSelectedChapter(chapter);
+        } else {
+          setSelectedChapter(1);
+        }
+      }
+    }
+  }, [paramBook, paramChapter, paramQ]);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -355,8 +418,18 @@ function BibleReaderContent() {
     return matched;
   };
 
+  const pageTitle = chapterData && chapterData.reference
+    ? `${chapterData.reference} (${selectedTranslation.toUpperCase()}) | PraisePage Bible Reader`
+    : `${selectedBook} ${selectedChapter} | PraisePage Bible Reader`;
+
+  const pageDescription = chapterData && chapterData.verses && chapterData.verses.length > 0
+    ? `Read ${selectedBook} ${selectedChapter} online. "${chapterData.verses[0].text.substring(0, 150)}..." Explore scriptures of gratitude and faith.`
+    : `Read, search, highlight, and write reflections on Holy Scriptures of gratitude and faith.`;
+
   return (
     <section className="section" style={{ minHeight: "80vh", paddingBlock: "4rem" }}>
+      <title>{pageTitle}</title>
+      <meta name="description" content={pageDescription} />
       <div className="container" style={{ maxWidth: "800px" }}>
         
         {/* Mood Selector bar */}

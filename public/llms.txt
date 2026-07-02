@@ -1,0 +1,22 @@
+# PraisePage
+
+PraisePage is a sanctuary of gratitude and faith. It is designed to help users anchor their lives in daily thanksgiving, explore the Bible, read guided devotional plans, share testimonies, and support one another in prayer.
+
+> **Note**: A complete, full-text representation of all static devotional reading plans is available at [/llms-full.txt](/llms-full.txt) for deeper indexing.
+
+## Primary Routes
+
+- **Homepage (`/`)**: The main landing area featuring the daily verse (Verse of the Day), a prompt-based gratitude journal, community testimonies, and shortcuts to reading plans.
+- **Bible Reader (`/bible`)**: An interactive tool to read the Holy Scriptures, search for books or chapters, highlight verses, and write personal reflections.
+- **Devotional Plans (`/plans`)**: Access both predefined and custom user-generated reading plans (such as plans on Love, Gratitude, Joy, Patience, Hope, and Strength). Users can track daily readings, save reflections, and see completion progress.
+- **Community Feed (`/feed`)**: A social feed where users share testimonies, read others' stories of God's faithfulness, leave comments, and like posts.
+- **Prayer Board (`/prayers`)**: A place to request prayers, support the needs of others in the community, and post encouraging replies.
+- **Quotes (`/quotes`)**: A collection of faith and gratitude quotes for daily inspiration.
+- **Contact Us (`/contacts`)**: Get in touch with the PraisePage team.
+
+## Tech Stack & Architecture
+
+- Built using **Next.js App Router** with React Server Components.
+- Styled using a customized dark/light theme stylesheet.
+- Leverages local data storage and SQLite for user state, streaks, custom devotionals, and prayer requests.
+- Accessible metadata schemas (OpenGraph, Twitter cards) and structured JSON-LD schemas embedded on key pages for search engine and AI crawlability.

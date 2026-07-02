@@ -3,7 +3,7 @@ export default function robots() {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/profile", "/login", "/signup"],
+      disallow: ["/profile", "/login", "/signup", "/admin"],
     },
     sitemap: "https://praisepage.com/sitemap.xml",
   };

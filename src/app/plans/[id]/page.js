@@ -210,8 +210,32 @@ function PlanPlayerContent({ params }) {
   const todayStr = new Date().toLocaleDateString();
   const hasCompletedToday = progress && progress.lastCompletedDate === todayStr;
 
+  const schemaJson = planData ? {
+    "@context": "https://schema.org",
+    "@type": "CreativeWorkSeries",
+    "name": `${planData.title} Devotional Plan`,
+    "description": `Start reading the "${planData.title}" plan in our devotional area. Track your daily reflections, highlights, and growth.`,
+    "provider": {
+      "@type": "Organization",
+      "name": "PraisePage",
+      "url": "https://praisepage.com"
+    },
+    "educationalUse": "Devotional Reading",
+    "hasPart": planData.days?.map((d) => ({
+      "@type": "CreativeWork",
+      "name": `Day ${d.day}: ${d.title}`,
+      "description": d.reflection
+    }))
+  } : null;
+
   return (
     <section className="section" style={{ paddingBlock: "4rem" }}>
+      {schemaJson && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+        />
+      )}
       <div className="container" style={{ maxWidth: "800px" }}>
         
         {/* Navigation Breadcrumb */}
