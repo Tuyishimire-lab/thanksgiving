@@ -60,7 +60,7 @@ export default async function sitemap() {
   bibleBooks.forEach((book) => {
     for (let c = 1; c <= book.chapters; c++) {
       bibleUrls.push({
-        url: `${baseUrl}/bible?book=${encodeURIComponent(book.name)}&chapter=${c}`,
+        url: `${baseUrl}/bible?book=${encodeURIComponent(book.name)}&amp;chapter=${c}`,
         lastModified: new Date().toISOString(),
         changeFrequency: "monthly",
         priority: 0.5,
