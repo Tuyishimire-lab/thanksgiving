@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ThemeProvider from "@/components/ThemeProvider";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { headers } from "next/headers";
 
 
 const poppins = Poppins({
@@ -61,7 +62,11 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const canonicalUrl = `https://praisepage.com${pathname}`;
+
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -84,6 +89,9 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en" className={`${poppins.variable} ${playfair.variable} ${caveat.variable}`}>
+      <head>
+        <link rel="canonical" href={canonicalUrl} />
+      </head>
       <body>
         <script
           type="application/ld+json"

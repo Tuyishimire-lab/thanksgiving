@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export function proxy(request) {
   const sessionToken = request.cookies.get("session")?.value;
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
 
   // Define paths that require authentication
   const protectedRoutes = ["/profile", "/admin"];
@@ -17,8 +17,25 @@ export function proxy(request) {
     }
   }
 
-  // Allow requests to proceed
-  return NextResponse.next();
+  // Construct canonical path, retaining specific search params if on the /bible route
+  let canonicalPath = pathname;
+  if (pathname === "/bible") {
+    const book = searchParams.get("book");
+    const chapter = searchParams.get("chapter");
+    if (book && chapter) {
+      canonicalPath = `/bible?book=${encodeURIComponent(book)}&chapter=${chapter}`;
+    }
+  }
+
+  // Inject x-pathname header for downstream components (e.g. layouts/pages)
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", canonicalPath);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {
