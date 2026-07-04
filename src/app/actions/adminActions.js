@@ -371,7 +371,7 @@ export async function deletePrayer(prayerId) {
   }
 }
 
-export async function createCustomDevotional(title, category, days) {
+export async function createCustomDevotional(title, category, days, image) {
   try {
     logAdminAction(`createCustomDevotional requested for title: ${title}`);
     await verifyAdmin();
@@ -382,8 +382,8 @@ export async function createCustomDevotional(title, category, days) {
     const id = `custom_${slug}_${Date.now()}`;
     
     await db.execute({
-      sql: "INSERT INTO custom_devotionals (id, title, category, days) VALUES (?, ?, ?, ?)",
-      args: [id, title.trim(), category, JSON.stringify(days)]
+      sql: "INSERT INTO custom_devotionals (id, title, category, days, image) VALUES (?, ?, ?, ?, ?)",
+      args: [id, title.trim(), category, JSON.stringify(days), image || ""]
     });
     logAdminAction(`createCustomDevotional complete. New ID: ${id}`);
     
@@ -392,6 +392,28 @@ export async function createCustomDevotional(title, category, days) {
     return { success: true, id };
   } catch (error) {
     logAdminAction(`createCustomDevotional error: ${error.message}`);
+    return { error: error.message };
+  }
+}
+
+export async function updateCustomDevotional(id, title, category, days, image) {
+  try {
+    logAdminAction(`updateCustomDevotional requested for id: ${id}, title: ${title}`);
+    await verifyAdmin();
+    const db = await getDb();
+    
+    await db.execute({
+      sql: "INSERT OR REPLACE INTO custom_devotionals (id, title, category, days, image) VALUES (?, ?, ?, ?, ?)",
+      args: [id, title.trim(), category, JSON.stringify(days), image || ""]
+    });
+    logAdminAction(`updateCustomDevotional complete. ID: ${id}`);
+    
+    revalidatePath("/plans");
+    revalidatePath(`/plans/${id}`);
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (error) {
+    logAdminAction(`updateCustomDevotional error: ${error.message}`);
     return { error: error.message };
   }
 }

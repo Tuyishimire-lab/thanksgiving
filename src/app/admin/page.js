@@ -16,6 +16,7 @@ import {
   deleteComment,
   deletePrayer,
   createCustomDevotional,
+  updateCustomDevotional,
   deleteCustomDevotional
 } from "@/app/actions/adminActions";
 import { getCustomDevotionals } from "@/app/actions/dbActions";
@@ -53,9 +54,12 @@ export default function AdminPanel() {
   const [customPlans, setCustomPlans] = useState([]);
   const [previewPlan, setPreviewPlan] = useState(null);
   const [showCreatePlanForm, setShowCreatePlanForm] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState(null);
+  const [hoveredPreset, setHoveredPreset] = useState(null);
   const [newPlanData, setNewPlanData] = useState({
     title: "",
     category: "Gratitude",
+    image: "",
     days: [
       {
         day: 1,
@@ -316,6 +320,28 @@ export default function AdminPanel() {
     }));
   };
 
+  const handleEditPlan = (plan) => {
+    setEditingPlanId(plan.id);
+    setNewPlanData({
+      title: plan.title,
+      category: plan.category,
+      image: plan.image || "",
+      days: plan.days || [
+        {
+          day: 1,
+          title: "",
+          verseText: "",
+          verseTag: "",
+          verseId: "",
+          reflection: ""
+        }
+      ]
+    });
+    setShowCreatePlanForm(true);
+    // Smooth scroll to the form element
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  };
+
   const handleCreatePlan = async (e) => {
     e.preventDefault();
     if (!newPlanData.title || newPlanData.days.some(d => !d.title || !d.verseText || !d.verseTag || !d.reflection)) {
@@ -325,15 +351,23 @@ export default function AdminPanel() {
 
     try {
       setActionLoading(true);
-      const res = await createCustomDevotional(newPlanData.title, newPlanData.category, newPlanData.days);
+      let res;
+      if (editingPlanId) {
+        res = await updateCustomDevotional(editingPlanId, newPlanData.title, newPlanData.category, newPlanData.days, newPlanData.image);
+      } else {
+        res = await createCustomDevotional(newPlanData.title, newPlanData.category, newPlanData.days, newPlanData.image);
+      }
+
       if (res && res.error) {
         alert("Error: " + res.error);
       } else if (res && res.success) {
-        alert("Custom Devotional Plan successfully created!");
+        alert(editingPlanId ? "Devotional Plan successfully updated!" : "Custom Devotional Plan successfully created!");
         setShowCreatePlanForm(false);
+        setEditingPlanId(null);
         setNewPlanData({
           title: "",
           category: "Gratitude",
+          image: "",
           days: [
             {
               day: 1,
@@ -382,9 +416,10 @@ export default function AdminPanel() {
     p.content?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const customPlanIds = new Set(customPlans.map(p => p.id));
   const filteredPlans = [
-    ...Object.values(staticDevotionals).map(p => ({ ...p, isCustom: false })),
-    ...customPlans.map(p => ({ ...p, isCustom: true }))
+    ...Object.values(staticDevotionals).filter(p => !customPlanIds.has(p.id)).map(p => ({ ...p, isCustom: false })),
+    ...customPlans.map(p => ({ ...p, isCustom: true, isOverridden: Object.keys(staticDevotionals).includes(p.id) }))
   ].filter(p => 
     p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     p.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1350,7 +1385,27 @@ export default function AdminPanel() {
                 Devotional Plans Registry
               </h3>
               <button
-                onClick={() => setShowCreatePlanForm(!showCreatePlanForm)}
+                onClick={() => {
+                  if (!showCreatePlanForm) {
+                    setEditingPlanId(null);
+                    setNewPlanData({
+                      title: "",
+                      category: "Gratitude",
+                      image: "",
+                      days: [
+                        {
+                          day: 1,
+                          title: "",
+                          verseText: "",
+                          verseTag: "",
+                          verseId: "",
+                          reflection: ""
+                        }
+                      ]
+                    });
+                  }
+                  setShowCreatePlanForm(!showCreatePlanForm);
+                }}
                 style={{
                   padding: "1rem 2rem",
                   background: showCreatePlanForm ? "rgba(255, 94, 98, 0.15)" : "var(--accent-color)",
@@ -1394,7 +1449,7 @@ export default function AdminPanel() {
                 }}
               >
                 <h4 style={{ fontSize: "1.6rem", color: "var(--accent-color)", fontWeight: "700", margin: 0 }}>
-                  Create Custom Devotional Plan
+                  {editingPlanId ? "Edit Devotional Plan" : "Create Custom Devotional Plan"}
                 </h4>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", flexWrap: "wrap" }}>
@@ -1435,6 +1490,79 @@ export default function AdminPanel() {
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  <label style={{ fontSize: "1.15rem", color: "var(--light-color-alt)", fontWeight: "600" }}>PLAN COVER PICTURE</label>
+                  
+                  {/* Presets Grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "1rem", marginBottom: "0.5rem" }}>
+                    {[
+                      { label: "Gratitude (Food)", url: "/assets/images/tags/food-tag.jpg" },
+                      { label: "Love (Travel)", url: "/assets/images/tags/travel-tag.jpg" },
+                      { label: "Joy (Tech)", url: "/assets/images/tags/technology-tag.jpg" },
+                      { label: "Patience (Health)", url: "/assets/images/tags/health-tag.jpg" },
+                      { label: "Hope (Nature)", url: "/assets/images/tags/nature-tag.jpg" },
+                      { label: "Fitness (Default)", url: "/assets/images/tags/fitness-tag.jpg" },
+                      { label: "Featured 1", url: "/assets/images/featured/featured-1.jpg" },
+                      { label: "Featured 2", url: "/assets/images/featured/featured-2.jpg" },
+                      { label: "Featured 3", url: "/assets/images/featured/featured-3.jpg" },
+                    ].map((img) => {
+                      const isSelected = newPlanData.image === img.url;
+                      const isHovered = hoveredPreset === img.url;
+                      return (
+                        <div
+                          key={img.url}
+                          onClick={() => setNewPlanData(prev => ({ ...prev, image: img.url }))}
+                          onMouseEnter={() => setHoveredPreset(img.url)}
+                          onMouseLeave={() => setHoveredPreset(null)}
+                          style={{
+                            cursor: "pointer",
+                            border: isSelected ? "3px solid var(--accent-color)" : "1px solid var(--transparent-light-color)",
+                            borderRadius: "8px",
+                            overflow: "hidden",
+                            background: "var(--primary-background-color)",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            padding: "0.2rem",
+                            transition: "all 0.2s",
+                            opacity: isSelected || isHovered ? 1 : 0.65,
+                            transform: isSelected ? "scale(1.04)" : isHovered ? "scale(1.02)" : "scale(1)"
+                          }}
+                        >
+                          <img 
+                            src={img.url} 
+                            alt={img.label} 
+                            style={{ width: "100%", height: "55px", objectFit: "cover", borderRadius: "6px" }}
+                          />
+                          <span style={{ fontSize: "0.95rem", textAlign: "center", paddingBlock: "0.4rem", color: isSelected ? "var(--light-color)" : "var(--light-color-alt)", fontWeight: isSelected ? "bold" : "normal" }}>
+                            {img.label.split(" (")[0]}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom URL Input */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <span style={{ fontSize: "1.1rem", color: "var(--light-color-alt)" }}>Or enter a custom picture URL:</span>
+                    <input 
+                      type="text"
+                      placeholder="e.g. https://images.unsplash.com/... or /assets/images/featured/featured-1.jpg"
+                      value={newPlanData.image}
+                      onChange={(e) => setNewPlanData(prev => ({ ...prev, image: e.target.value }))}
+                      style={{
+                        padding: "1.2rem",
+                        background: "var(--primary-background-color)",
+                        border: "2px solid var(--transparent-light-color)",
+                        borderRadius: "6px",
+                        color: "var(--light-color)",
+                        outline: "none",
+                        fontSize: "1.3rem"
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -1604,7 +1732,7 @@ export default function AdminPanel() {
                       opacity: actionLoading ? 0.7 : 1
                     }}
                   >
-                    {actionLoading ? "Publishing..." : "Publish Devotional Plan"}
+                    {actionLoading ? "Saving..." : editingPlanId ? "Update Devotional Plan" : "Publish Devotional Plan"}
                   </button>
                 </div>
               </form>
@@ -1649,14 +1777,14 @@ export default function AdminPanel() {
                           <td style={{ padding: "2rem" }}>
                             {p.isCustom ? (
                               <span style={{
-                                background: "rgba(18, 188, 254, 0.08)",
-                                color: "#12bcfe",
+                                background: p.isOverridden ? "rgba(18, 188, 254, 0.08)" : "rgba(79, 207, 112, 0.08)",
+                                color: p.isOverridden ? "#12bcfe" : "var(--accent-color)",
                                 padding: "0.3rem 0.8rem",
                                 borderRadius: "20px",
                                 fontSize: "1.1rem",
                                 fontWeight: "600"
                               }}>
-                                Custom
+                                {p.isOverridden ? "System Override" : "Custom"}
                               </span>
                             ) : (
                               <span style={{
@@ -1689,9 +1817,24 @@ export default function AdminPanel() {
                                 <i className="ri-eye-line"></i>
                               </button>
                               <button
+                                onClick={() => handleEditPlan(p)}
+                                title="Edit plan details and cover picture"
+                                style={{
+                                  padding: "0.6rem 1.2rem",
+                                  background: "rgba(250, 214, 72, 0.1)",
+                                  border: "1px solid rgba(250, 214, 72, 0.25)",
+                                  color: "#fad648",
+                                  borderRadius: "8px",
+                                  cursor: "pointer",
+                                  fontSize: "1.2rem"
+                                }}
+                              >
+                                <i className="ri-edit-line"></i>
+                              </button>
+                              <button
                                 disabled={actionLoading || !p.isCustom}
                                 onClick={() => handleDeleteCustomDevotional(p.id)}
-                                title={p.isCustom ? "Delete plan permanently" : "System plan cannot be deleted"}
+                                title={p.isCustom ? (p.isOverridden ? "Restore default plan (delete override)" : "Delete plan permanently") : "System plan cannot be deleted"}
                                 style={{
                                   padding: "0.6rem 1.2rem",
                                   background: p.isCustom ? "rgba(255, 94, 98, 0.1)" : "rgba(255,255,255,0.02)",

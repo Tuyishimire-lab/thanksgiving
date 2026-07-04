@@ -183,6 +183,7 @@ export async function initializeDb(client) {
         title TEXT NOT NULL,
         category TEXT NOT NULL,
         days TEXT NOT NULL,
+        image TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -211,6 +212,14 @@ export async function initializeDb(client) {
     try {
       await client.execute(`
         ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'
+      `);
+    } catch (err) {
+      // Column already exists or table doesn't exist yet
+    }
+
+    try {
+      await client.execute(`
+        ALTER TABLE custom_devotionals ADD COLUMN image TEXT
       `);
     } catch (err) {
       // Column already exists or table doesn't exist yet

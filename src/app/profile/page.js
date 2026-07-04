@@ -12,7 +12,7 @@ import {
   getLocalBadges
 } from "@/data/userState";
 import { devotionals } from "@/data/devotionals";
-import { getProfileData } from "@/app/actions/dbActions";
+import { getProfileData, getCustomDevotionals } from "@/app/actions/dbActions";
 import { BADGES } from "@/data/badges";
 
 const HIGHLIGHT_COLOR_NAMES = {
@@ -30,6 +30,7 @@ export default function PersonalProfile() {
   const [reflections, setReflections] = useState({});
   const [journalEntries, setJournalEntries] = useState([]);
   const [unlockedBadges, setUnlockedBadges] = useState([]);
+  const [customPlans, setCustomPlans] = useState([]);
   const [activeTab, setActiveTab] = useState("notebook");
   const [notebookSubTab, setNotebookSubTab] = useState("bible-notes");
   const [dayOfWeek, setDayOfWeek] = useState("");
@@ -39,13 +40,20 @@ export default function PersonalProfile() {
 
   useEffect(() => {
     async function loadUserData() {
-      const data = await getProfileData();
+      const [data, customRes] = await Promise.all([
+        getProfileData(),
+        getCustomDevotionals()
+      ]);
       const currentUser = data.user;
       setUser(currentUser);
       
       const today = new Date();
       const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
       setDayOfWeek(dayName);
+
+      if (customRes.success) {
+        setCustomPlans(customRes.plans);
+      }
 
       if (currentUser) {
         // Load data from DB consolidated payload
@@ -523,7 +531,12 @@ export default function PersonalProfile() {
                       const planId = key.substring(0, lastUnderscoreIdx);
                       const dayNum = parseInt(key.substring(lastUnderscoreIdx + 1), 10);
                       
-                      const plan = devotionals[planId];
+                      const customPlansMap = {};
+                      customPlans.forEach(p => {
+                        customPlansMap[p.id] = p;
+                      });
+                      const allPlansMap = { ...devotionals, ...customPlansMap };
+                      const plan = allPlansMap[planId];
                       const planTitle = plan ? plan.title : "Devotional Plan";
                       const dayObj = plan ? plan.days.find(d => d.day === dayNum) : null;
                       const dayTitle = dayObj ? dayObj.title : `Day ${dayNum}`;

@@ -23,26 +23,42 @@ import {
 } from "@/app/actions/dbActions";
 import VerseActionsModal from "@/components/VerseActionsModal";
 
+const getPlanImage = (plan) => {
+  if (plan.image) return plan.image;
+  switch (plan.category) {
+    case "Love": return "/assets/images/tags/travel-tag.jpg";
+    case "Gratitude": return "/assets/images/tags/food-tag.jpg";
+    case "Joy": return "/assets/images/tags/technology-tag.jpg";
+    case "Patience": return "/assets/images/tags/health-tag.jpg";
+    case "Hope": return "/assets/images/tags/nature-tag.jpg";
+    default: return "/assets/images/tags/fitness-tag.jpg";
+  }
+};
+
 function PlanPlayerContent({ params }) {
   const router = useRouter();
   const unwrappedParams = use(params);
   const planId = unwrappedParams.id;
 
-  const [planData, setPlanData] = useState(devotionals[planId] || null);
-  const [loadingPlan, setLoadingPlan] = useState(!devotionals[planId]);
+  const [planData, setPlanData] = useState(null);
+  const [loadingPlan, setLoadingPlan] = useState(true);
 
   useEffect(() => {
-    async function loadCustomPlan() {
-      if (!planData && planId) {
+    async function loadPlan() {
+      if (planId) {
+        // Try loading from database first to support overrides
         const res = await getCustomDevotionalById(planId);
         if (res.success && res.plan) {
           setPlanData(res.plan);
+        } else if (devotionals[planId]) {
+          // Fallback to static registry
+          setPlanData(devotionals[planId]);
         }
         setLoadingPlan(false);
       }
     }
-    loadCustomPlan();
-  }, [planId, planData]);
+    loadPlan();
+  }, [planId]);
 
   const [progress, setProgress] = useState(null);
   const [activeDayNum, setActiveDayNum] = useState(1);
@@ -249,25 +265,51 @@ function PlanPlayerContent({ params }) {
         <div 
           style={{ 
             background: "var(--secondary-background-color)", 
-            padding: "3rem", 
             borderRadius: "12px", 
-            boxShadow: "0 5px 15px rgba(0,0,0,0.12)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
             marginBottom: "3rem",
-            border: "1px solid var(--transparent-light-color)"
+            border: "1px solid var(--transparent-light-color)",
+            overflow: "hidden"
           }}
         >
-          <span style={{ fontSize: "1.2rem", color: "#fad648", fontWeight: "700", letterSpacing: "1px" }}>DEVOTIONAL PLAN</span>
-          <h2 style={{ fontSize: "2.4rem", color: "var(--light-color)", marginBlock: "0.5rem 1.5rem" }}>
-            {planData.title}
-          </h2>
-
-          {/* Progress Indicator */}
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1.2rem", fontWeight: "600", marginBottom: "0.5rem" }}>
-            <span>COMPLETION</span>
-            <span>{progress.completedDays.length} / {planData.days.length} DAYS</span>
+          {/* Cover Banner */}
+          <div style={{ height: "180px", position: "relative", overflow: "hidden" }}>
+            <img 
+              src={getPlanImage(planData)} 
+              alt={planData.title} 
+              style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+            />
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.85))",
+              display: "flex",
+              alignItems: "flex-end",
+              padding: "2rem 3rem"
+            }}>
+              <div>
+                <span style={{ fontSize: "1.1rem", color: "#fad648", fontWeight: "700", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+                  {planData.category} Devotional
+                </span>
+                <h2 style={{ fontSize: "2.6rem", color: "white", marginBlock: "0.5rem 0 0", fontWeight: "800", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>
+                  {planData.title}
+                </h2>
+              </div>
+            </div>
           </div>
-          <div className="progress-bar-container" style={{ margin: "0" }}>
-            <div className="progress-bar-fill" style={{ width: `${(progress.completedDays.length / planData.days.length) * 100}%` }}></div>
+
+          <div style={{ padding: "2.5rem 3rem" }}>
+            {/* Progress Indicator */}
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1.2rem", fontWeight: "600", marginBottom: "0.5rem" }}>
+              <span>COMPLETION PROGRESS</span>
+              <span>{progress.completedDays.length} / {planData.days.length} DAYS ({Math.round((progress.completedDays.length / planData.days.length) * 100)}%)</span>
+            </div>
+            <div className="progress-bar-container" style={{ margin: "0" }}>
+              <div className="progress-bar-fill" style={{ width: `${(progress.completedDays.length / planData.days.length) * 100}%` }}></div>
+            </div>
           </div>
         </div>
 

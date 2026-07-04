@@ -1107,12 +1107,13 @@ export async function checkAndUnlockBadges(userId) {
 export async function getCustomDevotionals() {
   try {
     const db = await getDb();
-    const res = await db.execute("SELECT id, title, category, days, created_at FROM custom_devotionals ORDER BY created_at DESC");
+    const res = await db.execute("SELECT id, title, category, days, image, created_at FROM custom_devotionals ORDER BY created_at DESC");
     const plans = res.rows.map(r => ({
       id: r.id,
       title: r.title,
       category: r.category,
       days: JSON.parse(r.days),
+      image: r.image || "",
       created_at: r.created_at,
       isCustom: true
     }));
@@ -1127,7 +1128,7 @@ export async function getCustomDevotionalById(id) {
   try {
     const db = await getDb();
     const res = await db.execute({
-      sql: "SELECT id, title, category, days, created_at FROM custom_devotionals WHERE id = ?",
+      sql: "SELECT id, title, category, days, image, created_at FROM custom_devotionals WHERE id = ?",
       args: [id]
     });
     const r = res.rows[0];
@@ -1137,6 +1138,7 @@ export async function getCustomDevotionalById(id) {
       title: r.title,
       category: r.category,
       days: JSON.parse(r.days),
+      image: r.image || "",
       created_at: r.created_at,
       isCustom: true
     };

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { verses } from "@/data/verses";
 import { devotionals } from "@/data/devotionals";
-import { getHomepageData, getLatestAnsweredPrayers, getCommunityStats } from "@/app/actions/dbActions";
+import { getHomepageData, getLatestAnsweredPrayers, getCommunityStats, getCustomDevotionals } from "@/app/actions/dbActions";
 import { JOURNAL_PROMPTS } from "@/data/journalPrompts";
 import StreakTracker from "@/components/StreakTracker";
 import VerseOfTheDaySection from "@/components/VerseOfTheDaySection";
@@ -22,15 +22,24 @@ const PLANS_MAPPING = [
 ];
 
 export default async function Home() {
-  const data = await getHomepageData();
+  const [data, answeredPrayers, communityStats, customPlansRes] = await Promise.all([
+    getHomepageData(),
+    getLatestAnsweredPrayers(),
+    getCommunityStats(),
+    getCustomDevotionals()
+  ]);
   const currentUser = data.user;
   const dbStreak = data.streak;
   const dbProgress = data.progress || {};
   const dbHighlights = data.highlights || {};
   const dbTestimonies = data.testimonies || [];
 
-  const answeredPrayers = await getLatestAnsweredPrayers();
-  const communityStats = await getCommunityStats();
+  const customPlans = customPlansRes.success ? customPlansRes.plans : [];
+  const customPlansMap = {};
+  customPlans.forEach(p => {
+    customPlansMap[p.id] = p;
+  });
+  const allPlansMap = { ...devotionals, ...customPlansMap };
 
   // Deterministic Verse of the Day (Day of the Year rotation)
   const today = new Date();
@@ -56,7 +65,7 @@ export default async function Home() {
   // Calculate active plans
   const activePlans = Object.keys(dbProgress)
     .map((id) => {
-      const detail = devotionals[id];
+      const detail = allPlansMap[id];
       if (!detail) return null;
       const prog = dbProgress[id];
       const completedDaysList = prog.completedDays || [];

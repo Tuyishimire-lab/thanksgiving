@@ -103,7 +103,11 @@ export default function PlansDashboard() {
   };
 
   // ---------------- MY PLANS SPLITS ----------------
-  const plansList = [...Object.values(devotionals), ...customPlans];
+  const customPlanIds = new Set(customPlans.map(p => p.id));
+  const plansList = [
+    ...Object.values(devotionals).filter(p => !customPlanIds.has(p.id)),
+    ...customPlans
+  ];
 
   // 1. In Progress
   const inProgressPlans = plansList.filter(plan => {
@@ -433,7 +437,7 @@ export default function PlansDashboard() {
 
 // Reusable Plan Card component
 function PlanCard({ plan, percent, completed, isSaved, onToggleSave, isCompleted = false }) {
-  const cardImg = getCategoryImage(plan.category);
+  const cardImg = plan.image || getCategoryImage(plan.category);
 
   return (
     <div 
