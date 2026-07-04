@@ -34,17 +34,17 @@ export default function VerseOfTheDaySection({ verseOfTheDay, dayOfWeek, initial
           text: verseOfTheDay.verse,
           tag: verseOfTheDay.tag
         })}
-        style={{ cursor: "pointer" }}
+        style={{ cursor: "pointer", height: "100%", display: "flex", flexDirection: "column" }}
       >
         <div className="verse-of-the-day-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <span>Verse of the Day • {dayOfWeek}</span>
           <i className="ri-double-quotes-r" style={{ fontSize: "1.8rem", color: "var(--accent-color)", opacity: 0.8 }}></i>
         </div>
-        <div className="verse-of-the-day-content">
+        <div className="verse-of-the-day-content" style={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
           "{verseOfTheDay.verse}"
         </div>
         
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1.5rem", borderTop: "1px solid var(--transparent-light-color)", paddingTop: "1rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", borderTop: "1px solid var(--transparent-light-color)", paddingTop: "1rem" }}>
           <span className="verse-of-the-day-tag" style={{ margin: 0 }}>
             — {verseOfTheDay.tag}
           </span>

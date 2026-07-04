@@ -43,28 +43,26 @@ export default function BibleReflectionTrivia() {
   if (!currentQuestion) return null;
 
   return (
-    <div style={{
-      background: "linear-gradient(135deg, var(--secondary-background-color) 0%, rgba(255, 255, 255, 0.01) 100%)",
-      border: "1px solid var(--transparent-light-color)",
-      borderRadius: "16px",
-      padding: "2.5rem",
-      boxShadow: "0 12px 30px rgba(0, 0, 0, 0.15)",
-      position: "relative",
-      height: "100%",
-      display: "flex",
-      flexDirection: "column"
-    }}>
+    <div 
+      className="verse-of-the-day-card" 
+      style={{ 
+        height: "100%", 
+        display: "flex", 
+        flexDirection: "column",
+        cursor: "default"
+      }}
+    >
       <style dangerouslySetInnerHTML={{__html: `
         .trivia-option {
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
           border: 1px solid var(--transparent-light-color);
-          border-radius: 10px;
-          padding: 1.2rem 1.6rem;
+          border-radius: 8px;
+          padding: 0.8rem 1.2rem;
           color: var(--light-color-alt);
-          font-size: 1.3rem;
+          font-size: 1.25rem;
           font-weight: 500;
           cursor: pointer;
-          transition: all 0.25s ease;
+          transition: all 0.2s ease;
           text-align: left;
           width: 100%;
           display: flex;
@@ -72,10 +70,9 @@ export default function BibleReflectionTrivia() {
           gap: 1rem;
         }
         .trivia-option:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.06);
           border-color: var(--light-color-alt);
           color: var(--light-color);
-          transform: translateX(3px);
         }
         .trivia-option.correct {
           background: rgba(79, 207, 112, 0.12) !important;
@@ -90,34 +87,19 @@ export default function BibleReflectionTrivia() {
         }
       `}} />
 
-      {/* Decorative polaroid look pushpin */}
-      <div style={{
-        position: "absolute",
-        top: "-8px",
-        left: "24px",
-        width: "12px",
-        height: "12px",
-        borderRadius: "50%",
-        background: "radial-gradient(circle, #ff6b6b 30%, #e84c3c 70%, #8b0000 100%)",
-        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.3)"
-      }} />
-
-      <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", color: "var(--accent-color)", fontWeight: "700", fontSize: "1.2rem", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "1rem" }}>
-        <i className="ri-question-line" style={{ fontSize: "1.6rem" }}></i>
+      {/* Card Header (Matches Verse of the Day style exactly) */}
+      <div className="verse-of-the-day-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <span>Daily Scripture Quiz</span>
+        <i className="ri-question-line" style={{ fontSize: "1.8rem", color: "var(--accent-color)", opacity: 0.8 }}></i>
       </div>
 
-      <h3 style={{
-        fontSize: "1.7rem",
-        fontWeight: "700",
-        lineHeight: "1.4",
-        color: "var(--light-color)",
-        marginBottom: "2rem"
-      }}>
+      {/* Card Question Text */}
+      <div style={{ margin: "1.2rem 0", fontSize: "1.6rem", fontWeight: "600", lineHeight: "1.4", color: "var(--light-color)" }}>
         {currentQuestion.question}
-      </h3>
+      </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {/* Option Buttons */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBlockEnd: "1.5rem" }}>
         {currentQuestion.options.map((option, idx) => {
           let className = "trivia-option";
           if (hasAnswered) {
@@ -136,14 +118,14 @@ export default function BibleReflectionTrivia() {
               disabled={hasAnswered}
             >
               <span style={{
-                width: "2.2rem",
-                height: "2.2rem",
+                width: "2rem",
+                height: "2rem",
                 borderRadius: "50%",
                 background: "rgba(255, 255, 255, 0.05)",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "1.1rem",
+                fontSize: "1rem",
                 fontWeight: "700",
                 color: "inherit"
               }}>
@@ -151,38 +133,38 @@ export default function BibleReflectionTrivia() {
               </span>
               <span>{option}</span>
               {hasAnswered && idx === currentQuestion.answerIndex && (
-                <i className="ri-checkbox-circle-fill" style={{ marginLeft: "auto", fontSize: "1.6rem" }}></i>
+                <i className="ri-checkbox-circle-fill" style={{ marginLeft: "auto", fontSize: "1.5rem" }}></i>
               )}
               {hasAnswered && idx === selectedIdx && idx !== currentQuestion.answerIndex && (
-                <i className="ri-close-circle-fill" style={{ marginLeft: "auto", fontSize: "1.6rem" }}></i>
+                <i className="ri-close-circle-fill" style={{ marginLeft: "auto", fontSize: "1.5rem" }}></i>
               )}
             </button>
           );
         })}
       </div>
 
+      {/* Explanation */}
       {hasAnswered && (
         <div style={{
           marginTop: "auto",
-          paddingTop: "1.5rem",
-          marginTop: "2rem",
-          borderRadius: "10px",
-          background: "rgba(255, 255, 255, 0.02)",
-          border: "1px dashed var(--transparent-light-color)",
+          paddingTop: "1rem",
+          borderTop: "1px dashed var(--transparent-light-color)",
           animation: "fadeIn 0.3s ease"
         }}>
           <span style={{
-            fontSize: "1.2rem",
+            fontSize: "1.1rem",
             fontWeight: "700",
+            textTransform: "uppercase",
+            letterSpacing: "1px",
             color: selectedIdx === currentQuestion.answerIndex ? "var(--accent-color)" : "#e84c3c",
             display: "block",
-            marginBottom: "0.5rem"
+            marginBottom: "0.4rem"
           }}>
-            {selectedIdx === currentQuestion.answerIndex ? "🎉 Correct!" : "✨ Explanation:"}
+            {selectedIdx === currentQuestion.answerIndex ? "Correct Answer" : "Explanation"}
           </span>
           <p style={{
-            fontSize: "1.25rem",
-            lineHeight: "1.5",
+            fontSize: "1.2rem",
+            lineHeight: "1.4",
             color: "var(--light-color-alt)",
             margin: 0
           }}>

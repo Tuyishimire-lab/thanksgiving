@@ -8,7 +8,6 @@ import VerseOfTheDaySection from "@/components/VerseOfTheDaySection";
 import JournalWidget from "@/components/JournalWidget";
 import PrayerWallSnippet from "@/components/PrayerWallSnippet";
 import BibleReflectionTrivia from "@/components/BibleReflectionTrivia";
-import MeditativeAudioPlayer from "@/components/MeditativeAudioPlayer";
 import FaithFootprintsTracker from "@/components/FaithFootprintsTracker";
 
 export const dynamic = "force-dynamic";
@@ -330,8 +329,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Persistent Meditative Ambient Player */}
-      <MeditativeAudioPlayer />
     </>
   );
 }
