@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { login, getMe, loginWithGoogle } from "@/app/actions/authActions";
@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [showDemoModal, setShowDemoModal] = useState(false);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const tokenClientRef = useRef(null);
 
   // If already logged in, redirect to profile immediately
   useEffect(() => {
@@ -39,14 +40,30 @@ export default function LoginPage() {
     script.defer = true;
     script.onload = () => {
       if (window.google) {
-        window.google.accounts.id.initialize({
+        tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
           client_id: googleClientId,
-          callback: handleGoogleLoginSuccess,
+          scope: "openid email profile",
+          callback: async (tokenResponse) => {
+            if (tokenResponse.error) {
+              setError(tokenResponse.error_description || "Google Authentication failed.");
+              return;
+            }
+            
+            setLoading(true);
+            try {
+              const userInfoRes = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenResponse.access_token}`);
+              if (!userInfoRes.ok) {
+                throw new Error("Failed to fetch user info from Google");
+              }
+              const userInfo = await userInfoRes.json();
+              await handleGoogleSuccess(userInfo.email, userInfo.name, tokenResponse.access_token, "access-token");
+            } catch (err) {
+              console.error("Error during Google OAuth flow:", err);
+              setError("Google login failed. Please try again.");
+              setLoading(false);
+            }
+          },
         });
-        window.google.accounts.id.renderButton(
-          document.getElementById("google-signin-btn"),
-          { theme: "outline", size: "large", width: "398" }
-        );
       }
     };
     document.body.appendChild(script);
@@ -56,12 +73,12 @@ export default function LoginPage() {
     };
   }, [googleClientId]);
 
-  const handleGoogleSuccess = async (emailToUse, nameToUse, tokenToUse = "demo-token") => {
+  const handleGoogleSuccess = async (emailToUse, nameToUse, tokenToUse = "demo-token", tokenType = "id-token") => {
     setError("");
     setLoading(true);
 
     try {
-      const res = await loginWithGoogle(tokenToUse, emailToUse, nameToUse);
+      const res = await loginWithGoogle(tokenToUse, emailToUse, nameToUse, tokenType);
       if (res.error) {
         setError(res.error);
         setLoading(false);
@@ -116,18 +133,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLoginSuccess = async (response) => {
-    const credential = response.credential;
-    let email = "";
-    let name = "";
-    try {
-      const payload = JSON.parse(atob(credential.split(".")[1]));
-      email = payload.email;
-      name = payload.name;
-    } catch (e) {
-      console.error("Failed to decode JWT payload client-side", e);
+  const handleGoogleClick = () => {
+    if (googleClientId && tokenClientRef.current) {
+      tokenClientRef.current.requestAccessToken();
+    } else {
+      setShowDemoModal(true);
     }
-    await handleGoogleSuccess(email, name, credential);
   };
 
   const handleSubmit = async (e) => {
@@ -254,40 +265,42 @@ export default function LoginPage() {
         {/* Google Sign-in Option */}
         {(googleClientId || process.env.NODE_ENV !== "production") && (
           <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            {googleClientId ? (
-              <div id="google-signin-btn" style={{ width: "100%", display: "flex", justifyContent: "center" }}></div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowDemoModal(true)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "1.2rem",
-                  width: "100%",
-                  padding: "1.2rem",
-                  borderRadius: "8px",
-                  background: "#ffffff",
-                  border: "1px solid var(--transparent-light-color)",
-                  color: "#1f1f1f",
-                  fontSize: "1.4rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "background 0.2s ease, transform 0.2s ease",
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = "#f5f5f5"}
-                onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
-              >
-                <svg width="18" height="18" viewBox="0 0 18 18">
-                  <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7v2.24h2.9c1.7-1.57 2.69-3.88 2.69-6.57z"/>
-                  <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.9-2.24c-.8.54-1.84.87-3.06.87-2.35 0-4.34-1.58-5.05-3.72H.95v2.3C2.43 15.89 5.5 18 9 18z"/>
-                  <path fill="#FBBC05" d="M3.95 10.71a5.4 5.4 0 0 1 0-3.42V4.99H.95A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.95 4.01l3-2.3z"/>
-                  <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.4A8.99 8.99 0 0 0 9 0C5.5 0 2.43 2.11.95 5l3 2.3c.71-2.14 2.7-3.72 5.05-3.72z"/>
-                </svg>
-                Continue with Google
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleGoogleClick}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "1.2rem",
+                width: "100%",
+                padding: "1.2rem",
+                borderRadius: "8px",
+                background: "var(--primary-background-color)",
+                border: "1px solid var(--transparent-light-color)",
+                color: "var(--light-color)",
+                fontSize: "1.4rem",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "background-color 0.2s ease, border-color 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+                e.currentTarget.style.borderColor = "var(--light-color-alt)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--primary-background-color)";
+                e.currentTarget.style.borderColor = "var(--transparent-light-color)";
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7v2.24h2.9c1.7-1.57 2.69-3.88 2.69-6.57z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.9-2.24c-.8.54-1.84.87-3.06.87-2.35 0-4.34-1.58-5.05-3.72H.95v2.3C2.43 15.89 5.5 18 9 18z"/>
+                <path fill="#FBBC05" d="M3.95 10.71a5.4 5.4 0 0 1 0-3.42V4.99H.95A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.95 4.01l3-2.3z"/>
+                <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.4A8.99 8.99 0 0 0 9 0C5.5 0 2.43 2.11.95 5l3 2.3c.71-2.14 2.7-3.72 5.05-3.72z"/>
+              </svg>
+              Continue with Google
+            </button>
 
             <div style={{ display: "flex", alignItems: "center", textTransform: "uppercase", fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
               <span style={{ flex: 1, height: "1px", background: "var(--transparent-light-color)" }}></span>

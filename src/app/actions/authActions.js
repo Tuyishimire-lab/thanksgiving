@@ -349,7 +349,7 @@ export async function updateStreakAction() {
 /**
  * Log in or sign up a user with Google
  */
-export async function loginWithGoogle(idToken, email, name) {
+export async function loginWithGoogle(token, email, name, tokenType = "id-token") {
   try {
     await verifyCsrf();
     if (!email) {
@@ -363,16 +363,26 @@ export async function loginWithGoogle(idToken, email, name) {
     const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (googleClientId) {
       try {
-        const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
-        if (!response.ok) {
-          throw new Error("Failed to verify Google token with tokeninfo endpoint");
+        let payload;
+        if (tokenType === "access-token") {
+          const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!response.ok) {
+            throw new Error("Failed to verify access token with Google userinfo API");
+          }
+          payload = await response.json();
+        } else {
+          const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
+          if (!response.ok) {
+            throw new Error("Failed to verify Google token with tokeninfo endpoint");
+          }
+          payload = await response.json();
+          if (payload.aud !== googleClientId) {
+            return { error: "Google authentication failed: Client ID mismatch." };
+          }
         }
-        const payload = await response.json();
         
-        // Ensure client ID matches
-        if (payload.aud !== googleClientId) {
-          return { error: "Google authentication failed: Client ID mismatch." };
-        }
         // Ensure email matches
         if (payload.email.trim().toLowerCase() !== normalizedEmail) {
           return { error: "Google authentication failed: Email mismatch." };
