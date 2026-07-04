@@ -77,7 +77,7 @@ export default async function Home() {
             A Sanctuary of <span className="hero-welcome-title-accent-green">Gratitude</span> & <span className="hero-welcome-title-accent-gradient">Faith</span>
           </h1>
           <p className="hero-welcome-desc">
-            Reflect on God's word, build your daily devotional habit, and share testimonies of His faithfulness.
+            Anchor your soul in God's Word, nurture a daily habit of devotion, and declare His enduring faithfulness through your testimonies.
           </p>
           <div className="hero-welcome-actions">
             <Link href="/plans" className="hero-welcome-btn-primary">
