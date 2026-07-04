@@ -1198,3 +1198,62 @@ export async function addPrayerEncouragement(prayerId, content) {
     return { error: "Could not add encouragement. Please try again." };
   }
 }
+
+export async function getLatestAnsweredPrayers() {
+  try {
+    const db = await getDb();
+    const res = await db.execute(`
+      SELECT p.*,
+             (SELECT COUNT(*) FROM prayer_support WHERE prayer_id = p.id) as support_count,
+             (SELECT COUNT(*) FROM prayer_encouragements WHERE prayer_id = p.id) as encouragement_count
+      FROM prayers p
+      WHERE p.status = 'answered'
+      ORDER BY p.created_at DESC
+      LIMIT 3
+    `);
+    
+    return res.rows.map(r => ({
+      id: r.id,
+      author: r.is_anonymous === 1 ? "Anonymous" : r.author_name,
+      title: r.title,
+      content: r.content,
+      date: new Date(r.created_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" }),
+      supportCount: r.support_count || 0,
+      encouragementCount: r.encouragement_count || 0
+    }));
+  } catch (error) {
+    console.error("Error fetching latest answered prayers:", error);
+    return [];
+  }
+}
+
+export async function getCommunityStats() {
+  try {
+    const db = await getDb();
+    
+    // Fetch total active prayers
+    const activeRes = await db.execute("SELECT COUNT(*) as count FROM prayers WHERE status = 'active'");
+    const activeCount = activeRes.rows[0]?.count || 0;
+
+    // Fetch total support registrations
+    const supportRes = await db.execute("SELECT COUNT(*) as count FROM prayer_support");
+    const supportCount = supportRes.rows[0]?.count || 0;
+
+    // Fetch total gratitude journal entries
+    const journalRes = await db.execute("SELECT COUNT(*) as count FROM gratitude_journal");
+    const journalCount = journalRes.rows[0]?.count || 0;
+
+    return {
+      activePrayers: activeCount,
+      prayerSupport: supportCount,
+      journalEntries: journalCount
+    };
+  } catch (error) {
+    console.error("Error fetching community stats:", error);
+    return {
+      activePrayers: 0,
+      prayerSupport: 0,
+      journalEntries: 0
+    };
+  }
+}

@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { verses } from "@/data/verses";
 import { devotionals } from "@/data/devotionals";
-import { getHomepageData } from "@/app/actions/dbActions";
+import { getHomepageData, getLatestAnsweredPrayers, getCommunityStats } from "@/app/actions/dbActions";
 import { JOURNAL_PROMPTS } from "@/data/journalPrompts";
 import StreakTracker from "@/components/StreakTracker";
 import VerseOfTheDaySection from "@/components/VerseOfTheDaySection";
 import JournalWidget from "@/components/JournalWidget";
+import PrayerWallSnippet from "@/components/PrayerWallSnippet";
+import BibleReflectionTrivia from "@/components/BibleReflectionTrivia";
+import MeditativeAudioPlayer from "@/components/MeditativeAudioPlayer";
+import FaithFootprintsTracker from "@/components/FaithFootprintsTracker";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +29,9 @@ export default async function Home() {
   const dbProgress = data.progress || {};
   const dbHighlights = data.highlights || {};
   const dbTestimonies = data.testimonies || [];
+
+  const answeredPrayers = await getLatestAnsweredPrayers();
+  const communityStats = await getCommunityStats();
 
   // Deterministic Verse of the Day (Day of the Year rotation)
   const today = new Date();
@@ -93,6 +100,13 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* 0.5 Faith Footprints Community Impact Tracker */}
+      <section style={{ paddingTop: "3rem", paddingBottom: "0rem" }}>
+        <div className="container" style={{ maxWidth: "1000px" }}>
+          <FaithFootprintsTracker stats={communityStats} />
+        </div>
+      </section>
+
       {/* 1. Streak Tracker Dashboard Widget */}
       <section style={{ paddingTop: "4rem", paddingBottom: "1rem" }}>
         <div className="container" style={{ maxWidth: "1000px" }}>
@@ -100,15 +114,27 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 2. Verse of the Day Card */}
+      {/* 2. Verse of the Day & Bible Reflection Trivia Side-by-Side */}
       <section id="word-of-the-day" style={{ paddingTop: "0.5rem", paddingBottom: "2rem" }}>
         <div className="container" style={{ maxWidth: "1000px" }}>
-          <VerseOfTheDaySection 
-            verseOfTheDay={verseOfTheDay} 
-            dayOfWeek={dayOfWeek} 
-            initialHighlights={dbHighlights}
-            currentUser={currentUser}
-          />
+          <div className="homepage-grid-layout" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: "2.5rem",
+            alignItems: "stretch"
+          }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <VerseOfTheDaySection 
+                verseOfTheDay={verseOfTheDay} 
+                dayOfWeek={dayOfWeek} 
+                initialHighlights={dbHighlights}
+                currentUser={currentUser}
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <BibleReflectionTrivia />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -190,6 +216,9 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      {/* 3.5 Answered Prayers Board Snippet */}
+      <PrayerWallSnippet answeredPrayers={answeredPrayers} />
 
       {/* 4. Testimonies Section */}
       <section className="older-posts section" style={{ paddingBlock: "4rem" }}>
@@ -300,6 +329,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Persistent Meditative Ambient Player */}
+      <MeditativeAudioPlayer />
     </>
   );
 }
