@@ -554,7 +554,7 @@ export default function PrayerBoard() {
                             style={{ fontSize: "1.2rem", padding: "0.6rem 1.2rem", marginLeft: "auto" }}
                           >
                             <i className="ri-checkbox-circle-line" style={{ fontSize: "1.3rem" }}></i>
-                            <span>Answered</span>
+                            <span>Mark Answered</span>
                           </button>
                         )}
                       </div>
