@@ -345,3 +345,145 @@ export async function updateStreakAction() {
     return null;
   }
 }
+
+/**
+ * Log in or sign up a user with Google
+ */
+export async function loginWithGoogle(idToken, email, name) {
+  try {
+    await verifyCsrf();
+    if (!email) {
+      return { error: "Google login did not return a valid email address." };
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const db = await getDb();
+
+    // 1. Verify token if a Google Client ID is configured
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (googleClientId) {
+      try {
+        const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+        if (!response.ok) {
+          throw new Error("Failed to verify Google token with tokeninfo endpoint");
+        }
+        const payload = await response.json();
+        
+        // Ensure client ID matches
+        if (payload.aud !== googleClientId) {
+          return { error: "Google authentication failed: Client ID mismatch." };
+        }
+        // Ensure email matches
+        if (payload.email.trim().toLowerCase() !== normalizedEmail) {
+          return { error: "Google authentication failed: Email mismatch." };
+        }
+      } catch (err) {
+        console.error("Google token verification error:", err);
+        return { error: "Failed to verify Google account credentials. Please try again." };
+      }
+    } else {
+      console.warn("Google Sign-In running in Demo Mode (NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured).");
+    }
+
+    // 2. Check if user already exists
+    const userRes = await db.execute({
+      sql: "SELECT * FROM users WHERE email = ?",
+      args: [normalizedEmail]
+    });
+    let user = userRes.rows[0];
+    let isNewUser = false;
+    let userId;
+    let updatedRole;
+
+    if (!user) {
+      // Sign up the new user
+      isNewUser = true;
+      userId = crypto.randomUUID();
+      const todayStr = new Date().toDateString();
+      
+      const adminEmails = (process.env.ADMIN_EMAILS || "admin@praisepage.com")
+        .split(",")
+        .map(e => e.trim().toLowerCase());
+      const isEmailAdmin = adminEmails.includes(normalizedEmail);
+      updatedRole = isEmailAdmin ? "admin" : "user";
+
+      // Secure placeholder for password_hash (it cannot be blank because of database check)
+      const placeholderPassword = crypto.randomBytes(32).toString("hex");
+      const passwordHash = hashPassword(placeholderPassword);
+
+      await db.execute({
+        sql: `INSERT INTO users (id, name, email, password_hash, streak_count, last_active, streak_freezes_count, role)
+              VALUES (?, ?, ?, ?, 1, ?, 1, ?)`,
+        args: [userId, (name || "Google User").trim(), normalizedEmail, passwordHash, todayStr, updatedRole]
+      });
+
+      // Retrieve new user info
+      const newUserRes = await db.execute({
+        sql: "SELECT * FROM users WHERE id = ?",
+        args: [userId]
+      });
+      user = newUserRes.rows[0];
+    } else {
+      userId = user.id;
+      // Sync admin role dynamically based on environment whitelist
+      const adminEmails = (process.env.ADMIN_EMAILS || "admin@praisepage.com")
+        .split(",")
+        .map(e => e.trim().toLowerCase());
+      const isEmailAdmin = adminEmails.includes(normalizedEmail);
+      
+      updatedRole = user.role || "user";
+      if (isEmailAdmin && user.role !== "admin") {
+        await db.execute({
+          sql: "UPDATE users SET role = 'admin' WHERE id = ?",
+          args: [userId]
+        });
+        updatedRole = "admin";
+      } else if (!isEmailAdmin && user.role === "admin") {
+        await db.execute({
+          sql: "UPDATE users SET role = 'user' WHERE id = ?",
+          args: [userId]
+        });
+        updatedRole = "user";
+      }
+    }
+
+    // 3. Create session
+    const sessionToken = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    
+    await db.execute({
+      sql: `INSERT INTO sessions (id, user_id, expires_at)
+            VALUES (?, ?, ?)`,
+      args: [sessionToken, userId, expiresAt.toISOString()]
+    });
+
+    // Set session cookie
+    const cookieStore = await cookies();
+    cookieStore.set("session", sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      expires: expiresAt,
+      sameSite: "lax",
+      path: "/"
+    });
+
+    // Update daily streak
+    const updated = await updateStreakInternal(userId);
+
+    return {
+      success: true,
+      isNewUser,
+      user: {
+        id: userId,
+        name: user.name,
+        email: user.email,
+        streak_count: updated ? updated.streak_count : user.streak_count,
+        role: updatedRole
+      }
+    };
+  } catch (error) {
+    console.error("Google Sign-In error:", error);
+    return { error: "Something went wrong during Google Sign-In. Please try again." };
+  }
+}
+
