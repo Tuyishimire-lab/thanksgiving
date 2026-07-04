@@ -382,6 +382,9 @@ export async function loginWithGoogle(idToken, email, name) {
         return { error: "Failed to verify Google account credentials. Please try again." };
       }
     } else {
+      if (process.env.NODE_ENV === "production") {
+        return { error: "Google Sign-In is not configured for production." };
+      }
       console.warn("Google Sign-In running in Demo Mode (NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured).");
     }
 

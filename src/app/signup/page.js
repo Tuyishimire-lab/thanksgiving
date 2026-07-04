@@ -264,48 +264,50 @@ export default function SignupPage() {
         )}
 
         {/* Google Sign-in Option */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          {googleClientId ? (
-            <div id="google-signup-btn" style={{ width: "100%", display: "flex", justifyContent: "center" }}></div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowDemoModal(true)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "1.2rem",
-                width: "100%",
-                padding: "1.2rem",
-                borderRadius: "8px",
-                background: "#ffffff",
-                border: "1px solid var(--transparent-light-color)",
-                color: "#1f1f1f",
-                fontSize: "1.4rem",
-                fontWeight: "600",
-                cursor: "pointer",
-                transition: "background 0.2s ease, transform 0.2s ease",
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "#f5f5f5"}
-              onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18">
-                <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7v2.24h2.9c1.7-1.57 2.69-3.88 2.69-6.57z"/>
-                <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.9-2.24c-.8.54-1.84.87-3.06.87-2.35 0-4.34-1.58-5.05-3.72H.95v2.3C2.43 15.89 5.5 18 9 18z"/>
-                <path fill="#FBBC05" d="M3.95 10.71a5.4 5.4 0 0 1 0-3.42V4.99H.95A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.95 4.01l3-2.3z"/>
-                <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.4A8.99 8.99 0 0 0 9 0C5.5 0 2.43 2.11.95 5l3 2.3c.71-2.14 2.7-3.72 5.05-3.72z"/>
-              </svg>
-              Continue with Google
-            </button>
-          )}
+        {(googleClientId || process.env.NODE_ENV !== "production") && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {googleClientId ? (
+              <div id="google-signup-btn" style={{ width: "100%", display: "flex", justifyContent: "center" }}></div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowDemoModal(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "1.2rem",
+                  width: "100%",
+                  padding: "1.2rem",
+                  borderRadius: "8px",
+                  background: "#ffffff",
+                  border: "1px solid var(--transparent-light-color)",
+                  color: "#1f1f1f",
+                  fontSize: "1.4rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "background 0.2s ease, transform 0.2s ease",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "#f5f5f5"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
+              >
+                <svg width="18" height="18" viewBox="0 0 18 18">
+                  <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7v2.24h2.9c1.7-1.57 2.69-3.88 2.69-6.57z"/>
+                  <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.9-2.24c-.8.54-1.84.87-3.06.87-2.35 0-4.34-1.58-5.05-3.72H.95v2.3C2.43 15.89 5.5 18 9 18z"/>
+                  <path fill="#FBBC05" d="M3.95 10.71a5.4 5.4 0 0 1 0-3.42V4.99H.95A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.95 4.01l3-2.3z"/>
+                  <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.4A8.99 8.99 0 0 0 9 0C5.5 0 2.43 2.11.95 5l3 2.3c.71-2.14 2.7-3.72 5.05-3.72z"/>
+                </svg>
+                Continue with Google
+              </button>
+            )}
 
-          <div style={{ display: "flex", alignItems: "center", textTransform: "uppercase", fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
-            <span style={{ flex: 1, height: "1px", background: "var(--transparent-light-color)" }}></span>
-            <span style={{ padding: "0 1.5rem" }}>or</span>
-            <span style={{ flex: 1, height: "1px", background: "var(--transparent-light-color)" }}></span>
+            <div style={{ display: "flex", alignItems: "center", textTransform: "uppercase", fontSize: "1.1rem", color: "var(--light-color-alt)" }}>
+              <span style={{ flex: 1, height: "1px", background: "var(--transparent-light-color)" }}></span>
+              <span style={{ padding: "0 1.5rem" }}>or</span>
+              <span style={{ flex: 1, height: "1px", background: "var(--transparent-light-color)" }}></span>
+            </div>
           </div>
-        </div>
+        )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
@@ -436,7 +438,7 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {showDemoModal && (
+      {showDemoModal && process.env.NODE_ENV !== "production" && (
         <div 
           style={{
             position: "fixed",
