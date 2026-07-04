@@ -161,16 +161,102 @@ export default function PrayerBoard() {
 
   return (
     <div className="section" style={{ paddingBlock: "6rem 4rem" }}>
-      <div className="container" style={{ maxWidth: "900px" }}>
+      <style dangerouslySetInnerHTML={{__html: `
+        .pinned-note {
+          position: relative;
+          background: var(--secondary-background-color);
+          border: 1px solid var(--transparent-light-color);
+          border-radius: 12px;
+          padding: 2.5rem;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .pinned-note.active-request:hover {
+          transform: translateY(-6px) rotate(var(--tilt)) scale(1.02) !important;
+          box-shadow: 0 15px 35px rgba(79, 207, 112, 0.12);
+          border-color: var(--accent-color);
+        }
+        .pinned-note.praise-report {
+          background: linear-gradient(135deg, var(--secondary-background-color) 0%, rgba(167, 103, 229, 0.05) 100%);
+          border: 1px solid rgba(167, 103, 229, 0.25);
+          box-shadow: 0 8px 24px rgba(167, 103, 229, 0.08);
+        }
+        .pinned-note.praise-report:hover {
+          transform: translateY(-6px) rotate(var(--tilt)) scale(1.02) !important;
+          box-shadow: 0 15px 35px rgba(167, 103, 229, 0.2);
+          border-color: #c893f9;
+        }
+        .pinned-note-pushpin {
+          position: absolute;
+          top: -9px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+          z-index: 5;
+        }
+        .pinned-note-pushpin.active-pin {
+          background: radial-gradient(circle, #ff6b6b 30%, #e84c3c 70%, #8b0000 100%);
+        }
+        .pinned-note-pushpin.praise-pin {
+          background: radial-gradient(circle, #fad648 30%, #f1c40f 70%, #b7950b 100%);
+        }
+      `}} />
+
+      <div className="container" style={{ maxWidth: "1000px" }}>
         
-        {/* Page Header */}
-        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-          <h1 style={{ fontSize: "3.2rem", fontWeight: "700", color: "var(--light-color)", marginBottom: "1rem" }}>
-            Community <span style={{ color: "var(--accent-color)" }}>Prayer Board</span>
-          </h1>
-          <p style={{ fontSize: "1.5rem", color: "var(--light-color-alt)", maxWidth: "600px", margin: "0 auto" }}>
-            {"Carry one another's burdens, stand in faith together, and celebrate the goodness of God through answered prayers."}
-          </p>
+        {/* Widescreen Hero Sanctuary Banner */}
+        <div 
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "240px",
+            borderRadius: "16px",
+            overflow: "hidden",
+            marginBottom: "4rem",
+            border: "1px solid var(--transparent-light-color)",
+            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.2)",
+            background: "var(--secondary-background-color)"
+          }}
+        >
+          <img 
+            src="/assets/images/prayer_wall_banner.png" 
+            alt="Prayer Wall" 
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.5,
+              filter: "brightness(0.9) contrast(1.1)"
+            }}
+          />
+          <div 
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "linear-gradient(to bottom, rgba(19, 20, 23, 0.1) 0%, rgba(19, 20, 23, 0.8) 100%)",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              padding: "2.5rem 3rem",
+              zIndex: 2
+            }}
+          >
+            <h1 style={{ fontSize: "3.2rem", fontWeight: "700", color: "var(--light-color)", marginBottom: "0.5rem" }}>
+              Wall of <span style={{ color: "var(--accent-color)" }}>Faith & Supplication</span>
+            </h1>
+            <p style={{ fontSize: "1.45rem", color: "var(--light-color-alt)", maxWidth: "550px", lineHeight: "1.5" }}>
+              Carry one another's burdens, stand in faith together, and celebrate the goodness of God through answered prayers.
+            </p>
+          </div>
         </div>
 
         {/* Action and Tab Control Bar */}
@@ -263,9 +349,15 @@ export default function PrayerBoard() {
 
         {/* Prayers Feed list */}
         {isLoading ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          <div 
+            style={{ 
+              display: "grid", 
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", 
+              gap: "2.5rem" 
+            }}
+          >
             {[1, 2, 3].map(n => (
-              <div key={n} className="streak-card" style={{ padding: "2.5rem" }}>
+              <div key={n} className="pinned-note" style={{ padding: "2.5rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                   <div className="shimmer" style={{ width: "200px", height: "1.8rem", borderRadius: "4px" }}></div>
                   <div className="shimmer" style={{ width: "100%", height: "1.2rem", borderRadius: "4px" }}></div>
@@ -299,61 +391,84 @@ export default function PrayerBoard() {
             )}
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-            {visiblePrayers.map((prayer) => {
+          <div 
+            style={{ 
+              display: "grid", 
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", 
+              gap: "2.5rem",
+              alignItems: "start"
+            }}
+          >
+            {visiblePrayers.map((prayer, idx) => {
               const isOwner = currentUser && currentUser.id === prayer.user_id;
+              // Generate minor alternating organic tilts
+              const tiltAngle = (idx % 2 === 0 ? 0.6 : -0.6) * (idx % 3 === 0 ? 1 : 0.5);
+
               return (
                 <div 
                   key={prayer.id}
-                  className={`prayer-card ${prayer.status === "answered" ? "answered" : "active"}`}
+                  className={`pinned-note ${prayer.status === "answered" ? "praise-report" : "active-request"}`}
+                  style={{
+                    "--tilt": `${tiltAngle}deg`,
+                    transform: `rotate(${tiltAngle}deg)`
+                  }}
                 >
+                  {/* Circular pushpin at the top center */}
+                  <div className={`pinned-note-pushpin ${prayer.status === "answered" ? "praise-pin" : "active-pin"}`} />
+
                   {/* Card Header */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
-                    <div>
-                      <h3 style={{ fontSize: "1.8rem", fontWeight: "700", color: "var(--light-color)", marginBottom: "0.4rem" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{ fontSize: "1.7rem", fontWeight: "700", color: "var(--light-color)", marginBottom: "0.4rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {prayer.title}
                       </h3>
-                      <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)" }}>
+                      <span style={{ fontSize: "1.15rem", color: "var(--light-color-alt)" }}>
                         By {prayer.author} &bull; {prayer.date}
                       </span>
                     </div>
-
-                    {/* Answered Stamp */}
-                    {prayer.status === "answered" && (
-                      <span style={{
-                        background: "rgba(167, 103, 229, 0.12)",
-                        color: "#c893f9",
-                        padding: "0.4rem 1.2rem",
-                        borderRadius: "30px",
-                        fontSize: "1.1rem",
-                        fontWeight: "700",
-                        letterSpacing: "0.5px"
-                      }}>
-                        PRAISE REPORT
-                      </span>
-                    )}
                   </div>
 
                   {/* Card Content */}
                   <p style={{
-                    fontSize: "1.45rem",
+                    fontSize: "1.35rem",
                     lineHeight: "1.6",
-                    color: "var(--light-color)",
-                    whiteSpace: "pre-line"
+                    color: "var(--light-color-alt)",
+                    whiteSpace: "pre-line",
+                    marginBlock: "0.5rem"
                   }}>
                     {prayer.content}
                   </p>
 
+                  {/* Praise Report Header (if answered) */}
+                  {prayer.status === "answered" && (
+                    <div style={{
+                      background: "rgba(167, 103, 229, 0.08)",
+                      border: "1px dashed rgba(167, 103, 229, 0.3)",
+                      borderRadius: "8px",
+                      padding: "1.2rem",
+                      marginTop: "0.5rem"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "#c893f9", fontSize: "1.2rem", fontWeight: "700", marginBottom: "0.5rem" }}>
+                        <i className="ri-star-smile-fill"></i>
+                        <span>PRAISE REPORT</span>
+                      </div>
+                      <p style={{ fontSize: "1.25rem", fontStyle: "italic", color: "var(--light-color-alt)", lineHeight: "1.5" }}>
+                        {prayer.testimonyContent || "Answered! Thank you for standing in prayer with us."}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Card Actions */}
-                  <div className="prayer-card-actions">
-                    <div className="prayer-card-actions-group">
+                  <div className="prayer-card-actions" style={{ marginTop: "auto", paddingTop: "1rem", borderTop: "1px solid var(--transparent-light-color)" }}>
+                    <div className="prayer-card-actions-group" style={{ display: "flex", flexWrap: "wrap", gap: "0.8rem", width: "100%" }}>
                       {/* Support Button */}
                       <button
                         onClick={() => handleSupport(prayer.id)}
                         className={`prayer-card-btn prayer-card-btn-support ${prayer.isSupportedByUser ? "active" : ""}`}
+                        style={{ fontSize: "1.2rem", padding: "0.6rem 1.2rem" }}
                       >
-                        <i className={prayer.isSupportedByUser ? "ri-hand-heart-fill" : "ri-hand-heart-line"} style={{ fontSize: "1.5rem" }}></i>
-                        <span>{prayer.isSupportedByUser ? "Praying" : "Stand in Prayer"}</span>
+                        <i className={prayer.isSupportedByUser ? "ri-hand-heart-fill" : "ri-hand-heart-line"} style={{ fontSize: "1.3rem" }}></i>
+                        <span>{prayer.isSupportedByUser ? "Praying" : "Pray"}</span>
                         {prayer.supportCount > 0 && (
                           <span className="prayer-card-badge">
                             {prayer.supportCount}
@@ -365,8 +480,9 @@ export default function PrayerBoard() {
                       <button
                         onClick={() => toggleEncouragementThread(prayer.id)}
                         className={`prayer-card-btn prayer-card-btn-encourage ${expandedPrayerId === prayer.id ? "active" : ""}`}
+                        style={{ fontSize: "1.2rem", padding: "0.6rem 1.2rem" }}
                       >
-                        <i className="ri-chat-smile-3-line" style={{ fontSize: "1.5rem" }}></i>
+                        <i className="ri-chat-smile-3-line" style={{ fontSize: "1.3rem" }}></i>
                         <span>Encourage</span>
                         {prayer.encouragementCount > 0 && (
                           <span className="prayer-card-badge">
@@ -374,59 +490,60 @@ export default function PrayerBoard() {
                           </span>
                         )}
                       </button>
-                    </div>
 
-                    {/* Owner Answered Actions */}
-                    {isOwner && prayer.status === "active" && (
-                      <button
-                        onClick={() => setAnsweredPrayerId(prayer.id)}
-                        className="prayer-card-btn prayer-card-btn-answered"
-                      >
-                        <i className="ri-checkbox-circle-line" style={{ fontSize: "1.5rem" }}></i>
-                        <span>Mark Answered</span>
-                      </button>
-                    )}
+                      {/* Owner Answered Actions */}
+                      {isOwner && prayer.status === "active" && (
+                        <button
+                          onClick={() => setAnsweredPrayerId(prayer.id)}
+                          className="prayer-card-btn prayer-card-btn-answered"
+                          style={{ fontSize: "1.2rem", padding: "0.6rem 1.2rem", marginLeft: "auto" }}
+                        >
+                          <i className="ri-checkbox-circle-line" style={{ fontSize: "1.3rem" }}></i>
+                          <span>Answered</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Encouragements sub-panel thread */}
                   {expandedPrayerId === prayer.id && (
                     <div style={{
-                      marginTop: "2rem",
-                      paddingTop: "2rem",
+                      marginTop: "1.5rem",
+                      paddingTop: "1.5rem",
                       borderTop: "1px dashed var(--transparent-light-color)",
                       display: "flex",
                       flexDirection: "column",
-                      gap: "1.5rem"
+                      gap: "1.2rem"
                     }}>
-                      <h4 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#12bcfe", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <i className="ri-heart-line"></i> Words of Comfort & Encouragement
+                      <h4 style={{ fontSize: "1.2rem", fontWeight: "700", color: "#12bcfe", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <i className="ri-heart-line"></i> Encouragements
                       </h4>
                       
                       {loadingEncouragements ? (
-                        <div style={{ color: "var(--light-color-alt)", fontSize: "1.2rem", paddingBlock: "1rem" }}>
-                          Loading encouragement...
+                        <div style={{ color: "var(--light-color-alt)", fontSize: "1.1rem", paddingBlock: "0.5rem" }}>
+                          Loading...
                         </div>
                       ) : encouragements.length === 0 ? (
-                        <div style={{ color: "var(--light-color-alt)", fontSize: "1.3rem", fontStyle: "italic", paddingBlock: "1rem" }}>
-                          No messages of encouragement yet. Be the first to leave a message or scripture of comfort!
+                        <div style={{ color: "var(--light-color-alt)", fontSize: "1.1rem", fontStyle: "italic", paddingBlock: "0.5rem" }}>
+                          No messages yet.
                         </div>
                       ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", maxHeight: "150px", overflowY: "auto" }}>
                           {encouragements.map((enc) => (
                             <div 
                               key={enc.id} 
                               style={{ 
                                 background: "var(--primary-background-color)", 
-                                padding: "1.5rem", 
-                                borderRadius: "8px", 
+                                padding: "1rem", 
+                                borderRadius: "6px", 
                                 border: "1px solid var(--transparent-light-color)"
                               }}
                             >
-                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.6rem", fontSize: "1.1rem" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", fontSize: "1rem" }}>
                                 <span style={{ fontWeight: "700", color: "var(--light-color)" }}>{enc.authorName}</span>
                                 <span style={{ color: "var(--light-color-alt)" }}>{enc.date}</span>
                               </div>
-                              <p style={{ fontSize: "1.3rem", lineHeight: "1.5", color: "var(--light-color-alt)", whiteSpace: "pre-wrap" }}>
+                              <p style={{ fontSize: "1.15rem", lineHeight: "1.4", color: "var(--light-color-alt)", whiteSpace: "pre-wrap" }}>
                                 {enc.content}
                               </p>
                             </div>
@@ -436,10 +553,10 @@ export default function PrayerBoard() {
 
                       {/* Add Encouragement Form */}
                       {currentUser ? (
-                        <form onSubmit={handleSubmitEncouragement} style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
+                        <form onSubmit={handleSubmitEncouragement} style={{ display: "flex", gap: "0.6rem", marginTop: "0.2rem" }}>
                           <input
                             type="text"
-                            placeholder="Type a word of comfort or scripture..."
+                            placeholder="Comfort or scripture..."
                             value={newEncouragementText}
                             onChange={(e) => setNewEncouragementText(e.target.value)}
                             style={{
@@ -448,8 +565,8 @@ export default function PrayerBoard() {
                               color: "var(--light-color)",
                               border: "1px solid var(--transparent-light-color)",
                               borderRadius: "20px",
-                              padding: "0.8rem 1.5rem",
-                              fontSize: "1.3rem",
+                              padding: "0.6rem 1.2rem",
+                              fontSize: "1.15rem",
                               outline: "none"
                             }}
                           />
@@ -460,21 +577,21 @@ export default function PrayerBoard() {
                               color: "#131417",
                               border: "none",
                               borderRadius: "20px",
-                              padding: "0.8rem 1.8rem",
+                              padding: "0.6rem 1.2rem",
                               fontWeight: "700",
-                              fontSize: "1.3rem",
+                              fontSize: "1.15rem",
                               cursor: "pointer",
                               display: "flex",
                               alignItems: "center",
-                              gap: "0.4rem"
+                              gap: "0.2rem"
                             }}
                           >
-                            <i className="ri-send-plane-fill"></i> Send
+                            <i className="ri-send-plane-fill"></i>
                           </button>
                         </form>
                       ) : (
-                        <p style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontStyle: "italic", textAlign: "center", marginTop: "1rem" }}>
-                          Please <Link href="/login" style={{ color: "var(--accent-color)", textDecoration: "underline" }}>log in</Link> to leave a message of encouragement.
+                        <p style={{ fontSize: "1.1rem", color: "var(--light-color-alt)", fontStyle: "italic", textAlign: "center" }}>
+                          <Link href="/login" style={{ color: "var(--accent-color)", textDecoration: "underline" }}>Log in</Link> to encourage.
                         </p>
                       )}
                     </div>
