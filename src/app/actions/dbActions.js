@@ -818,18 +818,31 @@ export async function saveJournalEntry(prompt, text) {
 
 // ================= PRAYER BOARD ACTIONS =================
 
-export async function getPrayers() {
+export async function getPrayers(status = null, limit = 12, offset = 0) {
   try {
     const currentUserId = await getCurrentUserId();
     const db = await getDb();
 
-    const res = await db.execute(`
+    let sql = `
       SELECT p.*,
              (SELECT COUNT(*) FROM prayer_support WHERE prayer_id = p.id) as support_count,
              (SELECT COUNT(*) FROM prayer_encouragements WHERE prayer_id = p.id) as encouragement_count
       FROM prayers p
-      ORDER BY p.created_at DESC
-    `);
+    `;
+    const args = [];
+
+    if (status) {
+      sql += " WHERE p.status = ? ";
+      args.push(status);
+    }
+
+    sql += " ORDER BY p.created_at DESC LIMIT ? OFFSET ? ";
+    args.push(limit, offset);
+
+    const res = await db.execute({
+      sql,
+      args
+    });
     const rows = res.rows;
 
     let supportedSet = new Set();
@@ -857,6 +870,25 @@ export async function getPrayers() {
   } catch (error) {
     console.error("Error fetching prayers:", error);
     return [];
+  }
+}
+
+export async function getPrayerCounts() {
+  try {
+    const db = await getDb();
+    const res = await db.execute(`
+      SELECT status, COUNT(*) as count FROM prayers GROUP BY status
+    `);
+    let active = 0;
+    let answered = 0;
+    res.rows.forEach(r => {
+      if (r.status === "active") active = r.count;
+      if (r.status === "answered") answered = r.count;
+    });
+    return { active, answered };
+  } catch (error) {
+    console.error("Error fetching prayer counts:", error);
+    return { active: 0, answered: 0 };
   }
 }
 
