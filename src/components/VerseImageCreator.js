@@ -51,12 +51,25 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
         const renderFontSize = Math.round(fontSize * fontScalar);
 
         let activeFont = `'Poppins', 'Segoe UI', Roboto, sans-serif`;
-        if (fontStyle === "Classic") {
-          activeFont = `var(--font-family-serif, 'Playfair Display', Georgia, serif)`;
-        } else if (fontStyle === "Typewriter") {
-          activeFont = `'Courier New', Courier, monospace`;
-        } else if (fontStyle === "Handwritten") {
-          activeFont = `var(--font-family-cursive, 'Caveat', cursive)`;
+        if (typeof window !== "undefined") {
+          const rootStyle = getComputedStyle(document.documentElement);
+          if (fontStyle === "Classic") {
+            activeFont = rootStyle.getPropertyValue("--font-family-serif").trim() || `'Playfair Display', Georgia, serif`;
+          } else if (fontStyle === "Typewriter") {
+            activeFont = `'Courier New', Courier, monospace`;
+          } else if (fontStyle === "Handwritten") {
+            activeFont = rootStyle.getPropertyValue("--font-family-cursive").trim() || `'Caveat', cursive`;
+          } else if (fontStyle === "Modern") {
+            activeFont = rootStyle.getPropertyValue("--font-family").trim() || `'Poppins', 'Segoe UI', Roboto, sans-serif`;
+          }
+        } else {
+          if (fontStyle === "Classic") {
+            activeFont = `'Playfair Display', Georgia, serif`;
+          } else if (fontStyle === "Typewriter") {
+            activeFont = `'Courier New', Courier, monospace`;
+          } else if (fontStyle === "Handwritten") {
+            activeFont = `'Caveat', cursive`;
+          }
         }
 
         ctx.font = `italic 600 ${renderFontSize}px ${activeFont}`;
@@ -290,7 +303,7 @@ export default function VerseImageCreator({ verseText, verseTag, onClose }) {
                 fontFamily: fontStyle === "Modern" ? "var(--font-family)" : fontStyle === "Classic" ? "var(--font-family-serif)" : fontStyle === "Typewriter" ? "monospace" : "var(--font-family-cursive)"
               }}
             >
-              "{verseText}"
+              &quot;{verseText}&quot;
             </p>
             <span
               style={{

@@ -173,13 +173,13 @@ export default async function PostPage({ params }) {
               </p>
               <ul className="list social-media" style={{ justifyContent: "flex-start", gap: "1.5rem" }}>
                 <li className="list-item">
-                  <a href="#" className="list-link" aria-label="Instagram"><i className="ri-instagram-line"></i></a>
+                  <a href="https://www.instagram.com/praisepage__?igsh=czB1MWpndDM5dmxl" className="list-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><i className="ri-instagram-line"></i></a>
                 </li>
                 <li className="list-item">
-                  <a href="#" className="list-link" aria-label="Facebook"><i className="ri-facebook-circle-line"></i></a>
+                  <a href="https://www.facebook.com/share/17UGpy6s6P/" className="list-link" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><i className="ri-facebook-circle-line"></i></a>
                 </li>
                 <li className="list-item">
-                  <a href="#" className="list-link" aria-label="Twitter"><i className="ri-twitter-line"></i></a>
+                  <a href="https://x.com/praisepage_" className="list-link" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer"><i className="ri-twitter-line"></i></a>
                 </li>
               </ul>
             </div>
