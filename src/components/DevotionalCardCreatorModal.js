@@ -15,7 +15,7 @@ const BG_PRESETS = [
 
 export default function DevotionalCardCreatorModal({ planTitle, category, dayObj, onClose }) {
   const [selectedBg, setSelectedBg] = useState(BG_PRESETS[0]);
-  const [fontSize, setFontSize] = useState(16); // base px in preview
+  const [fontSize, setFontSize] = useState(18); // base px in preview
   const [textColor, setTextColor] = useState("#ffffff");
   const [fontStyle, setFontStyle] = useState("Modern"); // "Modern", "Classic", "Typewriter", "Handwritten"
   const [overlayOpacity, setOverlayOpacity] = useState(0.35); // background dimmer overlay
@@ -98,10 +98,10 @@ export default function DevotionalCardCreatorModal({ planTitle, category, dayObj
     let layoutFits = false;
 
     while (currentScale > 0.4 && !layoutFits) {
-      const scaledFontSize = Math.round(fontSize * currentScale * 2.16);
-      const headerSize = Math.round(8 * 2.16 * currentScale);
-      const planTitleSize = Math.round(11 * 2.16 * currentScale);
-      const dayTitleSize = Math.round(10 * 2.16 * currentScale);
+      const scaledFontSize = Math.round(fontSize * currentScale * 4);
+      const headerSize = Math.round(8 * 4 * currentScale);
+      const planTitleSize = Math.round(11 * 4 * currentScale);
+      const dayTitleSize = Math.round(10 * 4 * currentScale);
       const teachingSize = Math.round(scaledFontSize * 0.95);
 
       const teachingLines = wrapTextJustified(ctx, reflection, maxTextWidth, `${teachingSize}px ${fontStack}`);
@@ -117,7 +117,7 @@ export default function DevotionalCardCreatorModal({ planTitle, category, dayObj
         dayTitleHeight + 35 +
         teachingHeight + 60;
 
-      if (totalNeededHeight <= canvasHeight - 100) {
+      if (totalNeededHeight <= canvasHeight - 120) {
         layoutFits = true;
       } else {
         currentScale -= 0.05; // shrink
@@ -143,14 +143,14 @@ export default function DevotionalCardCreatorModal({ planTitle, category, dayObj
         const maxTextWidth = canvasWidth - marginX * 2;
 
         const fontStack = getFontFamily(fontStyle);
-        const scaledFontSize = Math.round(fontSize * optimalScale * 2.16);
+        const scaledFontSize = Math.round(fontSize * optimalScale * 4);
 
         // Title and body font sizes based on optimal calculated scale
-        const headerSize = Math.round(8 * 2.16 * optimalScale);
-        const planTitleSize = Math.round(11 * 2.16 * optimalScale);
-        const dayTitleSize = Math.round(10 * 2.16 * optimalScale);
+        const headerSize = Math.round(8 * 4 * optimalScale);
+        const planTitleSize = Math.round(11 * 4 * optimalScale);
+        const dayTitleSize = Math.round(10 * 4 * optimalScale);
         const teachingSize = Math.round(scaledFontSize * 0.95);
-        const watermarkSize = Math.round(9 * 2.16 * optimalScale);
+        const watermarkSize = Math.round(9 * 4 * optimalScale);
 
         const teachingLines = wrapTextJustified(ctx, reflection, maxTextWidth, `${teachingSize}px ${fontStack}`);
 
