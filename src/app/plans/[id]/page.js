@@ -22,6 +22,7 @@ import {
   getCustomDevotionalById
 } from "@/app/actions/dbActions";
 import VerseActionsModal from "@/components/VerseActionsModal";
+import DevotionalCardCreatorModal from "@/components/DevotionalCardCreatorModal";
 
 const getPlanImage = (plan) => {
   if (plan.image) return plan.image;
@@ -67,6 +68,7 @@ function PlanPlayerContent({ params }) {
   const [updateTrigger, setUpdateTrigger] = useState(0);
   const [reflectionText, setReflectionText] = useState("");
   const [showReflectionInput, setShowReflectionInput] = useState(false);
+  const [showDevotionalCard, setShowDevotionalCard] = useState(false);
   const [user, setUser] = useState(null);
 
       useEffect(() => {
@@ -352,13 +354,41 @@ function PlanPlayerContent({ params }) {
             border: "1px solid var(--transparent-light-color)"
           }}
         >
-          <div style={{ marginBottom: "3rem" }}>
-            <span style={{ fontSize: "1.3rem", color: "var(--light-color-alt)", fontWeight: "600" }}>
-              DAY {activeDayNum} OF {planData.days.length}
-            </span>
-            <h3 style={{ fontSize: "2.2rem", color: "var(--light-color)", marginTop: "0.5rem" }}>
-              {dayContent.title}
-            </h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1.5rem", flexWrap: "wrap", marginBottom: "3rem" }}>
+            <div>
+              <span style={{ fontSize: "1.3rem", color: "var(--light-color-alt)", fontWeight: "600" }}>
+                DAY {activeDayNum} OF {planData.days.length}
+              </span>
+              <h3 style={{ fontSize: "2.2rem", color: "var(--light-color)", marginTop: "0.5rem" }}>
+                {dayContent.title}
+              </h3>
+            </div>
+            <button
+              onClick={() => setShowDevotionalCard(true)}
+              style={{
+                background: "rgba(250, 214, 72, 0.15)",
+                color: "#fad648",
+                border: "1px solid rgba(250, 214, 72, 0.3)",
+                padding: "0.8rem 1.8rem",
+                borderRadius: "20px",
+                cursor: "pointer",
+                fontSize: "1.3rem",
+                fontWeight: "700",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.6rem",
+                transition: "all 0.2s"
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = "rgba(250, 214, 72, 0.25)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = "rgba(250, 214, 72, 0.15)";
+              }}
+            >
+              <i className="ri-image-line"></i>
+              Share Day Card
+            </button>
           </div>
 
           {/* Devotional Reflection */}
@@ -620,6 +650,16 @@ function PlanPlayerContent({ params }) {
           verseId={activeVerse.id}
           onClose={() => setActiveVerse(null)}
           onStateChange={() => setUpdateTrigger(prev => prev + 1)}
+        />
+      )}
+
+      {/* Devotional Card Creator Modal */}
+      {showDevotionalCard && (
+        <DevotionalCardCreatorModal
+          planTitle={planData.title}
+          category={planData.category}
+          dayObj={dayContent}
+          onClose={() => setShowDevotionalCard(false)}
         />
       )}
     </section>
