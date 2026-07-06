@@ -70,8 +70,8 @@ export default function Contacts() {
                 </div>
                 <div>
                   <span style={{ display: "block", fontSize: "1.2rem", color: "var(--light-color-alt)" }}>EMAIL US</span>
-                  <a href="mailto:hello@praisepage.com" style={{ fontSize: "1.5rem", fontWeight: "600", color: "var(--light-color)" }}>
-                    hello@praisepage.com
+                  <a href="mailto:tuyishime1angel@gmail.com" style={{ fontSize: "1.5rem", fontWeight: "600", color: "var(--light-color)" }}>
+                    tuyishime1angel@gmail.com
                   </a>
                 </div>
               </div>
