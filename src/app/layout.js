@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ThemeProvider from "@/components/ThemeProvider";
+import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { headers } from "next/headers";
 
@@ -107,6 +108,7 @@ export default async function RootLayout({ children }) {
             {children}
           </main>
           <Footer />
+          <PwaInstallPrompt />
         </ThemeProvider>
       </body>
       <GoogleAnalytics gaId="G-C8TS9EERMJ" />
