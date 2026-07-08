@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.praisepage.www.twa",
+    "sha256_cert_fingerprints": ["8D:4B:59:C3:A2:E6:FF:D4:75:60:F2:C6:EB:46:30:D2:0D:2C:29:3F:EC:FB:37:AC:A6:E6:7D:D4:27:0C:C4:42"]
+  }
+}]
