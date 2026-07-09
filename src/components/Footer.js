@@ -70,6 +70,11 @@ export default function Footer() {
                 My Profile
               </Link>
             </li>
+            <li className="list-item">
+              <Link href="/privacy" className="list-link">
+                Privacy Policy
+              </Link>
+            </li>
           </ul>
         </div>
 
