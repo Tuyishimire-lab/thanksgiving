@@ -2137,7 +2137,7 @@ textarea:hover {
     background: var(--primary-background-color);
     color: var(--light-color);
     border: 1px solid var(--transparent-light-color);
-    borderRadius: 8px;
+    border-radius: 8px;
     padding: 1.5rem;
     font-size: 1.4rem;
     outline: none;
@@ -2151,7 +2151,7 @@ textarea:hover {
     color: var(--light-color-alt);
     border: none;
     padding: 1rem 2.2rem;
-    borderRadius: 30px;
+    border-radius: 30px;
     font-size: 1.3rem;
     font-weight: 700;
     cursor: default;

@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import ThemeProvider from "@/components/ThemeProvider";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/react";
 import { headers } from "next/headers";
 
 
@@ -112,6 +113,7 @@ export default async function RootLayout({ children }) {
         </ThemeProvider>
       </body>
       <GoogleAnalytics gaId="G-C8TS9EERMJ" />
+      <Analytics />
     </html>
   );
 }
