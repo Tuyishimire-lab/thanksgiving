@@ -627,7 +627,7 @@ export const triviaQuestions = [
     explanation: "Zechariah 9:9 predicted: 'See, your king comes to you, righteous and victorious, lowly and riding on a donkey.' This was fulfilled on Palm Sunday (Matthew 21:1-9)."
   },
   {
-    question: "The prophecy 'A voice of one calling in the wilderness, "Prepare the way for the Lord"' referred to:",
+    question: "The prophecy 'A voice of one calling in the wilderness, \"Prepare the way for the Lord\"' referred to:",
     options: ["Elijah", "Elisha", "John the Baptist", "Isaiah himself"],
     answerIndex: 2,
     explanation: "Isaiah 40:3 prophesied about John the Baptist, who came before Jesus to prepare people's hearts. John himself quoted this verse to describe his own ministry (John 1:23)."
