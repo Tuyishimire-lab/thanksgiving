@@ -104,3 +104,66 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+// ─── PUSH NOTIFICATIONS ──────────────────────────────────────────────────────
+
+// Map each notification tag to the URL the user should land on when they tap it
+const NOTIFICATION_URLS = {
+  'verse-of-day':          '/',
+  'devotional-reminder':   '/plans',
+  'gratitude-journal':     '/',
+  'scripture-quiz':        '/bible',
+};
+
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = { title: 'PraisePage', body: event.data.text(), tag: 'general' };
+  }
+
+  const { title, body, tag, icon, badge, data } = payload;
+
+  const options = {
+    body,
+    tag: tag || 'general',
+    icon: icon || '/assets/images/icon-192.png',
+    badge: badge || '/assets/images/icon-192.png',
+    data: data || {},
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    actions: payload.actions || [],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const tag = event.notification.tag;
+  const targetUrl = NOTIFICATION_URLS[tag] || '/';
+  const fullUrl = self.location.origin + targetUrl;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If a window is already open, focus it and navigate
+      for (const client of clientList) {
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          client.focus();
+          client.navigate(fullUrl);
+          return;
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(fullUrl);
+      }
+    })
+  );
+});

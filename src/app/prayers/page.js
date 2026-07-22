@@ -24,6 +24,7 @@ export default function PrayerBoard() {
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [guestName, setGuestName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -117,7 +118,7 @@ export default function PrayerBoard() {
     setIsSubmitting(true);
     setErrorMsg("");
 
-    const res = await createPrayer(newTitle, newContent, isAnonymous);
+    const res = await createPrayer(newTitle, newContent, isAnonymous, guestName);
     setIsSubmitting(false);
 
     if (res.error) {
@@ -126,6 +127,7 @@ export default function PrayerBoard() {
       setNewTitle("");
       setNewContent("");
       setIsAnonymous(false);
+      setGuestName("");
       setShowCreateModal(false);
       await refreshAll();
     }
@@ -188,6 +190,8 @@ export default function PrayerBoard() {
     }
   };
 
+  const [guestEncName, setGuestEncName] = useState("");
+
   const handleSubmitEncouragement = async (e) => {
     e.preventDefault();
     if (!newEncouragementText.trim()) return;
@@ -195,8 +199,10 @@ export default function PrayerBoard() {
     const currentId = expandedPrayerId;
     const content = newEncouragementText;
     setNewEncouragementText("");
+    const nameToSend = guestEncName;
+    setGuestEncName("");
 
-    const res = await addPrayerEncouragement(currentId, content);
+    const res = await addPrayerEncouragement(currentId, content, nameToSend);
     if (res.error) {
       alert(res.error);
     } else {
@@ -360,45 +366,27 @@ export default function PrayerBoard() {
             </button>
           </div>
 
-          {/* Share Button */}
-          {currentUser ? (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              style={{
-                background: "var(--accent-color)",
-                color: "#131417",
-                border: "none",
-                padding: "1rem 2.2rem",
-                borderRadius: "30px",
-                fontWeight: "700",
-                fontSize: "1.3rem",
-                cursor: "pointer",
-                boxShadow: "0 4px 15px rgba(79, 207, 112, 0.25)",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.8rem"
-              }}
-            >
-              <i className="ri-add-line" style={{ fontSize: "1.6rem" }}></i>
-              Request Prayer
-            </button>
-          ) : (
-            <Link
-              href="/login"
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-                color: "var(--light-color)",
-                border: "1px solid var(--transparent-light-color)",
-                padding: "1rem 2.2rem",
-                borderRadius: "30px",
-                fontWeight: "600",
-                fontSize: "1.3rem",
-                textDecoration: "none"
-              }}
-            >
-              Sign In to Request Prayer
-            </Link>
-          )}
+          {/* Share Button - open to everyone */}
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              background: "var(--accent-color)",
+              color: "#131417",
+              border: "none",
+              padding: "1rem 2.2rem",
+              borderRadius: "30px",
+              fontWeight: "700",
+              fontSize: "1.3rem",
+              cursor: "pointer",
+              boxShadow: "0 4px 15px rgba(79, 207, 112, 0.25)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.8rem"
+            }}
+          >
+            <i className="ri-add-line" style={{ fontSize: "1.6rem" }}></i>
+            Request Prayer
+          </button>
         </div>
 
         {/* Prayers Feed list */}
@@ -606,9 +594,26 @@ export default function PrayerBoard() {
                           </div>
                         )}
 
-                        {/* Add Encouragement Form */}
-                        {currentUser ? (
-                          <form onSubmit={handleSubmitEncouragement} style={{ display: "flex", gap: "0.6rem", marginTop: "0.2rem" }}>
+                        {/* Add Encouragement Form — open to guests too */}
+                        <form onSubmit={handleSubmitEncouragement} style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.2rem" }}>
+                          {!currentUser && (
+                            <input
+                              type="text"
+                              placeholder="Your name (optional)"
+                              value={guestEncName}
+                              onChange={(e) => setGuestEncName(e.target.value)}
+                              style={{
+                                background: "var(--primary-background-color)",
+                                color: "var(--light-color)",
+                                border: "1px solid var(--transparent-light-color)",
+                                borderRadius: "20px",
+                                padding: "0.5rem 1.2rem",
+                                fontSize: "1.1rem",
+                                outline: "none"
+                              }}
+                            />
+                          )}
+                          <div style={{ display: "flex", gap: "0.6rem" }}>
                             <input
                               type="text"
                               placeholder="Comfort or scripture..."
@@ -643,12 +648,8 @@ export default function PrayerBoard() {
                             >
                               <i className="ri-send-plane-fill"></i>
                             </button>
-                          </form>
-                        ) : (
-                          <p style={{ fontSize: "1.1rem", color: "var(--light-color-alt)", fontStyle: "italic", textAlign: "center" }}>
-                            <Link href="/login" style={{ color: "var(--accent-color)", textDecoration: "underline" }}>Log in</Link> to encourage.
-                          </p>
-                        )}
+                          </div>
+                        </form>
                       </div>
                     )}
                   </div>
@@ -721,6 +722,29 @@ export default function PrayerBoard() {
               )}
 
               <form onSubmit={handleCreatePrayer} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+                {/* Guest name field - only shown when not logged in */}
+                {!currentUser && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <label htmlFor="guest-name" style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600" }}>YOUR NAME <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span></label>
+                    <input
+                      id="guest-name"
+                      type="text"
+                      placeholder="Leave blank to post anonymously"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      style={{
+                        background: "var(--primary-background-color)",
+                        color: "var(--light-color)",
+                        border: "1px solid var(--transparent-light-color)",
+                        borderRadius: "6px",
+                        padding: "1.2rem",
+                        fontSize: "1.4rem",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+                )}
+
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <label htmlFor="prayer-title" style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600" }}>TITLE / SUBJECT</label>
                   <input
@@ -762,18 +786,28 @@ export default function PrayerBoard() {
                   />
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                  <input
-                    id="anonymous-check"
-                    type="checkbox"
-                    checked={isAnonymous}
-                    onChange={(e) => setIsAnonymous(e.target.checked)}
-                    style={{ width: "1.8rem", height: "1.8rem", cursor: "pointer" }}
-                  />
-                  <label htmlFor="anonymous-check" style={{ fontSize: "1.3rem", color: "var(--light-color-alt)", cursor: "pointer", userSelect: "none" }}>
-                    Post request anonymously
-                  </label>
-                </div>
+                {/* Anonymous toggle - only shown to logged-in users (guests always anonymous) */}
+                {currentUser && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                    <input
+                      id="anonymous-check"
+                      type="checkbox"
+                      checked={isAnonymous}
+                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                      style={{ width: "1.8rem", height: "1.8rem", cursor: "pointer" }}
+                    />
+                    <label htmlFor="anonymous-check" style={{ fontSize: "1.3rem", color: "var(--light-color-alt)", cursor: "pointer", userSelect: "none" }}>
+                      Post request anonymously
+                    </label>
+                  </div>
+                )}
+
+                {!currentUser && (
+                  <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.5, margin: 0 }}>
+                    <i className="ri-lock-line" style={{ marginRight: "0.4rem" }}></i>
+                    Guest requests are posted anonymously. <Link href="/login" style={{ color: "var(--accent-color)", textDecoration: "underline" }}>Sign in</Link> to use your name.
+                  </p>
+                )}
 
                 <button
                   type="submit"

@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ThemeProvider from "@/components/ThemeProvider";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
+import NotificationManager from "@/components/NotificationManager";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { headers } from "next/headers";
@@ -110,6 +111,7 @@ export default async function RootLayout({ children }) {
           </main>
           <Footer />
           <PwaInstallPrompt />
+          <NotificationManager />
         </ThemeProvider>
       </body>
       <GoogleAnalytics gaId="G-C8TS9EERMJ" />

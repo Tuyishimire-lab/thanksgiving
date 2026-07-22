@@ -892,26 +892,34 @@ export async function getPrayerCounts() {
   }
 }
 
-export async function createPrayer(title, content, isAnonymous = false) {
+export async function createPrayer(title, content, isAnonymous = false, guestName = "") {
   try {
-    const user = await getAuthenticatedUser();
-    if (!user) return { error: "Please log in to share a prayer request." };
-
     if (!title || !content) return { error: "Please fill in all fields." };
 
+    const user = await getAuthenticatedUser();
     const id = `prayer_${Date.now()}`;
     const dateStr = new Date().toISOString();
-    const isAnonInt = isAnonymous ? 1 : 0;
     const db = await getDb();
 
-    await db.execute({
-      sql: `INSERT INTO prayers (id, user_id, author_name, title, content, is_anonymous, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, 'active', ?)`,
-      args: [id, user.user_id, user.name, title.trim(), content.trim(), isAnonInt, dateStr]
-    });
-
-    // Check badges after posting prayer
-    await checkAndUnlockBadges(user.user_id);
+    if (user) {
+      // Logged-in user — honour their anonymous toggle
+      const isAnonInt = isAnonymous ? 1 : 0;
+      await db.execute({
+        sql: `INSERT INTO prayers (id, user_id, author_name, title, content, is_anonymous, status, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, 'active', ?)`,
+        args: [id, user.user_id, user.name, title.trim(), content.trim(), isAnonInt, dateStr]
+      });
+      // Check badges only for authenticated users
+      await checkAndUnlockBadges(user.user_id);
+    } else {
+      // Guest — always anonymous; use provided name or fallback
+      const authorName = guestName?.trim() || "Anonymous";
+      await db.execute({
+        sql: `INSERT INTO prayers (id, user_id, author_name, title, content, is_anonymous, status, created_at)
+              VALUES (?, ?, ?, ?, ?, 1, 'active', ?)`,
+        args: [id, null, authorName, title.trim(), content.trim(), dateStr]
+      });
+    }
 
     return { success: true };
   } catch (error) {
@@ -919,6 +927,7 @@ export async function createPrayer(title, content, isAnonymous = false) {
     return { error: "Could not submit prayer. Please try again." };
   }
 }
+
 
 export async function toggleSupportPrayer(prayerId) {
   try {
@@ -1174,25 +1183,30 @@ export async function getPrayerEncouragements(prayerId) {
   }
 }
 
-export async function addPrayerEncouragement(prayerId, content) {
+export async function addPrayerEncouragement(prayerId, content, guestName = "") {
   try {
-    const user = await getAuthenticatedUser();
-    if (!user) return { error: "Please log in to leave an encouragement." };
-
     if (!content || !content.trim()) return { error: "Encouragement content cannot be empty." };
 
+    const user = await getAuthenticatedUser();
     const id = `enc_${Date.now()}`;
     const dateStr = new Date().toISOString();
     const db = await getDb();
 
-    await db.execute({
-      sql: `INSERT INTO prayer_encouragements (id, prayer_id, user_id, author_name, content, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)`,
-      args: [id, prayerId, user.user_id, user.name, content.trim(), dateStr]
-    });
-
-    // Check badges after encouraging others
-    await checkAndUnlockBadges(user.user_id);
+    if (user) {
+      await db.execute({
+        sql: `INSERT INTO prayer_encouragements (id, prayer_id, user_id, author_name, content, created_at)
+              VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [id, prayerId, user.user_id, user.name, content.trim(), dateStr]
+      });
+      await checkAndUnlockBadges(user.user_id);
+    } else {
+      const authorName = guestName?.trim() || "Anonymous";
+      await db.execute({
+        sql: `INSERT INTO prayer_encouragements (id, prayer_id, user_id, author_name, content, created_at)
+              VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [id, prayerId, null, authorName, content.trim(), dateStr]
+      });
+    }
 
     return { success: true };
   } catch (error) {
@@ -1200,6 +1214,7 @@ export async function addPrayerEncouragement(prayerId, content) {
     return { error: "Could not add encouragement. Please try again." };
   }
 }
+
 
 export async function getLatestAnsweredPrayers() {
   try {

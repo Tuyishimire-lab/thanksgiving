@@ -225,6 +225,30 @@ export async function initializeDb(client) {
       // Column already exists or table doesn't exist yet
     }
 
+    // Push notification subscriptions (stores Web Push endpoint + keys)
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT,
+        endpoint TEXT UNIQUE NOT NULL,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Per-user notification preferences (which types they opted into)
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS notification_preferences (
+        endpoint TEXT PRIMARY KEY,
+        verse_of_day INTEGER DEFAULT 1,
+        devotional_reminder INTEGER DEFAULT 1,
+        gratitude_journal INTEGER DEFAULT 1,
+        scripture_quiz INTEGER DEFAULT 1
+      )
+    `);
+
     // 2. Insert initial static posts if they don't exist
     for (const post of posts) {
       const existing = await client.execute({

@@ -12,34 +12,36 @@ export default function VerseSection() {
 
   useEffect(() => {
     const today = new Date();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    
-    // Map current date to 2024 year which is used in the verses.js dataset
-    const targetDateStr = `2024-${month}-${day}`;
-    
-    const currentVerse = verses.find((v) => v.date === targetDateStr) || verses[0];
-    setVerseOfTheDay(currentVerse);
-    
+
+    // Rotation-based: use day-of-year so every day always has a verse
+    // and all 390 verses cycle through regardless of year
+    const startOfYear = new Date(today.getFullYear(), 0, 0);
+    const diff = today - startOfYear;
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay); // 1–365
+
+    const totalVerses = verses.length;
+    const todayIndex = (dayOfYear - 1) % totalVerses;
+
+    setVerseOfTheDay(verses[todayIndex]);
+
     // Day of the week name
     const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
     setDayOfWeek(dayName);
 
-    // Get previous verses (verses prior to the current date in 2024)
-    const currentVerseIndex = verses.findIndex((v) => v.date === targetDateStr);
-    if (currentVerseIndex > 0) {
-      // Get up to 6 recent older verses to show as suggestions
-      const past = verses.slice(0, currentVerseIndex).reverse().slice(0, 6);
-      setOlderVerses(past);
-    } else {
-      // If first day of the year, fall back to some verses
-      setOlderVerses(verses.slice(1, 7));
+    // Previous 6 verses (wrapping around if needed)
+    const past = [];
+    for (let i = 1; i <= 6; i++) {
+      const idx = (todayIndex - i + totalVerses) % totalVerses;
+      past.push(verses[idx]);
     }
+    setOlderVerses(past);
   }, []);
 
-  const getDayNameFromDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { weekday: "long" });
+  const getLabel = (verse, offsetDays) => {
+    const d = new Date();
+    d.setDate(d.getDate() - offsetDays);
+    return d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
   };
 
   if (!verseOfTheDay) return null;
@@ -83,21 +85,18 @@ export default function VerseSection() {
               Previous Readings
             </h2>
             <div className="verse-list">
-              {olderVerses.map((v, index) => {
-                const dayName = getDayNameFromDate(v.date);
-                return (
-                  <div 
-                    key={index} 
-                    className="card" 
-                    onClick={() => setSelectedVerse(v)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <div className="card-title">{dayName}</div>
-                    <div className="card-content">"{v.verse.substring(0, 100)}..."</div>
-                    <div className="card-tag">{v.tag}</div>
-                  </div>
-                );
-              })}
+              {olderVerses.map((v, index) => (
+                <div 
+                  key={index} 
+                  className="card" 
+                  onClick={() => setSelectedVerse(v)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className="card-title">{getLabel(v, index + 1)}</div>
+                  <div className="card-content">"{v.verse.substring(0, 100)}..."</div>
+                  <div className="card-tag">{v.tag}</div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -119,7 +118,7 @@ export default function VerseSection() {
               &times;
             </span>
             <h2 id="modal-title" style={{ color: "var(--light-color)" }}>
-              Reflections: {getDayNameFromDate(selectedVerse.date)}
+              Reflections
             </h2>
             <p id="modal-verse" style={{ fontStyle: "italic", marginBlock: "2rem", lineHeight: "1.6" }}>
               "{selectedVerse.verse}"
