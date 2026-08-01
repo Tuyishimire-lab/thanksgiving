@@ -3,8 +3,11 @@ import { devotionals } from "@/data/devotionals";
 import { bibleBooks } from "@/data/bibleBooks";
 import { getCustomDevotionals } from "@/app/actions/dbActions";
 
+export const revalidate = 86400; // Regenerate sitemap at most once per day
+
 export default async function sitemap() {
   const baseUrl = "https://praisepage.com";
+
 
   // Static core routes
   const staticUrls = [

@@ -10,7 +10,7 @@ import PrayerWallSnippet from "@/components/PrayerWallSnippet";
 import BibleReflectionTrivia from "@/components/BibleReflectionTrivia";
 import FaithFootprintsTracker from "@/components/FaithFootprintsTracker";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Revalidate homepage at most once per hour
 
 const PLANS_MAPPING = [
   { id: "love", title: "#Love", subtitle: "Walk in Love • 5 Days", image: "/assets/images/tags/travel-tag.jpg" },

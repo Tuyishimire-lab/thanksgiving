@@ -6,8 +6,8 @@ import ThemeProvider from "@/components/ThemeProvider";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import NotificationManager from "@/components/NotificationManager";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Analytics } from "@vercel/analytics/react";
-import { headers } from "next/headers";
+
+
 
 
 const poppins = Poppins({
@@ -65,10 +65,7 @@ export const metadata = {
   },
 };
 
-export default async function RootLayout({ children }) {
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || "";
-  const canonicalUrl = `https://praisepage.com${pathname}`;
+export default function RootLayout({ children }) {
 
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -92,9 +89,7 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en" className={`${poppins.variable} ${playfair.variable} ${caveat.variable}`}>
-      <head>
-        <link rel="canonical" href={canonicalUrl} />
-      </head>
+      <head />
       <body>
         <script
           type="application/ld+json"
@@ -115,7 +110,7 @@ export default async function RootLayout({ children }) {
         </ThemeProvider>
       </body>
       <GoogleAnalytics gaId="G-C8TS9EERMJ" />
-      <Analytics />
+
     </html>
   );
 }
