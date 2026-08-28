@@ -279,6 +279,29 @@ export async function initializeDb(client) {
       }
     }
 
+    // ─── Performance Indexes ──────────────────────────────────────────────────
+    // These use IF NOT EXISTS so they are safe to run on every init.
+    const indexes = [
+      "CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)",
+      "CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(session_token)",
+      "CREATE INDEX IF NOT EXISTS idx_testimonies_created ON testimonies(created_at DESC)",
+      "CREATE INDEX IF NOT EXISTS idx_comments_testimony ON comments(testimony_id, created_at)",
+      "CREATE INDEX IF NOT EXISTS idx_prayers_created ON prayers(created_at DESC)",
+      "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
+      "CREATE INDEX IF NOT EXISTS idx_users_last_active ON users(last_active)",
+      "CREATE INDEX IF NOT EXISTS idx_likes_testimony ON likes(testimony_id)",
+      "CREATE INDEX IF NOT EXISTS idx_plans_progress_user ON plans_progress(user_id)",
+      "CREATE INDEX IF NOT EXISTS idx_push_subs_user ON push_subscriptions(user_id)",
+    ];
+
+    for (const idx of indexes) {
+      try {
+        await client.execute(idx);
+      } catch (err) {
+        // Index may already exist or table missing — non-fatal
+      }
+    }
+
     isInitialized = true;
   } catch (error) {
     console.error("Database initialization error:", error);

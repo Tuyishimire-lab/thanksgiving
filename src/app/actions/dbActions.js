@@ -4,6 +4,7 @@ import { getDb } from "@/data/db";
 import { cookies } from "next/headers";
 import { parseContentBlocks } from "@/data/utils";
 import { getMe, updateStreakAction } from "./authActions";
+import crypto from "node:crypto";
 
 /**
  * Helper to fetch current logged-in user ID
@@ -45,18 +46,20 @@ async function getAuthenticatedUser() {
 
 // ================= TESTIMONIES FEED =================
 
-export async function getTestimonies() {
+export async function getTestimonies(limit = 0) {
   try {
     const currentUserId = await getCurrentUserId();
     const db = await getDb();
 
-    const res = await db.execute(`
+    let sql = `
       SELECT t.*, 
              (SELECT COUNT(*) FROM likes WHERE testimony_id = t.id) as likes_count,
              (SELECT COUNT(*) FROM comments WHERE testimony_id = t.id) as comments_count
       FROM testimonies t
       ORDER BY (CASE WHEN t.id LIKE 'post%' THEN 1 ELSE 0 END) ASC, t.created_at DESC
-    `);
+    `;
+    if (limit > 0) sql += ` LIMIT ${Number(limit)}`;
+    const res = await db.execute(sql);
     const rows = res.rows;
 
     // Check which ones the current user liked
@@ -112,7 +115,7 @@ export async function createTestimony(title, content, tag = "Gratitude") {
       return { error: "Please fill in all fields." };
     }
 
-    const id = `testimony_${Date.now()}`;
+    const id = `testimony_${crypto.randomUUID()}`;
     const contentBlocks = parseContentBlocks(content);
     const excerpt = content.substring(0, 120) + (content.length > 120 ? "..." : "");
     const dateStr = new Date().toISOString();
@@ -209,7 +212,7 @@ export async function addComment(testimonyId, content) {
       return { error: "Comment content cannot be empty." };
     }
 
-    const id = `comment_${Date.now()}`;
+    const id = `comment_${crypto.randomUUID()}`;
     const now = new Date().toISOString();
 
     const db = await getDb();
@@ -664,7 +667,7 @@ export async function getHomepageData() {
     const user = await getMe();
     if (!user) {
       // Guest mode - fetch testimonies in parallel with null values for auth stats
-      const testimonies = await getTestimonies();
+      const testimonies = await getTestimonies(4);
       return {
         user: null,
         streak: null,
@@ -680,7 +683,7 @@ export async function getHomepageData() {
       updateStreakAction(),
       getDevotionalProgress(),
       getNotebookData(),
-      getTestimonies(),
+      getTestimonies(4),
       getUnlockedBadges()
     ]);
 
@@ -797,7 +800,7 @@ export async function saveJournalEntry(prompt, text) {
       return { error: "Journal entry content cannot be empty." };
     }
 
-    const id = `journal_${Date.now()}`;
+    const id = `journal_${crypto.randomUUID()}`;
     const dateStr = new Date().toISOString();
     const db = await getDb();
     
@@ -897,7 +900,7 @@ export async function createPrayer(title, content, isAnonymous = false, guestNam
     if (!title || !content) return { error: "Please fill in all fields." };
 
     const user = await getAuthenticatedUser();
-    const id = `prayer_${Date.now()}`;
+    const id = `prayer_${crypto.randomUUID()}`;
     const dateStr = new Date().toISOString();
     const db = await getDb();
 
@@ -1188,7 +1191,7 @@ export async function addPrayerEncouragement(prayerId, content, guestName = "") 
     if (!content || !content.trim()) return { error: "Encouragement content cannot be empty." };
 
     const user = await getAuthenticatedUser();
-    const id = `enc_${Date.now()}`;
+    const id = `enc_${crypto.randomUUID()}`;
     const dateStr = new Date().toISOString();
     const db = await getDb();
 

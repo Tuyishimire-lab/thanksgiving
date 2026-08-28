@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { login, getMe, loginWithGoogle } from "@/app/actions/authActions";
-import { syncLocalData } from "@/app/actions/dbActions";
+import { syncAndClearLocalData } from "@/data/syncHelper";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -84,44 +84,7 @@ export default function LoginPage() {
         setLoading(false);
       } else {
         // Sync local storage state to db
-        if (typeof window !== "undefined") {
-          try {
-            const savedPlans = JSON.parse(localStorage.getItem("praisepage_saved_plans") || "[]");
-            const plansProgress = JSON.parse(localStorage.getItem("praisepage_plans_progress") || "{}");
-            const reflections = JSON.parse(localStorage.getItem("praisepage_plan_reflections") || "{}");
-            const highlights = JSON.parse(localStorage.getItem("praisepage_highlights") || "{}");
-            const notes = JSON.parse(localStorage.getItem("praisepage_notes") || "{}");
-            const localTestimonies = JSON.parse(localStorage.getItem("praisepage_local_testimonies") || "[]");
-
-            const hasLocalData = 
-              savedPlans.length > 0 ||
-              Object.keys(plansProgress).length > 0 ||
-              Object.keys(reflections).length > 0 ||
-              Object.keys(highlights).length > 0 ||
-              Object.keys(notes).length > 0 ||
-              localTestimonies.length > 0;
-
-            if (hasLocalData) {
-              await syncLocalData({
-                savedPlans,
-                plansProgress,
-                reflections,
-                highlights,
-                notes,
-                localTestimonies
-              });
-
-              localStorage.removeItem("praisepage_saved_plans");
-              localStorage.removeItem("praisepage_plans_progress");
-              localStorage.removeItem("praisepage_plan_reflections");
-              localStorage.removeItem("praisepage_highlights");
-              localStorage.removeItem("praisepage_notes");
-              localStorage.removeItem("praisepage_local_testimonies");
-            }
-          } catch (storageError) {
-            console.error("Local data sync failed: ", storageError);
-          }
-        }
+        await syncAndClearLocalData();
 
         router.push("/profile");
         window.location.reload();
@@ -158,45 +121,7 @@ export default function LoginPage() {
         setLoading(false);
       } else {
         // Sync local storage state to db
-        if (typeof window !== "undefined") {
-          try {
-            const savedPlans = JSON.parse(localStorage.getItem("praisepage_saved_plans") || "[]");
-            const plansProgress = JSON.parse(localStorage.getItem("praisepage_plans_progress") || "{}");
-            const reflections = JSON.parse(localStorage.getItem("praisepage_plan_reflections") || "{}");
-            const highlights = JSON.parse(localStorage.getItem("praisepage_highlights") || "{}");
-            const notes = JSON.parse(localStorage.getItem("praisepage_notes") || "{}");
-            const localTestimonies = JSON.parse(localStorage.getItem("praisepage_local_testimonies") || "[]");
-
-            const hasLocalData = 
-              savedPlans.length > 0 ||
-              Object.keys(plansProgress).length > 0 ||
-              Object.keys(reflections).length > 0 ||
-              Object.keys(highlights).length > 0 ||
-              Object.keys(notes).length > 0 ||
-              localTestimonies.length > 0;
-
-            if (hasLocalData) {
-              await syncLocalData({
-                savedPlans,
-                plansProgress,
-                reflections,
-                highlights,
-                notes,
-                localTestimonies
-              });
-
-              // Clean up local items since they are now stored in SQLite
-              localStorage.removeItem("praisepage_saved_plans");
-              localStorage.removeItem("praisepage_plans_progress");
-              localStorage.removeItem("praisepage_plan_reflections");
-              localStorage.removeItem("praisepage_highlights");
-              localStorage.removeItem("praisepage_notes");
-              localStorage.removeItem("praisepage_local_testimonies");
-            }
-          } catch (storageError) {
-            console.error("Local data sync failed: ", storageError);
-          }
-        }
+        await syncAndClearLocalData();
 
         router.push("/profile");
         // Force refresh to reload header state

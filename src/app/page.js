@@ -41,14 +41,17 @@ export default async function Home() {
   });
   const allPlansMap = { ...devotionals, ...customPlansMap };
 
-  // Deterministic Verse of the Day (Day of the Year rotation)
+  // Deterministic Verse of the Day — year-aware hash for fresh rotation
   const today = new Date();
   const start = new Date(today.getFullYear(), 0, 0);
   const diff = (today - start) + ((start.getTimezoneOffset() - today.getTimezoneOffset()) * 60 * 1000);
   const oneDay = 1000 * 60 * 60 * 24;
   const dayOfYear = Math.floor(diff / oneDay);
-  
-  const verseIndex = dayOfYear % verses.length;
+
+  // Pseudo-random hash mixing year + day so the sequence changes each year
+  const year = today.getFullYear();
+  const seed = (year * 367 + dayOfYear) * 2654435761; // Knuth multiplicative hash
+  const verseIndex = ((seed >>> 0) % verses.length);  // unsigned shift for positive modulo
   const currentVerse = verses[verseIndex] || verses[0];
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const day = String(today.getDate()).padStart(2, "0");

@@ -3,6 +3,7 @@
 import { getDb, hashPassword, verifyPassword } from "@/data/db";
 import { cookies, headers } from "next/headers";
 import crypto from "node:crypto";
+import { getAdminEmailList } from "./adminActions";
 
 /**
  * Perform basic CSRF check for mutations
@@ -150,9 +151,7 @@ export async function signup(name, email, password) {
     const todayStr = new Date().toDateString();
 
     // Check if user email is in the admin whitelist
-    const adminEmails = (process.env.ADMIN_EMAILS || "admin@praisepage.com")
-      .split(",")
-      .map(e => e.trim().toLowerCase());
+    const adminEmails = await getAdminEmailList();
     const isEmailAdmin = adminEmails.includes(normalizedEmail);
     const role = isEmailAdmin ? "admin" : "user";
 
@@ -249,9 +248,7 @@ export async function login(email, password) {
     });
 
     // Sync admin role dynamically based on environment whitelist
-    const adminEmails = (process.env.ADMIN_EMAILS || "admin@praisepage.com")
-      .split(",")
-      .map(e => e.trim().toLowerCase());
+    const adminEmails = await getAdminEmailList();
     const isEmailAdmin = adminEmails.includes(normalizedEmail);
     
     let updatedRole = user.role || "user";
@@ -414,9 +411,7 @@ export async function loginWithGoogle(token, email, name, tokenType = "id-token"
       userId = crypto.randomUUID();
       const todayStr = new Date().toDateString();
       
-      const adminEmails = (process.env.ADMIN_EMAILS || "admin@praisepage.com")
-        .split(",")
-        .map(e => e.trim().toLowerCase());
+      const adminEmails = await getAdminEmailList();
       const isEmailAdmin = adminEmails.includes(normalizedEmail);
       updatedRole = isEmailAdmin ? "admin" : "user";
 
@@ -439,9 +434,7 @@ export async function loginWithGoogle(token, email, name, tokenType = "id-token"
     } else {
       userId = user.id;
       // Sync admin role dynamically based on environment whitelist
-      const adminEmails = (process.env.ADMIN_EMAILS || "admin@praisepage.com")
-        .split(",")
-        .map(e => e.trim().toLowerCase());
+      const adminEmails = await getAdminEmailList();
       const isEmailAdmin = adminEmails.includes(normalizedEmail);
       
       updatedRole = user.role || "user";

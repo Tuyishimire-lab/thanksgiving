@@ -18,6 +18,7 @@ function logAdminAction(message) {
 /**
  * Verifies that the current logged-in user is an admin.
  * Throws an error if not authenticated or not an admin.
+ * Returns the authenticated admin user object.
  */
 async function verifyAdmin() {
   const user = await getMe();
@@ -25,6 +26,16 @@ async function verifyAdmin() {
     throw new Error("Unauthorized: Admin access required.");
   }
   return user;
+}
+
+/**
+ * Parse the ADMIN_EMAILS environment variable into a normalized list.
+ * Shared helper to eliminate duplication across auth flows.
+ */
+export async function getAdminEmailList() {
+  return (process.env.ADMIN_EMAILS || "admin@praisepage.com")
+    .split(",")
+    .map(e => e.trim().toLowerCase());
 }
 
 
@@ -36,23 +47,32 @@ export async function getAdminStats() {
     await verifyAdmin();
     const db = await getDb();
 
-    // 1. Fetch users for calculations
-    const usersRes = await db.execute("SELECT id, name, email, streak_count, last_active, created_at, role FROM users");
-    const users = usersRes.rows;
+    // 1. Count users with SQL instead of loading all into memory
+    const totalUsersRes = await db.execute("SELECT COUNT(*) as count FROM users");
+    const totalUsers = totalUsersRes.rows[0]?.count ?? 0;
 
     const todayStr = new Date().toDateString();
-    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toDateString();
 
-    let activeToday = 0;
+    const activeTodayRes = await db.execute({
+      sql: "SELECT COUNT(*) as count FROM users WHERE last_active = ?",
+      args: [todayStr]
+    });
+    const activeToday = activeTodayRes.rows[0]?.count ?? 0;
+
+    // Active this week: count users whose last_active is within the last 7 days
+    // Since last_active is stored as toDateString(), we fetch recent and filter
+    const recentUsersRes = await db.execute(
+      "SELECT last_active FROM users WHERE last_active IS NOT NULL"
+    );
+    const oneWeekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
     let activeThisWeek = 0;
-
-    users.forEach(u => {
+    recentUsersRes.rows.forEach(u => {
       if (u.last_active === todayStr) {
-        activeToday++;
         activeThisWeek++;
       } else if (u.last_active) {
         const lastActiveTime = Date.parse(u.last_active);
-        if (!isNaN(lastActiveTime) && lastActiveTime >= oneWeekAgo) {
+        if (!isNaN(lastActiveTime) && lastActiveTime >= oneWeekAgoMs) {
           activeThisWeek++;
         }
       }
@@ -73,7 +93,8 @@ export async function getAdminStats() {
 
     // 3. Compile Activity Stream
     // User registrations
-    const userActivities = users.map(u => ({
+    const userActRes = await db.execute("SELECT id, name, email, created_at FROM users ORDER BY created_at DESC LIMIT 15");
+    const userActivities = userActRes.rows.map(u => ({
       id: `reg_${u.id}`,
       type: "user_registered",
       user: u.name,
@@ -131,7 +152,7 @@ export async function getAdminStats() {
     return {
       success: true,
       stats: {
-        totalUsers: users.length,
+        totalUsers,
         activeToday,
         activeThisWeek,
         totalTestimonies,
@@ -259,6 +280,12 @@ export async function deleteUser(userId) {
   try {
     logAdminAction(`deleteUser requested for userId: ${userId}`);
     const admin = await verifyAdmin();
+    
+    // Server-side self-deletion guard
+    if (userId === admin.id) {
+      return { error: "You cannot delete your own admin account." };
+    }
+    
     logAdminAction(`deleteUser: verifyAdmin passed. Admin: ${admin.email}`);
     const db = await getDb();
     const dbRes = await db.execute({
@@ -282,6 +309,12 @@ export async function toggleUserRole(userId, currentRole) {
   try {
     logAdminAction(`toggleUserRole requested for userId: ${userId}, currentRole: ${currentRole}`);
     const admin = await verifyAdmin();
+    
+    // Server-side self-demotion guard
+    if (userId === admin.id) {
+      return { error: "You cannot change your own admin role." };
+    }
+    
     logAdminAction(`toggleUserRole: verifyAdmin passed. Admin: ${admin.email}`);
     const newRole = currentRole === "admin" ? "user" : "admin";
     const db = await getDb();

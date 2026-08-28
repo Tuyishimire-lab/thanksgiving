@@ -15,7 +15,10 @@ function getVerseOfDay() {
   const today = new Date();
   const startOfYear = new Date(today.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
-  const verse = verses[(dayOfYear - 1) % verses.length];
+  const year = today.getFullYear();
+  const seed = (year * 367 + dayOfYear) * 2654435761; // Knuth multiplicative hash
+  const verseIndex = ((seed >>> 0) % verses.length);
+  const verse = verses[verseIndex] || verses[0];
   return {
     title: "🌅 Verse of the Day",
     body: `"${verse.verse.substring(0, 100)}${verse.verse.length > 100 ? "…" : ""}" — ${verse.tag}`,
@@ -99,6 +102,20 @@ export async function GET(request) {
 
   try {
     const db = await getDb();
+
+    // ─── Housekeeping: purge expired sessions ───────────────────────────────
+    try {
+      const now = new Date().toISOString();
+      const purged = await db.execute({
+        sql: "DELETE FROM sessions WHERE expires_at < ?",
+        args: [now]
+      });
+      if (purged.rowsAffected > 0) {
+        console.log(`[cron] Purged ${purged.rowsAffected} expired sessions.`);
+      }
+    } catch (cleanupErr) {
+      console.error("[cron] Session cleanup error (non-fatal):", cleanupErr.message);
+    }
 
     // Fetch all subscriptions joined with their preferences
     const { rows: subs } = await db.execute(`

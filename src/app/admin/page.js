@@ -571,7 +571,7 @@ export default function AdminPanel() {
       const date = new Date(isoString);
       const diffMs = Date.now() - date.getTime();
       const diffMins = Math.floor(diffMs / 60000);
-      const diffHrs = Math.floor(diffMins / 600);
+      const diffHrs = Math.floor(diffMins / 60);
       if (diffMins < 1) return "Just now";
       if (diffMins < 60) return `${diffMins}m ago`;
       if (diffHrs < 24) return `${Math.floor(diffMins / 60)}h ago`;
