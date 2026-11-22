@@ -1,0 +1,3552 @@
+/* PraisePage Canonical Design System:
+ * Warm Candlelit Sanctuary (Dark) & Sunlit Parchment (Light)
+ */
+
+:root {
+  --sanc-bg: #131417;
+  --sanc-surface: #151820;
+  --sanc-surface-2: #1c202a;
+  --sanc-surface-hover: #222735;
+  --sanc-text: #f5f2eb;
+  --sanc-muted: #b0b7c6;
+  --sanc-gold: #e8c56b;
+  --sanc-gold-soft: rgba(232, 197, 107, 0.13);
+  --sanc-gold-border: rgba(232, 197, 107, 0.34);
+  --sanc-emerald: #4fcf70;
+  --sanc-emerald-soft: rgba(79, 207, 112, 0.13);
+  --sanc-emerald-border: rgba(79, 207, 112, 0.34);
+  --sanc-sky: #7cc4fa;
+  --sanc-sky-soft: rgba(124, 196, 250, 0.12);
+  --sanc-violet: #c893f9;
+  --sanc-violet-soft: rgba(200, 147, 249, 0.13);
+  --sanc-violet-border: rgba(200, 147, 249, 0.34);
+  --sanc-error: #f07167;
+  --sanc-error-soft: rgba(240, 113, 103, 0.14);
+  --sanc-btn-ink: #111513;
+  --sanc-border: rgba(255, 255, 255, 0.08);
+  --sanc-border-strong: rgba(255, 255, 255, 0.16);
+  --sanc-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  --sanc-shadow-hover: 0 18px 40px rgba(0, 0, 0, 0.4);
+
+  /* Legacy global variable harmonization (Dark) */
+  --light-color: #f5f2eb;
+  --light-color-alt: #b0b7c6;
+  --primary-background-color: #131417;
+  --secondary-background-color: #151820;
+  --transparent-light-color: rgba(255, 255, 255, 0.08);
+}
+
+body.light-theme {
+  --sanc-bg: #f7f6f2;
+  --sanc-surface: #ffffff;
+  --sanc-surface-2: #f4f1ea;
+  --sanc-surface-hover: #ece7da;
+  --sanc-text: #1c2028;
+  --sanc-muted: #565e6d;
+  --sanc-gold: #9a6d12;
+  --sanc-gold-soft: rgba(182, 134, 33, 0.12);
+  --sanc-gold-border: rgba(168, 121, 24, 0.34);
+  --sanc-emerald: #237a3b;
+  --sanc-emerald-soft: rgba(43, 147, 72, 0.11);
+  --sanc-emerald-border: rgba(43, 147, 72, 0.34);
+  --sanc-sky: #1e6fa8;
+  --sanc-sky-soft: rgba(30, 111, 168, 0.1);
+  --sanc-violet: #7b3fa0;
+  --sanc-violet-soft: rgba(123, 63, 160, 0.1);
+  --sanc-violet-border: rgba(123, 63, 160, 0.3);
+  --sanc-error: #c43c30;
+  --sanc-error-soft: rgba(196, 60, 48, 0.1);
+  --sanc-btn-ink: #ffffff;
+  --sanc-border: rgba(20, 25, 35, 0.09);
+  --sanc-border-strong: rgba(20, 25, 35, 0.18);
+  --sanc-shadow: 0 10px 28px rgba(20, 25, 35, 0.06);
+  --sanc-shadow-hover: 0 16px 36px rgba(20, 25, 35, 0.11);
+
+  /* Legacy global variable harmonization (Light) */
+  --primary-background-color: #f7f6f2;
+  --secondary-background-color: #ffffff;
+  --light-color: #1c2028;
+  --light-color-alt: #565e6d;
+  --accent-color: #237a3b;
+  --transparent-light-color: rgba(20, 25, 35, 0.09);
+}
+
+/* Global Sanctuary Scrollbars */
+::-webkit-scrollbar {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--sanc-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sanc-border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sanc-gold-border);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* ==========================================================================
+   Layout & Heroes
+   ========================================================================== */
+.sanc-page {
+  min-height: 75vh;
+  background-color: var(--sanc-bg);
+  color: var(--sanc-text);
+  letter-spacing: 0;
+  font-family: var(--font-family), system-ui, -apple-system, sans-serif;
+  padding-block: 3.4rem 6rem;
+  overflow-x: clip;
+}
+
+.sanc-page a:focus-visible,
+.sanc-page button:focus-visible,
+.sanc-page input:focus-visible,
+.sanc-page textarea:focus-visible,
+.sanc-page select:focus-visible,
+.sanc-header a:focus-visible,
+.sanc-header button:focus-visible,
+.sanc-footer a:focus-visible,
+.sanc-modal-backdrop a:focus-visible,
+.sanc-modal-backdrop button:focus-visible,
+.sanc-modal-backdrop input:focus-visible,
+.sanc-modal-backdrop textarea:focus-visible,
+.sanc-modal-backdrop select:focus-visible,
+.sanc-search-backdrop a:focus-visible,
+.sanc-search-backdrop button:focus-visible,
+.sanc-search-backdrop input:focus-visible,
+.sanc-float-banner button:focus-visible {
+  outline: 2px solid var(--sanc-gold);
+  outline-offset: 2px;
+}
+
+.sanc-container {
+  width: 100%;
+  max-width: 114rem;
+  margin: 0 auto;
+  padding-inline: 2rem;
+}
+
+.sanc-container-md {
+  width: 100%;
+  max-width: 96rem;
+  margin: 0 auto;
+  padding-inline: 2rem;
+}
+
+.sanc-container-sm {
+  width: 100%;
+  max-width: 78rem;
+  margin: 0 auto;
+  padding-inline: 2rem;
+}
+
+.sanc-hero {
+  position: relative;
+  margin-bottom: 2.8rem;
+  padding: 2.8rem 3rem;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, var(--sanc-gold-soft), transparent 55%),
+    linear-gradient(155deg, var(--sanc-surface) 0%, var(--sanc-surface-2) 100%);
+  border: 1px solid var(--sanc-border);
+  border-top: 2px solid var(--sanc-gold);
+  box-shadow: var(--sanc-shadow);
+}
+
+.sanc-hero-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.sanc-hero-center {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sanc-hero-banner {
+  position: relative;
+  min-height: 24rem;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--sanc-border);
+  box-shadow: var(--sanc-shadow);
+  margin-bottom: 2.8rem;
+}
+
+.sanc-hero-banner-overlay {
+  position: relative;
+  z-index: 1;
+  min-height: 24rem;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.9rem;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 16, 22, 0.28) 0%,
+    rgba(13, 16, 22, 0.72) 52%,
+    rgba(13, 16, 22, 0.92) 100%
+  );
+  color: #f5f2eb;
+}
+
+.sanc-eyebrow {
+  display: inline-block;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sanc-gold);
+  margin-bottom: 0.45rem;
+}
+
+.sanc-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: clamp(2.6rem, 3.6vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1.16;
+  color: var(--sanc-text);
+  margin: 0;
+}
+
+.sanc-hero-banner-overlay .sanc-title {
+  color: #ffffff;
+}
+
+.sanc-title-accent {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--sanc-gold);
+  padding-right: 0.14em;
+}
+
+.sanc-subtitle {
+  font-size: 1.5rem;
+  line-height: 1.65;
+  color: var(--sanc-muted);
+  max-width: 64rem;
+  margin: 0.75rem 0 0;
+}
+
+.sanc-hero-banner-overlay .sanc-subtitle {
+  color: rgba(245, 242, 235, 0.88);
+}
+
+.sanc-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.sanc-section-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: clamp(2.1rem, 2.6vw, 2.7rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--sanc-text);
+  margin: 0;
+}
+
+.sanc-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 1.32rem;
+  font-weight: 600;
+  color: var(--sanc-muted);
+  margin-bottom: 1.8rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.sanc-back-link i {
+  font-size: 1.55rem;
+}
+
+.sanc-back-link:hover {
+  color: var(--sanc-gold);
+}
+
+/* ==========================================================================
+   Surfaces & Grids
+   ========================================================================== */
+.sanc-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 18px;
+  box-shadow: var(--sanc-shadow);
+  color: var(--sanc-text);
+  overflow: hidden;
+}
+
+.sanc-card-pad {
+  padding: 2.6rem 2.8rem;
+}
+
+.sanc-card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.sanc-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sanc-shadow-hover);
+  border-color: var(--sanc-gold-border);
+}
+
+.sanc-card-muted {
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  border-radius: 14px;
+  padding: 1.6rem 1.8rem;
+}
+
+.sanc-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 2.4rem;
+}
+
+.sanc-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.4rem 1.6rem;
+  border-radius: 16px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  box-shadow: var(--sanc-shadow);
+}
+
+.sanc-stat-icon {
+  width: 4.2rem;
+  height: 4.2rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--sanc-gold-soft);
+  color: var(--sanc-gold);
+}
+
+.sanc-stat-icon.gold {
+  background: var(--sanc-gold-soft);
+  color: var(--sanc-gold);
+}
+
+.sanc-stat-icon.emerald {
+  background: var(--sanc-emerald-soft);
+  color: var(--sanc-emerald);
+}
+
+.sanc-stat-icon.sky {
+  background: var(--sanc-sky-soft);
+  color: var(--sanc-sky);
+}
+
+.sanc-stat-icon.violet {
+  background: var(--sanc-violet-soft);
+  color: var(--sanc-violet);
+}
+
+.sanc-stat-icon.danger {
+  background: var(--sanc-error-soft);
+  color: var(--sanc-error);
+}
+
+.sanc-stat-icon i {
+  font-size: 1.95rem;
+}
+
+.sanc-stat-value {
+  display: block;
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--sanc-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.sanc-stat-label {
+  display: block;
+  font-size: 1.18rem;
+  font-weight: 500;
+  color: var(--sanc-muted);
+  margin-top: 0.15rem;
+}
+
+.sanc-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.sanc-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.sanc-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.sanc-empty {
+  text-align: center;
+  padding: 4.4rem 2.4rem;
+  border-radius: 18px;
+  background: var(--sanc-surface);
+  border: 1px dashed var(--sanc-border-strong);
+  color: var(--sanc-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sanc-empty i {
+  font-size: 3.4rem;
+  color: var(--sanc-gold);
+}
+
+/* ==========================================================================
+   Buttons, Tabs, Pills, Badges
+   ========================================================================== */
+.sanc-btn-primary,
+.sanc-btn-secondary,
+.sanc-btn-gold,
+.sanc-btn-violet,
+.sanc-btn-danger,
+.sanc-btn-danger-solid,
+.sanc-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 1rem 2rem;
+  border-radius: 999px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.sanc-btn-primary i,
+.sanc-btn-secondary i,
+.sanc-btn-gold i,
+.sanc-btn-violet i,
+.sanc-btn-danger i,
+.sanc-btn-danger-solid i,
+.sanc-btn-ghost i,
+.sanc-icon-btn i {
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.sanc-btn-primary {
+  background-color: var(--sanc-emerald);
+  border-color: var(--sanc-emerald);
+  color: var(--sanc-btn-ink);
+  box-shadow: 0 6px 18px var(--sanc-emerald-soft);
+}
+
+.sanc-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px var(--sanc-emerald-border);
+}
+
+.sanc-btn-secondary {
+  background-color: var(--sanc-surface-2);
+  border-color: var(--sanc-border-strong);
+  color: var(--sanc-text);
+}
+
+.sanc-btn-secondary:hover:not(:disabled) {
+  background-color: var(--sanc-surface-hover);
+  border-color: var(--sanc-gold-border);
+  transform: translateY(-1px);
+}
+
+.sanc-btn-gold {
+  background-color: var(--sanc-gold-soft);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+.sanc-btn-gold:hover:not(:disabled) {
+  background-color: var(--sanc-gold);
+  border-color: var(--sanc-gold);
+  color: var(--sanc-btn-ink);
+  transform: translateY(-1px);
+}
+
+.sanc-btn-violet {
+  background-color: var(--sanc-violet-soft);
+  border-color: var(--sanc-violet-border);
+  color: var(--sanc-violet);
+}
+
+.sanc-btn-violet:hover:not(:disabled) {
+  background-color: var(--sanc-violet);
+  border-color: var(--sanc-violet);
+  color: #131417;
+  transform: translateY(-1px);
+}
+
+.sanc-btn-danger {
+  background-color: var(--sanc-error-soft);
+  border-color: var(--sanc-error);
+  color: var(--sanc-error);
+}
+
+.sanc-btn-danger:hover:not(:disabled) {
+  background-color: var(--sanc-error);
+  border-color: var(--sanc-error);
+  color: var(--sanc-btn-ink);
+  transform: translateY(-1px);
+}
+
+.sanc-btn-danger-solid {
+  background-color: var(--sanc-error);
+  border-color: var(--sanc-error);
+  color: var(--sanc-btn-ink);
+  box-shadow: 0 6px 18px var(--sanc-error-soft);
+}
+
+.sanc-btn-danger-solid:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px var(--sanc-error-soft);
+}
+
+.sanc-btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--sanc-muted);
+}
+
+.sanc-btn-ghost:hover:not(:disabled) {
+  background-color: var(--sanc-surface-2);
+  color: var(--sanc-text);
+}
+
+.sanc-btn-primary:disabled,
+.sanc-btn-secondary:disabled,
+.sanc-btn-gold:disabled,
+.sanc-btn-violet:disabled,
+.sanc-btn-danger:disabled,
+.sanc-btn-danger-solid:disabled,
+.sanc-btn-ghost:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sanc-btn-sm {
+  padding: 0.65rem 1.35rem;
+  font-size: 1.24rem;
+}
+
+.sanc-btn-sm i {
+  font-size: 1.42rem;
+}
+
+.sanc-icon-btn {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sanc-icon-btn:hover {
+  background: var(--sanc-surface-hover);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-text);
+}
+
+.sanc-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  border-radius: 999px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+}
+
+.sanc-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.35rem;
+  border-radius: 999px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--sanc-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sanc-seg-btn i {
+  font-size: 1.45rem;
+}
+
+.sanc-seg-btn:hover {
+  color: var(--sanc-text);
+}
+
+.sanc-seg-btn.active {
+  background: var(--sanc-emerald);
+  color: var(--sanc-btn-ink);
+}
+
+.sanc-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  border-bottom: 1px solid var(--sanc-border);
+  padding-bottom: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.sanc-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.72rem 1.45rem;
+  border-radius: 10px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--sanc-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sanc-tab-btn i {
+  font-size: 1.5rem;
+}
+
+.sanc-tab-btn:hover {
+  color: var(--sanc-text);
+  background: var(--sanc-surface-2);
+}
+
+.sanc-tab-btn.active {
+  background: var(--sanc-gold-soft);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+.sanc-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sanc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.35rem;
+  border-radius: 999px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  color: var(--sanc-muted);
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.sanc-pill i {
+  font-size: 1.4rem;
+}
+
+.sanc-pill:hover {
+  border-color: var(--sanc-border-strong);
+  color: var(--sanc-text);
+}
+
+.sanc-pill.active {
+  background: var(--sanc-emerald);
+  border-color: var(--sanc-emerald);
+  color: var(--sanc-btn-ink);
+}
+
+.sanc-pill.active-gold {
+  background: var(--sanc-gold-soft);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+.sanc-pill.active-violet {
+  background: var(--sanc-violet-soft);
+  border-color: var(--sanc-violet-border);
+  color: var(--sanc-violet);
+}
+
+.sanc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  color: var(--sanc-muted);
+  white-space: nowrap;
+}
+
+.sanc-badge i {
+  font-size: 1.3rem;
+}
+
+.sanc-badge.gold {
+  background: var(--sanc-gold-soft);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+.sanc-badge.emerald {
+  background: var(--sanc-emerald-soft);
+  border-color: var(--sanc-emerald-border);
+  color: var(--sanc-emerald);
+}
+
+.sanc-badge.sky {
+  background: var(--sanc-sky-soft);
+  border-color: rgba(124, 196, 250, 0.3);
+  color: var(--sanc-sky);
+}
+
+.sanc-badge.violet {
+  background: var(--sanc-violet-soft);
+  border-color: var(--sanc-violet-border);
+  color: var(--sanc-violet);
+}
+
+.sanc-badge.danger {
+  background: var(--sanc-error-soft);
+  border-color: var(--sanc-error);
+  color: var(--sanc-error);
+}
+
+.sanc-avatar {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  background: var(--sanc-gold-soft);
+  border: 1px solid var(--sanc-gold-border);
+  color: var(--sanc-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Forms & Feedback
+   ========================================================================== */
+.sanc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.sanc-label {
+  font-size: 1.18rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sanc-muted);
+  margin: 0;
+}
+
+.sanc-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.sanc-input-icon {
+  position: absolute;
+  left: 1.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--sanc-muted);
+  font-size: 1.75rem;
+  pointer-events: none;
+  line-height: 1;
+}
+
+input.sanc-input,
+textarea.sanc-textarea,
+select.sanc-select {
+  width: 100%;
+  padding: 1.15rem 1.4rem;
+  border-radius: 12px;
+  border: 1px solid var(--sanc-border-strong);
+  background-color: var(--sanc-surface-2);
+  color: var(--sanc-text);
+  font-family: var(--font-family), system-ui, sans-serif;
+  font-size: 1.4rem;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input.sanc-input.has-icon {
+  padding-left: 4.3rem;
+}
+
+textarea.sanc-textarea {
+  min-height: 11rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+input.sanc-input::placeholder,
+textarea.sanc-textarea::placeholder {
+  color: var(--sanc-muted);
+  opacity: 0.78;
+}
+
+input.sanc-input:hover,
+textarea.sanc-textarea:hover,
+select.sanc-select:hover {
+  background-color: var(--sanc-surface-2);
+  border-color: var(--sanc-gold-border);
+}
+
+input.sanc-input:focus,
+textarea.sanc-textarea:focus,
+select.sanc-select:focus {
+  background-color: var(--sanc-surface-2);
+  border-color: var(--sanc-gold);
+  box-shadow: 0 0 0 3px var(--sanc-gold-soft);
+}
+
+input.sanc-checkbox {
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  border-radius: 5px;
+  border: 1px solid var(--sanc-border-strong);
+  background-color: var(--sanc-surface-2);
+  accent-color: var(--sanc-emerald);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+input.sanc-checkbox:hover {
+  background-color: var(--sanc-surface-2);
+}
+
+.sanc-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1.32rem;
+  font-weight: 600;
+  line-height: 1.5;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-text);
+}
+
+.sanc-alert i {
+  font-size: 1.85rem;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.sanc-alert.error {
+  background: var(--sanc-error-soft);
+  border-color: var(--sanc-error);
+  color: var(--sanc-error);
+}
+
+.sanc-alert.ok {
+  background: var(--sanc-emerald-soft);
+  border-color: var(--sanc-emerald-border);
+  color: var(--sanc-emerald);
+}
+
+.sanc-alert.gold {
+  background: var(--sanc-gold-soft);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+.sanc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border-radius: 10px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+}
+
+.sanc-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 7px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  color: var(--sanc-text);
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+
+.sanc-toolbar-btn i {
+  font-size: 1.45rem;
+}
+
+.sanc-toolbar-btn:hover {
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+/* ==========================================================================
+   Portaled Modals (.sanc-modal-*)
+   ========================================================================== */
+.sanc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  z-index: 9999;
+  background: rgba(8, 10, 14, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  letter-spacing: 0;
+  font-family: var(--font-family), system-ui, -apple-system, sans-serif;
+}
+
+body.light-theme .sanc-modal-backdrop {
+  background: rgba(20, 22, 28, 0.56);
+}
+
+.sanc-modal-dialog {
+  width: 100%;
+  max-width: 58rem;
+  max-height: min(88dvh, 76rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--sanc-surface);
+  color: var(--sanc-text);
+  border: 1px solid var(--sanc-border);
+  box-shadow: var(--sanc-shadow-hover);
+}
+
+.sanc-modal-dialog.wide {
+  max-width: 78rem;
+  max-height: min(90dvh, 84rem);
+}
+
+.sanc-modal-dialog.narrow {
+  max-width: 46rem;
+}
+
+.sanc-modal-header {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--sanc-surface);
+  border-bottom: 1px solid var(--sanc-border);
+  padding: 1.7rem 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+}
+
+.sanc-modal-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--sanc-text);
+  margin: 0;
+}
+
+.sanc-modal-close {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-muted);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.sanc-modal-close i {
+  font-size: 1.85rem;
+  line-height: 1;
+}
+
+.sanc-modal-close:hover {
+  background: var(--sanc-surface-hover);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-text);
+}
+
+.sanc-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2rem 2.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sanc-border-strong) transparent;
+}
+
+.sanc-modal-body::-webkit-scrollbar {
+  width: 0.75rem;
+}
+
+.sanc-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sanc-modal-body::-webkit-scrollbar-thumb {
+  background: var(--sanc-border-strong);
+  border-radius: 999px;
+}
+
+.sanc-modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--sanc-gold-border);
+}
+
+.sanc-modal-footer {
+  flex-shrink: 0;
+  background: var(--sanc-surface);
+  padding: 1.45rem 2.4rem;
+  border-top: 1px solid var(--sanc-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* ==========================================================================
+   Global Chrome: Header, Mobile Nav, Search, Footer
+   ========================================================================== */
+.sanc-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  background: rgba(21, 24, 32, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--sanc-border);
+  letter-spacing: 0;
+  font-family: var(--font-family), system-ui, -apple-system, sans-serif;
+  transition: box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+body.light-theme .sanc-header {
+  background: rgba(247, 246, 242, 0.92);
+}
+
+.sanc-header.activated {
+  box-shadow: var(--sanc-shadow);
+}
+
+.sanc-navbar {
+  max-width: 114rem;
+  margin: 0 auto;
+  padding: 1.35rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
+}
+
+.sanc-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 2.3rem;
+  font-weight: 700;
+  color: var(--sanc-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.sanc-nav-menu {
+  display: flex;
+  align-items: center;
+}
+
+.sanc-nav-list {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sanc-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.25rem;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--sanc-muted);
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.sanc-nav-link:hover {
+  color: var(--sanc-text);
+}
+
+.sanc-nav-link.current {
+  color: var(--sanc-text);
+  font-weight: 600;
+  border-bottom-color: var(--sanc-gold);
+}
+
+.sanc-nav-link.admin {
+  color: var(--sanc-gold);
+  font-weight: 600;
+}
+
+.sanc-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.sanc-mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 6.2rem;
+  background-color: var(--sanc-surface);
+  border-top: 1px solid var(--sanc-border-strong);
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.22);
+  z-index: 1000;
+  letter-spacing: 0;
+}
+
+.sanc-mobile-nav .nav-list {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 100%;
+  margin: 0;
+  padding: 0 0.4rem;
+}
+
+.sanc-mobile-nav .nav-item {
+  flex: 1;
+  text-align: center;
+}
+
+.sanc-mobile-nav .nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--sanc-muted);
+  font-size: 1.05rem;
+  font-weight: 600;
+  gap: 0.15rem;
+  transition: color 0.2s ease;
+}
+
+.sanc-mobile-nav .nav-link i {
+  font-size: 1.95rem;
+  line-height: 1;
+}
+
+.sanc-mobile-nav .nav-link.active {
+  color: var(--sanc-emerald);
+}
+
+.sanc-search-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  z-index: 9999;
+  background: rgba(8, 10, 14, 0.74);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8rem 2rem 2rem;
+  letter-spacing: 0;
+}
+
+body.light-theme .sanc-search-backdrop {
+  background: rgba(20, 22, 28, 0.56);
+}
+
+.sanc-search-dialog {
+  width: 100%;
+  max-width: 62rem;
+  border-radius: 20px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border-strong);
+  box-shadow: var(--sanc-shadow-hover);
+  padding: 2.2rem 2.4rem;
+  color: var(--sanc-text);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sanc-search-form {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.sanc-search-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.sanc-footer {
+  background: var(--sanc-surface);
+  border-top: 1px solid var(--sanc-border);
+  padding: 4.8rem 0 3rem;
+  color: var(--sanc-muted);
+  letter-spacing: 0;
+  font-family: var(--font-family), system-ui, -apple-system, sans-serif;
+}
+
+.sanc-footer-grid {
+  max-width: 114rem;
+  margin: 0 auto;
+  padding-inline: 2rem;
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, minmax(0, 1fr));
+  gap: 3rem;
+}
+
+.sanc-social-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.sanc-social-btn {
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-muted);
+  transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.sanc-social-btn i {
+  font-size: 1.7rem;
+}
+
+.sanc-social-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+.sanc-footer-bottom {
+  max-width: 114rem;
+  margin: 3.2rem auto 0;
+  padding: 2rem 2rem 0;
+  border-top: 1px solid var(--sanc-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 1.25rem;
+}
+
+/* ==========================================================================
+   Floating Banners & Notification Settings
+   ========================================================================== */
+.sanc-float-banner {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1050;
+  width: min(40rem, calc(100vw - 2.4rem));
+  padding: 1.6rem 1.8rem;
+  border-radius: 16px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border-strong);
+  border-top: 2px solid var(--sanc-gold);
+  box-shadow: var(--sanc-shadow-hover);
+  color: var(--sanc-text);
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  letter-spacing: 0;
+}
+
+.sanc-float-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 12px;
+  background: var(--sanc-gold-soft);
+  border: 1px solid var(--sanc-gold-border);
+  color: var(--sanc-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sanc-float-icon i {
+  font-size: 1.9rem;
+}
+
+.sanc-float-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sanc-float-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.sanc-notif-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 1.35rem 1.5rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.sanc-notif-row.active {
+  border-color: var(--sanc-emerald-border);
+  background: var(--sanc-emerald-soft);
+}
+
+.sanc-notif-icon {
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 10px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sanc-notif-icon i {
+  font-size: 1.75rem;
+}
+
+.sanc-switch {
+  position: relative;
+  display: inline-block;
+  width: 4.6rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.sanc-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.sanc-switch-slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border-strong);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.sanc-switch-slider::before {
+  content: "";
+  position: absolute;
+  left: 0.3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: var(--sanc-muted);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.sanc-switch input:checked + .sanc-switch-slider {
+  background: var(--sanc-emerald);
+  border-color: var(--sanc-emerald);
+}
+
+.sanc-switch input:checked + .sanc-switch-slider::before {
+  transform: translate(2.1rem, -50%);
+  background: var(--sanc-btn-ink);
+}
+
+/* ==========================================================================
+   Plans
+   ========================================================================== */
+.sanc-plan-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.sanc-plan-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sanc-shadow-hover);
+  border-color: var(--sanc-gold-border);
+}
+
+.sanc-plan-cover {
+  position: relative;
+  height: 18rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--sanc-surface-2);
+}
+
+.sanc-plan-cover img {
+  transition: transform 0.4s ease;
+}
+
+.sanc-plan-card:hover .sanc-plan-cover img {
+  transform: scale(1.05);
+}
+
+.sanc-plan-cover-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 1.4rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(13, 16, 22, 0.2) 0%, rgba(13, 16, 22, 0.88) 100%);
+}
+
+.sanc-plan-bookmark {
+  align-self: flex-end;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  background: rgba(17, 19, 24, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+}
+
+.sanc-plan-bookmark i {
+  font-size: 1.55rem;
+}
+
+.sanc-plan-bookmark.saved {
+  background: var(--sanc-gold);
+  border-color: var(--sanc-gold);
+  color: #131417;
+}
+
+.sanc-plan-body {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 0;
+}
+
+.sanc-plan-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.85rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--sanc-text);
+  margin: 0 0 0.85rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(1.85rem * 1.3 * 2);
+}
+
+.sanc-plan-excerpt {
+  font-size: 1.34rem;
+  line-height: 1.55;
+  color: var(--sanc-muted);
+  margin: 0 0 1.6rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(1.34rem * 1.55 * 3);
+}
+
+.sanc-plan-footer {
+  margin-top: auto;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--sanc-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.sanc-plan-meta-slot {
+  min-height: 3.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sanc-plan-cta {
+  width: 100%;
+  height: 4.4rem;
+  min-height: 4.4rem;
+  padding: 0 1.6rem;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sanc-progress-track {
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  overflow: hidden;
+}
+
+.sanc-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sanc-emerald), var(--sanc-gold));
+  transition: width 0.35s ease;
+}
+
+.sanc-day-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-block: 2rem;
+}
+
+.sanc-day-bubble {
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  font-weight: 700;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sanc-day-bubble.completed {
+  background: var(--sanc-emerald-soft);
+  border-color: var(--sanc-emerald-border);
+  color: var(--sanc-emerald);
+}
+
+.sanc-day-bubble.active {
+  background: var(--sanc-gold);
+  border-color: var(--sanc-gold);
+  color: #131417;
+  box-shadow: 0 0 0 3px var(--sanc-gold-soft);
+}
+
+.sanc-day-bubble.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sanc-scripture-box {
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  border-left: 3px solid var(--sanc-gold);
+  border-radius: 14px;
+  padding: 2rem 2.2rem;
+  font-family: var(--font-family-reader), Georgia, serif;
+  font-size: 1.75rem;
+  line-height: 1.7;
+  color: var(--sanc-text);
+}
+
+.sanc-reflection-box {
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.sanc-reflection-prompt {
+  font-family: var(--font-family-reader), Georgia, serif;
+  font-size: 1.55rem;
+  line-height: 1.58;
+  color: var(--sanc-text);
+}
+
+.sanc-prose {
+  font-size: 1.58rem;
+  line-height: 1.85;
+  color: var(--sanc-text);
+  color: color-mix(in srgb, var(--sanc-text) 88%, var(--sanc-muted));
+  overflow-wrap: break-word;
+}
+
+.sanc-prose p {
+  margin-bottom: 1.55rem;
+}
+
+.sanc-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.sanc-prose strong {
+  color: var(--sanc-text);
+  font-weight: 700;
+}
+
+.sanc-prose em {
+  font-style: italic;
+  color: var(--sanc-text);
+}
+
+.sanc-prose blockquote {
+  margin-block: 2.2rem;
+  padding: 1.85rem 2.2rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  border-left: 3px solid var(--sanc-gold);
+  font-family: var(--font-family-reader), Georgia, serif;
+  font-style: italic;
+  font-size: 1.72rem;
+  line-height: 1.68;
+  color: var(--sanc-text);
+  position: relative;
+}
+
+.sanc-prose ul,
+.sanc-prose ol {
+  padding-left: 2.3rem;
+  margin-block: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.sanc-prose ul {
+  list-style: disc;
+}
+
+.sanc-prose ol {
+  list-style: decimal;
+}
+
+.sanc-prose li {
+  color: inherit;
+}
+
+.sanc-prose li::marker {
+  color: var(--sanc-gold);
+}
+
+.sanc-prose a {
+  color: var(--sanc-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sanc-prose h2,
+.sanc-prose h3 {
+  font-family: var(--font-family-serif), Georgia, serif;
+  color: var(--sanc-text);
+  margin: 2.2rem 0 1rem;
+  line-height: 1.3;
+}
+
+/* ==========================================================================
+   Prayers
+   ========================================================================== */
+.sanc-prayer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(30rem, 1fr));
+  gap: 2rem;
+}
+
+.sanc-prayer-card {
+  position: relative;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 18px;
+  padding: 2.3rem;
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.sanc-prayer-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sanc-shadow-hover);
+}
+
+.sanc-prayer-card.active-request {
+  border-top: 3px solid var(--sanc-emerald);
+}
+
+.sanc-prayer-card.praise-report {
+  border-top: 3px solid var(--sanc-violet);
+}
+
+.sanc-prayer-pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.sanc-prayer-pin.active-pin {
+  background: var(--sanc-emerald-soft);
+  border: 1px solid var(--sanc-emerald-border);
+  color: var(--sanc-emerald);
+}
+
+.sanc-prayer-pin.praise-pin {
+  background: var(--sanc-violet-soft);
+  border: 1px solid var(--sanc-violet-border);
+  color: var(--sanc-violet);
+}
+
+.sanc-praise-box {
+  background: var(--sanc-violet-soft);
+  border-left: 3px solid var(--sanc-violet);
+  border-radius: 10px;
+  padding: 1.25rem 1.45rem;
+  font-size: 1.38rem;
+  line-height: 1.6;
+  color: var(--sanc-text);
+}
+
+.sanc-prayer-actions {
+  margin-top: auto;
+  padding-top: 1.3rem;
+  border-top: 1px solid var(--sanc-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sanc-prayer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1.25rem;
+  border-radius: 999px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  color: var(--sanc-text);
+  font-size: 1.22rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sanc-prayer-btn i {
+  font-size: 1.45rem;
+}
+
+.sanc-prayer-btn.support.active {
+  background: var(--sanc-emerald-soft);
+  border-color: var(--sanc-emerald-border);
+  color: var(--sanc-emerald);
+}
+
+.sanc-prayer-btn.encourage.active {
+  background: var(--sanc-sky-soft);
+  border-color: rgba(124, 196, 250, 0.34);
+  color: var(--sanc-sky);
+}
+
+.sanc-prayer-btn.answered,
+.sanc-prayer-btn.answered.active {
+  background: var(--sanc-violet-soft);
+  border-color: var(--sanc-violet-border);
+  color: var(--sanc-violet);
+}
+
+.sanc-prayer-count {
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  background: var(--sanc-surface);
+  color: inherit;
+}
+
+.sanc-enc-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding-top: 1.1rem;
+  border-top: 1px dashed var(--sanc-border-strong);
+}
+
+.sanc-enc-item {
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  font-size: 1.28rem;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   Feed
+   ========================================================================== */
+.sanc-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.2rem;
+}
+
+.sanc-feed-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 18px;
+  padding: 2.3rem;
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.sanc-feed-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sanc-shadow-hover);
+  border-color: var(--sanc-gold-border);
+}
+
+.sanc-feed-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--sanc-text);
+  margin: 0;
+}
+
+.sanc-feed-excerpt {
+  font-size: 1.38rem;
+  line-height: 1.62;
+  color: var(--sanc-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.sanc-feed-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 1.2rem;
+  color: var(--sanc-muted);
+}
+
+.sanc-feed-actions {
+  margin-top: auto;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--sanc-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.sanc-like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.58rem 1.2rem;
+  border-radius: 999px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  color: var(--sanc-muted);
+  font-size: 1.24rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sanc-like-btn i {
+  font-size: 1.48rem;
+}
+
+.sanc-like-btn.liked {
+  background: var(--sanc-error-soft);
+  border-color: var(--sanc-error);
+  color: var(--sanc-error);
+}
+
+.sanc-comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sanc-comment-item {
+  padding: 1.4rem 1.6rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  transition: border-color 0.2s ease;
+}
+
+.sanc-comment-item:hover {
+  border-color: var(--sanc-border-strong);
+}
+
+/* ==========================================================================
+   Profile
+   ========================================================================== */
+.sanc-profile-hero {
+  background:
+    radial-gradient(circle at top right, var(--sanc-gold-soft), transparent 55%),
+    linear-gradient(155deg, var(--sanc-surface) 0%, var(--sanc-surface-2) 100%);
+  border: 1px solid var(--sanc-border);
+  border-top: 2px solid var(--sanc-gold);
+  border-radius: 20px;
+  padding: 2.8rem;
+  box-shadow: var(--sanc-shadow);
+  margin-bottom: 2.6rem;
+}
+
+.sanc-week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 1.4rem;
+}
+
+.sanc-week-day {
+  padding: 0.7rem 0.4rem;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 600;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  color: var(--sanc-muted);
+}
+
+.sanc-week-day.active {
+  background: var(--sanc-emerald-soft);
+  border-color: var(--sanc-emerald-border);
+  color: var(--sanc-emerald);
+}
+
+.sanc-week-day.today {
+  border-color: var(--sanc-gold);
+  box-shadow: 0 0 0 2px var(--sanc-gold-soft);
+}
+
+.sanc-note-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-left: 3px solid var(--sanc-gold);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sanc-note-card.gold {
+  border-left-color: var(--sanc-gold);
+}
+
+.sanc-note-card.emerald {
+  border-left-color: var(--sanc-emerald);
+}
+
+.sanc-note-card.sky {
+  border-left-color: var(--sanc-sky);
+}
+
+.sanc-note-card.violet {
+  border-left-color: var(--sanc-violet);
+}
+
+.sanc-highlight-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 16px;
+  padding: 1.8rem 2rem;
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.sanc-highlight-dot {
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid var(--sanc-border-strong);
+  flex-shrink: 0;
+}
+
+.sanc-badge-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.sanc-badge-card.unlocked {
+  border-color: var(--sanc-gold-border);
+  box-shadow: var(--sanc-shadow);
+}
+
+.sanc-badge-card.locked {
+  opacity: 0.56;
+  filter: grayscale(0.45);
+}
+
+.sanc-badge-medallion {
+  width: 5.4rem;
+  height: 5.4rem;
+  border-radius: 50%;
+  background: var(--sanc-gold-soft);
+  border: 2px solid var(--sanc-gold-border);
+  color: var(--sanc-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sanc-badge-medallion i {
+  font-size: 2.5rem;
+}
+
+/* ==========================================================================
+   Auth / Editorial / Quotes / Info
+   ========================================================================== */
+.sanc-auth-wrap {
+  min-height: 76vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.4rem 1.5rem;
+}
+
+.sanc-auth-card {
+  width: 100%;
+  max-width: 46rem;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-top: 2px solid var(--sanc-gold);
+  border-radius: 20px;
+  padding: 3.4rem 3rem;
+  box-shadow: var(--sanc-shadow-hover);
+  display: flex;
+  flex-direction: column;
+  gap: 2.2rem;
+}
+
+.sanc-google-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.15rem 1.6rem;
+  border-radius: 12px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-text);
+  font-size: 1.38rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.sanc-google-btn:hover {
+  background: var(--sanc-surface-hover);
+  border-color: var(--sanc-gold-border);
+  transform: translateY(-1px);
+}
+
+.sanc-divider {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  text-transform: uppercase;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--sanc-muted);
+}
+
+.sanc-divider::before,
+.sanc-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--sanc-border);
+}
+
+.sanc-article-prose {
+  font-size: 1.56rem;
+  line-height: 1.85;
+  color: var(--sanc-muted);
+}
+
+.sanc-article-prose h2,
+.sanc-article-prose h3 {
+  font-family: var(--font-family-serif), Georgia, serif;
+  color: var(--sanc-text);
+  margin: 2.6rem 0 1rem;
+  line-height: 1.3;
+}
+
+.sanc-article-prose h2 {
+  font-size: 2.2rem;
+}
+
+.sanc-article-prose p {
+  margin-bottom: 1.6rem;
+}
+
+.sanc-article-prose ul {
+  list-style: disc;
+  padding-left: 2.4rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.sanc-article-prose a {
+  color: var(--sanc-emerald);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.sanc-article-prose hr {
+  border: 0;
+  height: 1px;
+  background: var(--sanc-border);
+  margin-block: 2.6rem;
+}
+
+.sanc-blockquote {
+  margin-block: 2.4rem;
+  padding: 2rem 2.4rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  border-left: 3px solid var(--sanc-gold);
+  font-family: var(--font-family-reader), Georgia, serif;
+  font-style: italic;
+  font-size: 1.8rem;
+  line-height: 1.65;
+  color: var(--sanc-text);
+}
+
+.sanc-author-card {
+  margin-top: 3.4rem;
+  padding: 2.4rem;
+  border-radius: 18px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.sanc-quote-slide {
+  position: relative;
+  height: 40rem;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--sanc-border);
+  box-shadow: var(--sanc-shadow);
+  background: var(--sanc-surface-2);
+}
+
+.sanc-quote-slide img {
+  transition: transform 0.45s ease;
+}
+
+.sanc-quote-slide:hover img {
+  transform: scale(1.05);
+}
+
+.sanc-quote-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 2.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 12, 18, 0.14) 0%,
+    rgba(10, 12, 18, 0.56) 44%,
+    rgba(10, 12, 18, 0.92) 100%
+  );
+  color: #ffffff;
+}
+
+.sanc-info-row {
+  display: flex;
+  align-items: center;
+  gap: 1.3rem;
+}
+
+.sanc-info-icon {
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 50%;
+  background: var(--sanc-gold-soft);
+  border: 1px solid var(--sanc-gold-border);
+  color: var(--sanc-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sanc-info-icon i {
+  font-size: 1.85rem;
+}
+
+/* ==========================================================================
+   Admin Sanctuary Dashboard (.sanc-admin-*)
+   ========================================================================== */
+@keyframes sanc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sanc-spin {
+  display: inline-block;
+  animation: sanc-spin 0.9s linear infinite;
+}
+
+.sanc-admin-hero {
+  position: relative;
+  margin-bottom: 2.2rem;
+  padding: 2.6rem 3rem;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, var(--sanc-gold-soft), transparent 55%),
+    linear-gradient(155deg, var(--sanc-surface) 0%, var(--sanc-surface-2) 100%);
+  border: 1px solid var(--sanc-border);
+  border-top: 2px solid var(--sanc-gold);
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.sanc-admin-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.sanc-admin-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sanc-admin-loading,
+.sanc-admin-denied {
+  max-width: 52rem;
+  margin: 4rem auto;
+  padding: 4rem 3rem;
+  border-radius: 20px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  box-shadow: var(--sanc-shadow);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+.sanc-admin-denied-icon {
+  width: 6.4rem;
+  height: 6.4rem;
+  border-radius: 50%;
+  background: var(--sanc-error-soft);
+  border: 1px solid var(--sanc-error);
+  color: var(--sanc-error);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sanc-admin-denied-icon i {
+  font-size: 3rem;
+}
+
+.sanc-admin-toast {
+  position: sticky;
+  top: 8.2rem;
+  z-index: 35;
+  margin-bottom: 1.8rem;
+  padding: 1.2rem 1.6rem;
+  border-radius: 14px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border-strong);
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  font-size: 1.32rem;
+  font-weight: 600;
+  color: var(--sanc-text);
+}
+
+.sanc-admin-toast.ok {
+  border-color: var(--sanc-emerald-border);
+  background: var(--sanc-surface);
+  color: var(--sanc-emerald);
+}
+
+.sanc-admin-toast.error {
+  border-color: var(--sanc-error);
+  background: var(--sanc-surface);
+  color: var(--sanc-error);
+}
+
+.sanc-admin-toast i {
+  font-size: 1.7rem;
+}
+
+.sanc-admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  padding: 0.6rem;
+  margin-bottom: 2.4rem;
+  border-radius: 14px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+}
+
+.sanc-admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.78rem 1.35rem;
+  border-radius: 10px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--sanc-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.sanc-admin-tab i {
+  font-size: 1.55rem;
+}
+
+.sanc-admin-tab:hover {
+  color: var(--sanc-text);
+  background: var(--sanc-surface-2);
+}
+
+.sanc-admin-tab.active {
+  background: var(--sanc-gold-soft);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+.sanc-admin-tab-count {
+  padding: 0.14rem 0.65rem;
+  border-radius: 999px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--sanc-surface-2);
+  color: var(--sanc-muted);
+}
+
+.sanc-admin-tab.active .sanc-admin-tab-count {
+  background: var(--sanc-gold);
+  color: var(--sanc-btn-ink);
+}
+
+/* KPI Grid */
+.sanc-admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: 1.6rem;
+  margin-bottom: 2.6rem;
+}
+
+.sanc-admin-kpi {
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  padding: 2rem;
+  border-radius: 18px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  box-shadow: var(--sanc-shadow);
+  color: var(--sanc-text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.sanc-admin-kpi:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sanc-shadow-hover);
+  border-color: var(--sanc-gold-border);
+}
+
+.sanc-admin-kpi-watermark {
+  position: absolute;
+  right: -0.6rem;
+  bottom: -0.8rem;
+  font-size: 7.4rem;
+  line-height: 1;
+  opacity: 0.06;
+  color: var(--sanc-gold);
+  pointer-events: none;
+}
+
+.sanc-admin-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.sanc-admin-kpi-label {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sanc-muted);
+}
+
+.sanc-admin-kpi-value {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 3.1rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--sanc-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.sanc-admin-kpi-sub {
+  font-size: 1.24rem;
+  color: var(--sanc-muted);
+}
+
+/* Activity Feed */
+.sanc-admin-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sanc-admin-activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.4rem;
+  padding: 1.35rem 1.6rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+}
+
+.sanc-admin-activity-main {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sanc-admin-activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-shrink: 0;
+  font-size: 1.2rem;
+  color: var(--sanc-muted);
+}
+
+/* Toolbar & Data Tables */
+.sanc-admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-bottom: 1.8rem;
+}
+
+.sanc-admin-search {
+  position: relative;
+  flex: 1 1 28rem;
+  min-width: 22rem;
+}
+
+.sanc-admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sanc-admin-table-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 18px;
+  box-shadow: var(--sanc-shadow);
+  overflow: hidden;
+}
+
+.sanc-admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.sanc-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 1.32rem;
+}
+
+.sanc-admin-table thead {
+  background: var(--sanc-surface-2);
+  border-bottom: 1px solid var(--sanc-border-strong);
+}
+
+.sanc-admin-table th {
+  padding: 1.3rem 1.6rem;
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--sanc-muted);
+  white-space: nowrap;
+}
+
+.sanc-admin-table td {
+  padding: 1.35rem 1.6rem;
+  border-bottom: 1px solid var(--sanc-border);
+  color: var(--sanc-text);
+  vertical-align: middle;
+}
+
+.sanc-admin-table tbody tr {
+  transition: background-color 0.16s ease;
+}
+
+.sanc-admin-table tbody tr:hover {
+  background: var(--sanc-surface-2);
+}
+
+.sanc-admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sanc-admin-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.sanc-admin-icon-action {
+  width: 3.3rem;
+  height: 3.3rem;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-muted);
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.sanc-admin-icon-action i {
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.sanc-admin-icon-action:hover:not(:disabled) {
+  background: var(--sanc-surface-hover);
+  border-color: var(--sanc-border-strong);
+  color: var(--sanc-text);
+}
+
+.sanc-admin-icon-action.gold:hover:not(:disabled) {
+  background: var(--sanc-gold-soft);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+.sanc-admin-icon-action.danger:hover:not(:disabled) {
+  background: var(--sanc-error-soft);
+  border-color: var(--sanc-error);
+  color: var(--sanc-error);
+}
+
+.sanc-admin-icon-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sanc-admin-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 18rem;
+}
+
+.sanc-admin-plan-cell {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  min-width: 22rem;
+}
+
+.sanc-admin-plan-thumb {
+  position: relative;
+  width: 5.4rem;
+  height: 3.6rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  flex-shrink: 0;
+}
+
+.sanc-admin-status-dot {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  background: var(--sanc-muted);
+}
+
+.sanc-admin-status-dot.online,
+.sanc-admin-status-dot.emerald {
+  background: var(--sanc-emerald);
+  box-shadow: 0 0 0 3px var(--sanc-emerald-soft);
+}
+
+.sanc-admin-status-dot.gold {
+  background: var(--sanc-gold);
+}
+
+.sanc-admin-truncate {
+  max-width: 28rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Devotional Builder Form */
+.sanc-admin-form {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-top: 2px solid var(--sanc-gold);
+  border-radius: 20px;
+  padding: 2.6rem 2.8rem;
+  box-shadow: var(--sanc-shadow);
+  margin-bottom: 2.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sanc-admin-form-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--sanc-border);
+}
+
+.sanc-admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem;
+}
+
+.sanc-admin-cover-preview {
+  position: relative;
+  width: 100%;
+  height: 18rem;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--sanc-border-strong);
+  background: var(--sanc-surface-2);
+}
+
+.sanc-admin-cover-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 1.4rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  background: linear-gradient(180deg, rgba(13, 16, 22, 0.14) 0%, rgba(13, 16, 22, 0.88) 100%);
+  color: #ffffff;
+}
+
+.sanc-admin-preset-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.6rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+}
+
+.sanc-admin-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.9rem;
+}
+
+.sanc-admin-preset-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.45rem;
+  border-radius: 10px;
+  background: var(--sanc-surface);
+  border: 2px solid var(--sanc-border);
+  color: var(--sanc-muted);
+  font-size: 1.12rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.sanc-admin-preset-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-text);
+}
+
+.sanc-admin-preset-btn.selected {
+  border-color: var(--sanc-gold);
+  color: var(--sanc-gold);
+  box-shadow: 0 0 0 3px var(--sanc-gold-soft);
+}
+
+.sanc-admin-preset-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--sanc-surface-2);
+}
+
+.sanc-admin-day-card {
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  border-left: 3px solid var(--sanc-emerald);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.sanc-admin-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.sanc-admin-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--sanc-border);
+}
+
+/* Admin Preview & Confirm Modals */
+.sanc-admin-modal-cover {
+  position: relative;
+  width: 100%;
+  height: 17rem;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--sanc-border);
+  background: var(--sanc-surface-2);
+}
+
+.sanc-admin-modal-cover-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 1.5rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  background: linear-gradient(180deg, rgba(13, 16, 22, 0.16) 0%, rgba(13, 16, 22, 0.9) 100%);
+  color: #ffffff;
+}
+
+.sanc-admin-modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 1.24rem;
+  color: var(--sanc-muted);
+}
+
+.sanc-admin-confirm-icon {
+  width: 5.4rem;
+  height: 5.4rem;
+  border-radius: 50%;
+  margin: 0 auto 0.6rem;
+  background: var(--sanc-error-soft);
+  border: 1px solid var(--sanc-error);
+  color: var(--sanc-error);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sanc-admin-confirm-icon i {
+  font-size: 2.5rem;
+}
+
+/* ==========================================================================
+   Testimony Reader & Composer Modals (.sanc-story-*)
+   ========================================================================== */
+.sanc-story-dialog {
+  border-top: 2px solid var(--sanc-gold);
+}
+
+.sanc-story-progress {
+  width: 100%;
+  height: 3px;
+  background: var(--sanc-surface-2);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sanc-story-progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--sanc-emerald), var(--sanc-gold));
+  border-radius: 0 999px 999px 0;
+  transition: width 0.12s ease-out;
+}
+
+.sanc-story-header {
+  background:
+    radial-gradient(circle at top left, var(--sanc-gold-soft), transparent 52%),
+    var(--sanc-surface);
+  gap: 1.4rem;
+}
+
+.sanc-story-author {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sanc-story-author-name {
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.28;
+  color: var(--sanc-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sanc-story-author-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.2rem;
+  font-size: 1.22rem;
+  line-height: 1.35;
+  color: var(--sanc-muted);
+}
+
+.sanc-story-author-meta i {
+  font-size: 1.35rem;
+  color: var(--sanc-gold);
+}
+
+.sanc-story-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+
+.sanc-story-body {
+  padding: 2.8rem 3.2rem;
+  gap: 0;
+}
+
+.sanc-story-article {
+  max-width: 66rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.sanc-story-kicker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  font-size: 1.24rem;
+  color: var(--sanc-muted);
+}
+
+.sanc-story-kicker i {
+  font-size: 1.4rem;
+  color: var(--sanc-gold);
+}
+
+.sanc-story-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: clamp(2.4rem, 3.2vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--sanc-text);
+  margin: 1.2rem 0 1.8rem;
+}
+
+.sanc-story-divider {
+  width: 5.6rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sanc-gold), transparent);
+  margin-bottom: 2.2rem;
+}
+
+.sanc-story-engage {
+  margin: 2.8rem 0 2.6rem;
+  padding: 1.25rem 1.6rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.sanc-story-engage-left,
+.sanc-story-engage-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.sanc-story-engage .sanc-like-btn:not(.liked) {
+  background: var(--sanc-surface);
+  border-color: var(--sanc-border-strong);
+}
+
+.sanc-story-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.58rem 1.2rem;
+  border-radius: 999px;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-muted);
+  font-size: 1.24rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sanc-story-action-pill i {
+  font-size: 1.48rem;
+  line-height: 1;
+}
+
+.sanc-story-action-pill:hover {
+  background: var(--sanc-surface-hover);
+  border-color: var(--sanc-gold-border);
+  color: var(--sanc-text);
+}
+
+.sanc-story-action-pill.copied {
+  background: var(--sanc-emerald-soft);
+  border-color: var(--sanc-emerald-border);
+  color: var(--sanc-emerald);
+}
+
+.sanc-story-comments {
+  padding-top: 2.2rem;
+  border-top: 1px solid var(--sanc-border);
+}
+
+.sanc-story-comments-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+}
+
+.sanc-story-comments-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--sanc-text);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.sanc-story-comments-title i {
+  font-size: 1.75rem;
+  color: var(--sanc-gold);
+}
+
+.sanc-story-comments-empty,
+.sanc-story-comments-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.65rem;
+  text-align: center;
+  padding: 2.4rem 1.8rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  color: var(--sanc-muted);
+  font-size: 1.38rem;
+  line-height: 1.5;
+}
+
+.sanc-story-comments-empty {
+  border-style: dashed;
+  border-color: var(--sanc-border-strong);
+}
+
+.sanc-story-comments-empty i,
+.sanc-story-comments-loading i {
+  font-size: 2.1rem;
+  color: var(--sanc-gold);
+}
+
+.sanc-comment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.15rem;
+}
+
+.sanc-comment-avatar {
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sanc-gold-soft);
+  border: 1px solid var(--sanc-gold-border);
+  color: var(--sanc-gold);
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.38rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+
+.sanc-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sanc-comment-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sanc-comment-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  margin-bottom: 0.45rem;
+}
+
+.sanc-comment-author {
+  font-size: 1.36rem;
+  font-weight: 700;
+  color: var(--sanc-text);
+  line-height: 1.3;
+}
+
+.sanc-comment-date {
+  font-size: 1.18rem;
+  color: var(--sanc-muted);
+  line-height: 1.3;
+}
+
+.sanc-comment-body {
+  font-size: 1.44rem;
+  line-height: 1.62;
+  color: var(--sanc-text);
+  color: color-mix(in srgb, var(--sanc-text) 90%, var(--sanc-muted));
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  margin: 0;
+}
+
+.sanc-comment-composer {
+  margin-top: 1.8rem;
+  padding: 1.5rem 1.6rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px solid var(--sanc-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.sanc-comment-composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.sanc-comment-composer-foot i {
+  font-size: 1.4rem;
+}
+
+.sanc-story-guest-cta {
+  margin-top: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+  padding: 1.8rem 2rem;
+  border-radius: 14px;
+  background: var(--sanc-surface-2);
+  border: 1px dashed var(--sanc-gold-border);
+}
+
+.sanc-story-guest-info {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
+  flex: 1 1 26rem;
+}
+
+.sanc-story-guest-icon {
+  width: 4.2rem;
+  height: 4.2rem;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sanc-gold-soft);
+  border: 1px solid var(--sanc-gold-border);
+  color: var(--sanc-gold);
+}
+
+.sanc-story-guest-icon i {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.sanc-composer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+  margin-top: 0.6rem;
+  font-size: 1.22rem;
+  color: var(--sanc-muted);
+}
+
+.sanc-composer-meta i {
+  font-size: 1.35rem;
+  color: var(--sanc-gold);
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .sanc-icon-btn.screen-lg-hidden,
+  .sanc-header .menu-toggle-icon {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .sanc-nav-menu {
+    position: absolute;
+    top: 7.4rem;
+    right: 2rem;
+    width: 24rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+    background: var(--sanc-surface);
+    border: 1px solid var(--sanc-border-strong);
+    box-shadow: var(--sanc-shadow-hover);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.97);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .sanc-nav-menu.activated {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  .sanc-nav-list {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .sanc-footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .sanc-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sanc-grid-2,
+  .sanc-feed-grid,
+  .sanc-admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .sanc-admin-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sanc-admin-search {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .sanc-admin-activity-item {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .sanc-admin-activity-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .sanc-header .menu-toggle-icon {
+    display: none;
+  }
+
+  .sanc-page {
+    padding-block: 2.4rem 9rem;
+  }
+
+  .sanc-mobile-nav {
+    display: block;
+  }
+
+  .sanc-footer {
+    padding-bottom: 9.5rem;
+  }
+
+  .sanc-float-banner {
+    bottom: 7.4rem;
+    left: 1.2rem;
+    right: 1.2rem;
+    width: auto;
+  }
+
+  .sanc-author-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .sanc-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .sanc-modal-dialog,
+  .sanc-modal-dialog.wide,
+  .sanc-modal-dialog.narrow {
+    max-width: 100%;
+    max-height: 92dvh;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .sanc-modal-header {
+    padding: 1.45rem 1.8rem;
+  }
+
+  .sanc-modal-body {
+    padding: 1.6rem 1.8rem;
+  }
+
+  .sanc-modal-footer {
+    padding: 1.3rem 1.8rem;
+    padding-bottom: max(1.6rem, env(safe-area-inset-bottom));
+  }
+
+  .sanc-story-body {
+    padding: 2rem 1.8rem;
+  }
+
+  .sanc-story-engage {
+    padding: 1.05rem 1.2rem;
+    margin: 2.2rem 0 2rem;
+  }
+
+  .sanc-story-guest-cta {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.5rem 1.6rem;
+    gap: 1.2rem;
+  }
+
+  .sanc-story-guest-info {
+    flex: 0 1 auto;
+  }
+
+  .sanc-hero,
+  .sanc-card-pad,
+  .sanc-profile-hero,
+  .sanc-auth-card,
+  .sanc-admin-hero,
+  .sanc-admin-form,
+  .sanc-admin-day-card {
+    padding: 2.2rem 1.8rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .sanc-container,
+  .sanc-container-md,
+  .sanc-container-sm {
+    padding-inline: 1.4rem;
+  }
+
+  .sanc-grid-3,
+  .sanc-footer-grid {
+    grid-template-columns: 1fr;
+  }
+}

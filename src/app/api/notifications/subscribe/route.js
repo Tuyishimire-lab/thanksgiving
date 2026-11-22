@@ -4,9 +4,17 @@ import crypto from "node:crypto";
 
 export async function POST(request) {
   try {
-    const { subscription, preferences } = await request.json();
+    const body = await request.json();
+    const { subscription, preferences } = body || {};
 
-    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+    if (
+      typeof subscription?.endpoint !== "string" ||
+      !subscription.endpoint.startsWith("https://") ||
+      typeof subscription?.keys?.p256dh !== "string" ||
+      typeof subscription?.keys?.auth !== "string" ||
+      !subscription.keys.p256dh ||
+      !subscription.keys.auth
+    ) {
       return Response.json({ error: "Invalid subscription object" }, { status: 400 });
     }
 
@@ -27,7 +35,7 @@ export async function POST(request) {
     });
 
     // Upsert preferences
-    const prefs = preferences || {};
+    const prefs = preferences && typeof preferences === "object" ? preferences : {};
     await db.execute({
       sql: `INSERT INTO notification_preferences (endpoint, verse_of_day, devotional_reminder, gratitude_journal, scripture_quiz)
             VALUES (?, ?, ?, ?, ?)

@@ -11,8 +11,35 @@ export default function ThemeProvider({ children }) {
       document.body.classList.remove("light-theme");
     }
 
-    // Register Service Worker for PWA
+    // Manage Service Worker for PWA (disable & clean up stale caches in local dev)
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      const isLocalDev =
+        process.env.NODE_ENV !== "production" ||
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.hostname === "0.0.0.0";
+
+      if (isLocalDev) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => Promise.all(regs.map((r) => r.unregister())))
+          .catch(() => {});
+
+        if ("caches" in window) {
+          caches
+            .keys()
+            .then((names) =>
+              Promise.all(
+                names
+                  .filter((n) => n.startsWith("praisepage-cache"))
+                  .map((n) => caches.delete(n))
+              )
+            )
+            .catch(() => {});
+        }
+        return;
+      }
+
       const registerSW = () => {
         navigator.serviceWorker.register("/sw.js").then(
           (reg) => console.log("Service Worker registered with scope:", reg.scope),
@@ -23,7 +50,8 @@ export default function ThemeProvider({ children }) {
       if (document.readyState === "complete") {
         registerSW();
       } else {
-        window.addEventListener("load", registerSW);
+        window.addEventListener("load", registerSW, { once: true });
+        return () => window.removeEventListener("load", registerSW);
       }
     }
   }, []);

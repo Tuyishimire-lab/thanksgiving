@@ -46,21 +46,25 @@ export const updateStreak = () => {
   if (streak.lastActive) {
     const lastDate = new Date(streak.lastActive);
     const todayDate = new Date(todayStr);
-    
-    // Calculate difference in days
-    const diffTime = Math.abs(todayDate - lastDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) {
-      // Visited yesterday, increment streak
-      newStreak.count += 1;
-    } else if (diffDays > 1 && newStreak.freezes > 0) {
-      // Consume streak freeze locally
-      newStreak.freezes = Math.max(0, newStreak.freezes - 1);
-      newStreak.count += 1; // Preserve streak
-      newStreak.freezeUsed = true;
-    } else if (diffDays > 1) {
-      // Skipped a day and no freezes, reset streak to 1
+    if (!Number.isNaN(lastDate.getTime())) {
+      // Calculate difference in calendar days (round to handle DST 23h/25h transitions)
+      const diffTime = Math.abs(todayDate - lastDate);
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        // Visited yesterday, increment streak
+        newStreak.count += 1;
+      } else if (diffDays > 1 && newStreak.freezes > 0) {
+        // Consume streak freeze locally
+        newStreak.freezes = Math.max(0, newStreak.freezes - 1);
+        newStreak.count += 1; // Preserve streak
+        newStreak.freezeUsed = true;
+      } else if (diffDays > 1) {
+        // Skipped a day and no freezes, reset streak to 1
+        newStreak.count = 1;
+      }
+    } else {
       newStreak.count = 1;
     }
   } else {

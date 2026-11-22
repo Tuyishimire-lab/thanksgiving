@@ -10,99 +10,84 @@ export default function OfflinePage() {
   };
 
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      minHeight: "70vh",
-      padding: "2rem",
-      textAlign: "center",
-      backgroundColor: "var(--primary-background-color)",
-      color: "var(--light-color)"
-    }}>
-      <div style={{
-        backgroundColor: "var(--secondary-background-color)",
-        padding: "4rem 2rem",
-        borderRadius: "16px",
-        boxShadow: "0 8px 30px rgba(0, 0, 0, 0.4)",
-        maxWidth: "500px",
-        border: "1px solid var(--transparent-light-color)"
-      }}>
-        <div style={{
-          fontSize: "5rem",
-          color: "var(--accent-color)",
-          marginBottom: "2rem"
-        }}>
-          <i className="ri-wifi-off-line"></i>
-        </div>
-        <h1 style={{
-          fontFamily: "var(--font-family-serif, serif)",
-          fontSize: "2.8rem",
-          marginBottom: "1.5rem",
-          fontWeight: "700"
-        }}>
-          You're Offline
-        </h1>
-        <p style={{
-          fontSize: "1.5rem",
-          color: "var(--light-color-alt)",
-          lineHeight: "1.6",
-          marginBottom: "2.5rem"
-        }}>
-          "Be still, and know that I am God."<br/>
-          <span style={{ fontSize: "1.2rem", opacity: 0.8 }}>— Psalm 46:10</span>
-        </p>
-        <p style={{
-          fontSize: "1.4rem",
-          color: "var(--light-color-alt)",
-          marginBottom: "3rem",
-          opacity: 0.9
-        }}>
-          PraisePage cannot reach the internet right now. Check your connection or try refreshing below.
-        </p>
-        <div style={{
-          display: "flex",
-          gap: "1.5rem",
-          justifyContent: "center",
-          flexWrap: "wrap"
-        }}>
-          <button 
-            onClick={handleRetry}
-            style={{
-              padding: "1.2rem 2.4rem",
-              borderRadius: "30px",
-              border: "none",
-              backgroundColor: "var(--accent-color)",
-              color: "#131417",
-              fontWeight: "600",
-              fontSize: "1.4rem",
-              cursor: "pointer",
-              transition: "transform 0.2s, opacity 0.2s"
-            }}
-            onMouseOver={(e) => e.currentTarget.style.opacity = 0.9}
-            onMouseOut={(e) => e.currentTarget.style.opacity = 1}
+    <section
+      className="sanc-page"
+      style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+    >
+      <div className="sanc-container-sm">
+        <div
+          className="sanc-card sanc-card-pad"
+          style={{
+            maxWidth: "52rem",
+            margin: "0 auto",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "1.6rem",
+          }}
+        >
+          <div
+            className="sanc-stat-icon gold"
+            style={{ width: "6.4rem", height: "6.4rem", borderRadius: "50%" }}
           >
-            Try Again
-          </button>
-          <Link 
-            href="/"
+            <i className="ri-wifi-off-line" style={{ fontSize: "3rem" }} aria-hidden="true"></i>
+          </div>
+
+          <div>
+            <span className="sanc-eyebrow">No Connection</span>
+            <h1 className="sanc-title">You&apos;re Offline</h1>
+          </div>
+
+          <blockquote
+            className="sanc-blockquote"
+            style={{ width: "100%", marginBlock: "0.4rem", textAlign: "center" }}
+          >
+            &ldquo;Be still, and know that I am God.&rdquo;
+            <span
+              style={{
+                display: "block",
+                marginTop: "0.6rem",
+                fontStyle: "normal",
+                fontSize: "1.3rem",
+                fontWeight: 600,
+                color: "var(--sanc-gold)",
+              }}
+            >
+              &mdash; Psalm 46:10
+            </span>
+          </blockquote>
+
+          <p
             style={{
-              padding: "1.2rem 2.4rem",
-              borderRadius: "30px",
-              border: "1px solid var(--transparent-light-color)",
-              backgroundColor: "var(--transparent-light-color)",
-              color: "var(--light-color)",
-              fontWeight: "600",
-              fontSize: "1.4rem",
-              textDecoration: "none",
-              transition: "background-color 0.2s"
+              fontSize: "1.42rem",
+              lineHeight: 1.65,
+              color: "var(--sanc-muted)",
+              margin: 0,
             }}
           >
-            Go Home
-          </Link>
+            PraisePage cannot reach the internet right now. Check your connection or try
+            refreshing below.
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: "1.1rem",
+              marginTop: "0.4rem",
+            }}
+          >
+            <button type="button" onClick={handleRetry} className="sanc-btn-primary">
+              Try Again
+            </button>
+            <Link href="/" className="sanc-btn-secondary">
+              Go Home
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

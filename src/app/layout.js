@@ -1,4 +1,4 @@
-import { Poppins, Playfair_Display, Caveat } from "next/font/google";
+import { Poppins, Playfair_Display, Caveat, Lora } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,7 +15,7 @@ const poppins = Poppins({
   weight: ["300", "400", "600", "700"],
   variable: "--font-family",
   display: "swap",
-  preload: false,
+  preload: true,
 });
 
 const playfair = Playfair_Display({
@@ -30,6 +30,15 @@ const caveat = Caveat({
   subsets: ["latin"],
   weight: ["600", "700"],
   variable: "--font-family-cursive",
+  display: "swap",
+  preload: false,
+});
+
+const lora = Lora({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-family-reader",
   display: "swap",
   preload: false,
 });
@@ -88,8 +97,15 @@ export default function RootLayout({ children }) {
   };
 
   return (
-    <html lang="en" className={`${poppins.variable} ${playfair.variable} ${caveat.variable}`}>
-      <head />
+    <html lang="en" className={`${poppins.variable} ${playfair.variable} ${caveat.variable} ${lora.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
+        />
+      </head>
       <body>
         <script
           type="application/ld+json"
@@ -110,7 +126,6 @@ export default function RootLayout({ children }) {
         </ThemeProvider>
       </body>
       <GoogleAnalytics gaId="G-C8TS9EERMJ" />
-
     </html>
   );
 }

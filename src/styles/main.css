@@ -94,6 +94,7 @@ img{
 }
 
 input,
+textarea,
 button {
   font: inherit;
   color: inherit;
@@ -332,7 +333,7 @@ body.light-theme{
 .featured-content{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2 rem;
+    gap: 2rem;
 }
 /* Make the featured articles grid layout */
 .featured-content{
@@ -982,7 +983,7 @@ textarea:hover {
     }
 
     .blog-post-data img{
-        height: var(--item-min-height-md);;
+        height: var(--item-min-height-md);
     }
 }
 

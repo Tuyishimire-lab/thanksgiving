@@ -3,8 +3,9 @@ import { getMe } from "@/app/actions/authActions";
 
 export async function POST(request) {
   try {
-    const { endpoint } = await request.json();
-    if (!endpoint) return Response.json({ error: "Missing endpoint" }, { status: 400 });
+    const body = await request.json();
+    const { endpoint } = body || {};
+    if (!endpoint || typeof endpoint !== "string") return Response.json({ error: "Missing endpoint" }, { status: 400 });
 
     const db = await getDb();
     

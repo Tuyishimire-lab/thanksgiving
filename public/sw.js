@@ -1,14 +1,13 @@
-const CACHE_NAME = 'praisepage-cache-v1';
+const CACHE_NAME = 'praisepage-cache-v4';
 const OFFLINE_PAGE = '/offline';
 
 const ASSETS_TO_CACHE = [
   '/',
   OFFLINE_PAGE,
-  '/assets/images/icon-192.png',
-  '/assets/images/icon-512.png',
-  '/assets/images/favicon.png',
-  '/assets/images/praisepage.jpeg'
+  '/assets/images/icon-192.png'
 ];
+
+const NO_CACHE_PREFIXES = ['/api/', '/admin', '/profile', '/login', '/signup'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -41,12 +40,54 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Ignore non-same-origin requests, Next.js dev server sockets, and chrome extensions
+  // Ignore non-same-origin requests, localhost dev traffic, Next.js dev server sockets/assets, service worker itself, and private/API routes
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.includes('/_next/webpack-hmr') || url.pathname.startsWith('/_next/data/')) return;
+  if (
+    self.location.hostname === 'localhost' ||
+    self.location.hostname === '127.0.0.1' ||
+    self.location.hostname === '0.0.0.0'
+  ) {
+    return;
+  }
+  if (url.pathname === '/sw.js') return;
+  if (
+    url.pathname.includes('/_next/webpack-hmr') ||
+    url.pathname.startsWith('/_next/data/') ||
+    url.pathname.includes('_.single.css') ||
+    url.pathname.startsWith('/_next/static/development/')
+  ) {
+    return;
+  }
+
+  // Cache-First strategy for Bible chapters API (/api/bible) for instant & offline reading
+  if (url.pathname === '/api/bible') {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+            }
+            return networkResponse;
+          })
+          .catch(() => Response.error());
+      })
+    );
+    return;
+  }
+
+  if (NO_CACHE_PREFIXES.some((prefix) => url.pathname === prefix || url.pathname.startsWith(prefix + '/') || url.pathname.startsWith('/api/'))) {
+    return;
+  }
 
   // Cache-First strategy for static assets
-  const isStaticAsset = 
+  const isStaticAsset =
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/assets/') ||
     url.pathname.endsWith('.js') ||
@@ -64,21 +105,21 @@ self.addEventListener('fetch', (event) => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        return fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return networkResponse;
-        }).catch(() => {
-          // Silent catch, return nothing
-        });
+        return fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+            }
+            return networkResponse;
+          })
+          .catch(() => Response.error());
       })
     );
   } else {
-    // Network-First (with cache fallback) strategy for pages and API calls
+    // Network-First (with cache fallback) strategy for public pages
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {
@@ -95,10 +136,10 @@ self.addEventListener('fetch', (event) => {
             if (cachedResponse) {
               return cachedResponse;
             }
-            // If the request was for a page/document navigation, return the offline fallback
             if (event.request.mode === 'navigate') {
-              return caches.match(OFFLINE_PAGE);
+              return caches.match(OFFLINE_PAGE).then((offlineRes) => offlineRes || Response.error());
             }
+            return Response.error();
           });
         })
     );
@@ -112,7 +153,7 @@ const NOTIFICATION_URLS = {
   'verse-of-day':          '/',
   'devotional-reminder':   '/plans',
   'gratitude-journal':     '/',
-  'scripture-quiz':        '/bible',
+  'scripture-quiz':        '/#word-of-the-day',
 };
 
 self.addEventListener('push', (event) => {
@@ -125,7 +166,8 @@ self.addEventListener('push', (event) => {
     payload = { title: 'PraisePage', body: event.data.text(), tag: 'general' };
   }
 
-  const { title, body, tag, icon, badge, data } = payload;
+  const title = payload.title || 'PraisePage';
+  const { body, tag, icon, badge, data } = payload;
 
   const options = {
     body,
@@ -151,12 +193,14 @@ self.addEventListener('notificationclick', (event) => {
   const fullUrl = self.location.origin + targetUrl;
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clientList) => {
       // If a window is already open, focus it and navigate
       for (const client of clientList) {
         if (client.url.startsWith(self.location.origin) && 'focus' in client) {
-          client.focus();
-          client.navigate(fullUrl);
+          const focused = await client.focus();
+          if (focused && 'navigate' in focused) {
+            await focused.navigate(fullUrl);
+          }
           return;
         }
       }

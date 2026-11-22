@@ -1,24 +1,35 @@
 import webpush from "web-push";
+import crypto from "node:crypto";
 import { getDb } from "@/data/db";
-import { verses } from "@/data/verses";
+import { getVerseOfTheDay } from "@/data/verses";
+import { devotionals } from "@/data/devotionals";
 
-// Configure VAPID credentials
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+function ensureVapidConfigured() {
+  const email = process.env.VAPID_EMAIL;
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+
+  if (!email || !publicKey || !privateKey) {
+    return false;
+  }
+
+  webpush.setVapidDetails(email, publicKey, privateKey);
+  return true;
+}
+
+function verifyBearerToken(authHeader, secret) {
+  if (!authHeader || !secret) return false;
+  const expected = `Bearer ${secret}`;
+  const a = Buffer.from(authHeader, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
 
 // ─── Notification payloads ────────────────────────────────────────────────────
 
 function getVerseOfDay() {
-  const today = new Date();
-  const startOfYear = new Date(today.getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
-  const year = today.getFullYear();
-  const seed = (year * 367 + dayOfYear) * 2654435761; // Knuth multiplicative hash
-  const verseIndex = ((seed >>> 0) % verses.length);
-  const verse = verses[verseIndex] || verses[0];
+  const verse = getVerseOfTheDay(new Date());
   return {
     title: "🌅 Verse of the Day",
     body: `"${verse.verse.substring(0, 100)}${verse.verse.length > 100 ? "…" : ""}" — ${verse.tag}`,
@@ -95,9 +106,14 @@ async function sendNotification(db, sub, payload) {
 
 export async function GET(request) {
   // Secure the endpoint — only Vercel Cron or callers with the secret can trigger it
+  const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!cronSecret || !verifyBearerToken(authHeader, cronSecret)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!ensureVapidConfigured()) {
+    return Response.json({ error: "Push notifications are not configured." }, { status: 500 });
   }
 
   try {
@@ -139,16 +155,18 @@ export async function GET(request) {
 
     const planTitles = {};
     if (userIdsWithPlans.length > 0) {
-      // Fetch active (non-completed) plans for these users
       const placeholders = userIdsWithPlans.map(() => "?").join(", ");
       const { rows: plans } = await db.execute({
-        sql: `SELECT user_id, plan_id FROM plans_progress
-              WHERE user_id IN (${placeholders}) AND is_completed = 0`,
+        sql: `SELECT pp.user_id, pp.plan_id, cd.title AS custom_title
+              FROM plans_progress pp
+              LEFT JOIN custom_devotionals cd ON cd.id = pp.plan_id
+              WHERE pp.user_id IN (${placeholders}) AND pp.is_completed = 0`,
         args: userIdsWithPlans,
       });
-      // Map user_id → first active plan_id (title will be plan_id for now)
       plans.forEach(p => {
-        if (!planTitles[p.user_id]) planTitles[p.user_id] = p.plan_id;
+        if (!planTitles[p.user_id]) {
+          planTitles[p.user_id] = p.custom_title || devotionals[p.plan_id]?.title || p.plan_id;
+        }
       });
     }
 

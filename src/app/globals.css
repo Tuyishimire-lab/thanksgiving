@@ -1,4 +1,8 @@
-@import url('https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css');
 @import "../styles/main.css";
+@import "../styles/sanctuary.css";
 @import "../styles/quotes.css";
 @import "../styles/verse.css";
+@import "../styles/bible.css";
+@import "../styles/home.css";
+@import "../styles/modal.css";
+@import "../styles/verse-card.css";

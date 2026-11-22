@@ -2,9 +2,27 @@
 
 import { getDb } from "@/data/db";
 import { getMe } from "./authActions";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import fs from "fs";
 import path from "path";
+
+function safeRevalidatePath(targetPath) {
+  try {
+    revalidatePath(targetPath);
+  } catch (err) {
+    if (err?.message?.includes("static generation store missing")) return;
+    throw err;
+  }
+}
+
+function safeRevalidateTag(tag) {
+  try {
+    revalidateTag(tag, { expire: 0 });
+  } catch (err) {
+    if (err?.message?.includes("static generation store missing")) return;
+    throw err;
+  }
+}
 
 function logAdminAction(message) {
   try {
@@ -35,7 +53,14 @@ async function verifyAdmin() {
 export async function getAdminEmailList() {
   return (process.env.ADMIN_EMAILS || "admin@praisepage.com")
     .split(",")
-    .map(e => e.trim().toLowerCase());
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function toSafeIsoTimestamp(value) {
+  if (!value) return new Date().toISOString();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
 }
 
 
@@ -52,7 +77,6 @@ export async function getAdminStats() {
     const totalUsers = totalUsersRes.rows[0]?.count ?? 0;
 
     const todayStr = new Date().toDateString();
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toDateString();
 
     const activeTodayRes = await db.execute({
       sql: "SELECT COUNT(*) as count FROM users WHERE last_active = ?",
@@ -100,7 +124,7 @@ export async function getAdminStats() {
       user: u.name,
       email: u.email,
       details: "registered a new account",
-      timestamp: u.created_at ? new Date(u.created_at).toISOString() : new Date().toISOString()
+      timestamp: toSafeIsoTimestamp(u.created_at)
     }));
 
     // Testimony posts
@@ -110,8 +134,8 @@ export async function getAdminStats() {
       type: "testimony_created",
       user: t.author_name,
       details: `shared a testimony: "${t.title}"`,
-      timestamp: t.created_at && (t.created_at.includes("-") || t.created_at.includes(":")) 
-        ? new Date(t.created_at).toISOString() 
+      timestamp: t.created_at && (t.created_at.includes("-") || t.created_at.includes(":"))
+        ? toSafeIsoTimestamp(t.created_at)
         : new Date().toISOString()
     }));
 
@@ -122,8 +146,8 @@ export async function getAdminStats() {
       type: "comment_added",
       user: c.author_name,
       details: `commented: "${c.content.length > 50 ? c.content.substring(0, 50) + "..." : c.content}"`,
-      timestamp: c.created_at && (c.created_at.includes("-") || c.created_at.includes(":")) 
-        ? new Date(c.created_at).toISOString() 
+      timestamp: c.created_at && (c.created_at.includes("-") || c.created_at.includes(":"))
+        ? toSafeIsoTimestamp(c.created_at)
         : new Date().toISOString()
     }));
 
@@ -134,8 +158,8 @@ export async function getAdminStats() {
       type: "prayer_requested",
       user: p.is_anonymous ? "Anonymous" : p.author_name,
       details: `requested prayer: "${p.title}"`,
-      timestamp: p.created_at && (p.created_at.includes("-") || p.created_at.includes(":")) 
-        ? new Date(p.created_at).toISOString() 
+      timestamp: p.created_at && (p.created_at.includes("-") || p.created_at.includes(":"))
+        ? toSafeIsoTimestamp(p.created_at)
         : new Date().toISOString()
     }));
 
@@ -294,7 +318,10 @@ export async function deleteUser(userId) {
     });
     logAdminAction(`deleteUser execute completed. Rows affected: ${dbRes.rowsAffected}`);
     
-    revalidatePath("/admin");
+    safeRevalidateTag("community-stats");
+    safeRevalidateTag("answered-prayers");
+    safeRevalidateTag("public-testimonies");
+    safeRevalidatePath("/admin");
     return { success: true };
   } catch (error) {
     logAdminAction(`deleteUser error: ${error.message}`);
@@ -324,7 +351,7 @@ export async function toggleUserRole(userId, currentRole) {
     });
     logAdminAction(`toggleUserRole execute completed. Rows affected: ${dbRes.rowsAffected}`);
 
-    revalidatePath("/admin");
+    safeRevalidatePath("/admin");
     return { success: true, newRole };
   } catch (error) {
     logAdminAction(`toggleUserRole error: ${error.message}`);
@@ -347,8 +374,9 @@ export async function deleteTestimony(testimonyId) {
     });
     logAdminAction(`deleteTestimony execute completed. Rows affected: ${dbRes.rowsAffected}`);
 
-    revalidatePath("/feed");
-    revalidatePath("/admin");
+    safeRevalidateTag("public-testimonies");
+    safeRevalidatePath("/feed");
+    safeRevalidatePath("/admin");
     return { success: true };
   } catch (error) {
     logAdminAction(`deleteTestimony error: ${error.message}`);
@@ -371,8 +399,9 @@ export async function deleteComment(commentId) {
     });
     logAdminAction(`deleteComment execute completed. Rows affected: ${dbRes.rowsAffected}`);
 
-    revalidatePath("/feed");
-    revalidatePath("/admin");
+    safeRevalidateTag("public-testimonies");
+    safeRevalidatePath("/feed");
+    safeRevalidatePath("/admin");
     return { success: true };
   } catch (error) {
     logAdminAction(`deleteComment error: ${error.message}`);
@@ -395,8 +424,10 @@ export async function deletePrayer(prayerId) {
     });
     logAdminAction(`deletePrayer execute completed. Rows affected: ${dbRes.rowsAffected}`);
 
-    revalidatePath("/prayers");
-    revalidatePath("/admin");
+    safeRevalidateTag("community-stats");
+    safeRevalidateTag("answered-prayers");
+    safeRevalidatePath("/prayers");
+    safeRevalidatePath("/admin");
     return { success: true };
   } catch (error) {
     logAdminAction(`deletePrayer error: ${error.message}`);
@@ -408,20 +439,24 @@ export async function createCustomDevotional(title, category, days, image) {
   try {
     logAdminAction(`createCustomDevotional requested for title: ${title}`);
     await verifyAdmin();
+    if (!title?.trim() || !category?.trim() || !Array.isArray(days) || days.length === 0) {
+      return { error: "Title, category, and at least one day are required." };
+    }
     const db = await getDb();
     
     // Generate a clean url-friendly ID
-    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/(^_+|_+$)/g, "");
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/(^_+|_+$)/g, "") || "plan";
     const id = `custom_${slug}_${Date.now()}`;
     
     await db.execute({
       sql: "INSERT INTO custom_devotionals (id, title, category, days, image) VALUES (?, ?, ?, ?, ?)",
-      args: [id, title.trim(), category, JSON.stringify(days), image || ""]
+      args: [id, title.trim(), category.trim(), JSON.stringify(days), image || ""]
     });
     logAdminAction(`createCustomDevotional complete. New ID: ${id}`);
     
-    revalidatePath("/plans");
-    revalidatePath("/admin");
+    safeRevalidateTag("custom-devotionals");
+    safeRevalidatePath("/plans");
+    safeRevalidatePath("/admin");
     return { success: true, id };
   } catch (error) {
     logAdminAction(`createCustomDevotional error: ${error.message}`);
@@ -433,17 +468,27 @@ export async function updateCustomDevotional(id, title, category, days, image) {
   try {
     logAdminAction(`updateCustomDevotional requested for id: ${id}, title: ${title}`);
     await verifyAdmin();
+    if (!id || !title?.trim() || !category?.trim() || !Array.isArray(days) || days.length === 0) {
+      return { error: "Plan ID, title, category, and at least one day are required." };
+    }
     const db = await getDb();
     
     await db.execute({
-      sql: "INSERT OR REPLACE INTO custom_devotionals (id, title, category, days, image) VALUES (?, ?, ?, ?, ?)",
-      args: [id, title.trim(), category, JSON.stringify(days), image || ""]
+      sql: `INSERT INTO custom_devotionals (id, title, category, days, image)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              title = excluded.title,
+              category = excluded.category,
+              days = excluded.days,
+              image = excluded.image`,
+      args: [id, title.trim(), category.trim(), JSON.stringify(days), image || ""]
     });
     logAdminAction(`updateCustomDevotional complete. ID: ${id}`);
     
-    revalidatePath("/plans");
-    revalidatePath(`/plans/${id}`);
-    revalidatePath("/admin");
+    safeRevalidateTag("custom-devotionals");
+    safeRevalidatePath("/plans");
+    safeRevalidatePath(`/plans/${id}`);
+    safeRevalidatePath("/admin");
     return { success: true };
   } catch (error) {
     logAdminAction(`updateCustomDevotional error: ${error.message}`);
@@ -477,8 +522,9 @@ export async function deleteCustomDevotional(id) {
       args: [id]
     });
     
-    revalidatePath("/plans");
-    revalidatePath("/admin");
+    safeRevalidateTag("custom-devotionals");
+    safeRevalidatePath("/plans");
+    safeRevalidatePath("/admin");
     return { success: true };
   } catch (error) {
     logAdminAction(`deleteCustomDevotional error: ${error.message}`);

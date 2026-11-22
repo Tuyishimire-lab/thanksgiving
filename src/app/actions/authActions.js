@@ -1,7 +1,9 @@
 "use server";
 
+import { cache } from "react";
 import { getDb, hashPassword, verifyPassword } from "@/data/db";
 import { cookies, headers } from "next/headers";
+import { unstable_rethrow } from "next/navigation";
 import crypto from "node:crypto";
 import { getAdminEmailList } from "./adminActions";
 
@@ -29,13 +31,16 @@ async function verifyCsrf() {
 /**
  * Helper to update user streak internally (asynchronous)
  */
-async function updateStreakInternal(userId) {
+async function updateStreakInternal(userId, cachedUser = null) {
   const db = await getDb();
-  const res = await db.execute({
-    sql: "SELECT streak_count, last_active, streak_freezes_count FROM users WHERE id = ?",
-    args: [userId]
-  });
-  const user = res.rows[0];
+  let user = cachedUser;
+  if (!user) {
+    const res = await db.execute({
+      sql: "SELECT streak_count, last_active, streak_freezes_count FROM users WHERE id = ?",
+      args: [userId]
+    });
+    user = res.rows[0];
+  }
   if (!user) return null;
 
   const todayStr = new Date().toDateString(); // E.g., "Fri Jun 26 2026"
@@ -55,18 +60,20 @@ async function updateStreakInternal(userId) {
   if (user.last_active) {
     const lastDate = new Date(user.last_active);
     const todayDate = new Date(todayStr);
-    
-    // Calculate difference in days
-    const diffTime = Math.abs(todayDate - lastDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) {
-      newCount = (user.streak_count || 0) + 1;
-    } else if (diffDays > 1 && newFreezesCount > 0) {
-      // Consume a streak freeze!
-      newFreezesCount = Math.max(0, newFreezesCount - 1);
-      newCount = (user.streak_count || 0) + 1; // Preserve the streak chain
-      freezeUsed = true;
+    if (!Number.isNaN(lastDate.getTime())) {
+      // Calculate difference in calendar days (round to handle DST transitions)
+      const diffTime = Math.abs(todayDate - lastDate);
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        newCount = (user.streak_count || 0) + 1;
+      } else if (diffDays > 1 && newFreezesCount > 0) {
+        // Consume a streak freeze!
+        newFreezesCount = Math.max(0, newFreezesCount - 1);
+        newCount = (user.streak_count || 0) + 1; // Preserve the streak chain
+        freezeUsed = true;
+      }
     }
   }
 
@@ -82,10 +89,7 @@ async function updateStreakInternal(userId) {
   };
 }
 
-/**
- * Get currently authenticated user details
- */
-export async function getMe() {
+const getMeCached = cache(async () => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("session")?.value;
@@ -114,9 +118,17 @@ export async function getMe() {
       role: session.role || "user"
     };
   } catch (error) {
+    unstable_rethrow(error);
     console.error("Error in getMe server action:", error);
     return null;
   }
+});
+
+/**
+ * Get currently authenticated user details (deduplicated per server request)
+ */
+export async function getMe() {
+  return getMeCached();
 }
 
 /**
@@ -305,6 +317,7 @@ export async function logout() {
     cookieStore.set("session", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 0,
       path: "/"
     });
@@ -321,23 +334,22 @@ export async function logout() {
  */
 export async function updateStreakAction() {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("session")?.value;
-    if (!token) return null;
+    const user = await getMe();
+    if (!user) return null;
 
-    const now = new Date().toISOString();
-    const db = await getDb();
-    const res = await db.execute({
-      sql: "SELECT user_id FROM sessions WHERE id = ? AND expires_at > ?",
-      args: [token, now]
-    });
-    const session = res.rows[0];
+    const todayStr = new Date().toDateString();
+    if (user.last_active === todayStr) {
+      return {
+        streak_count: user.streak_count,
+        last_active: user.last_active,
+        streak_freezes_count: user.streak_freezes_count ?? 1
+      };
+    }
 
-    if (!session) return null;
-
-    const updated = await updateStreakInternal(session.user_id);
+    const updated = await updateStreakInternal(user.id, user);
     return updated;
   } catch (error) {
+    unstable_rethrow(error);
     console.error("Error updating streak:", error);
     return null;
   }
@@ -359,29 +371,29 @@ export async function loginWithGoogle(token, email, name, tokenType = "id-token"
     // 1. Verify token if a Google Client ID is configured
     const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (googleClientId) {
+      if (!token || typeof token !== "string") {
+        return { error: "Missing Google authentication token." };
+      }
       try {
-        let payload;
-        if (tokenType === "access-token") {
-          const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (!response.ok) {
-            throw new Error("Failed to verify access token with Google userinfo API");
-          }
-          payload = await response.json();
-        } else {
-          const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
-          if (!response.ok) {
-            throw new Error("Failed to verify Google token with tokeninfo endpoint");
-          }
-          payload = await response.json();
-          if (payload.aud !== googleClientId) {
-            return { error: "Google authentication failed: Client ID mismatch." };
-          }
+        const tokenParam = tokenType === "access-token"
+          ? `access_token=${encodeURIComponent(token)}`
+          : `id_token=${encodeURIComponent(token)}`;
+        const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?${tokenParam}`);
+        if (!response.ok) {
+          throw new Error("Failed to verify Google token with tokeninfo endpoint");
         }
-        
+        const payload = await response.json();
+        const tokenAudience = payload.aud || payload.azp;
+        if (tokenAudience !== googleClientId) {
+          return { error: "Google authentication failed: Client ID mismatch." };
+        }
+
+        if (payload.email_verified !== true && payload.email_verified !== "true") {
+          return { error: "Google authentication failed: Email is not verified." };
+        }
+
         // Ensure email matches
-        if (payload.email.trim().toLowerCase() !== normalizedEmail) {
+        if (!payload.email || payload.email.trim().toLowerCase() !== normalizedEmail) {
           return { error: "Google authentication failed: Email mismatch." };
         }
       } catch (err) {

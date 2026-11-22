@@ -24,264 +24,188 @@ export default function Contacts() {
   };
 
   return (
-    <section className="section" style={{ paddingBlock: "6rem 4rem" }}>
-      <div className="container" style={{ maxWidth: "1000px" }}>
-        <h2 className="title section-title" data-name="Connect">
-          Contact Us
-        </h2>
+    <section className="sanc-page">
+      <div className="sanc-container-md">
+        <div className="sanc-hero">
+          <span className="sanc-eyebrow">Connect With Us</span>
+          <h1 className="sanc-title">
+            Reach Out to <span className="sanc-title-accent">Ju &amp;</span> Vicky
+          </h1>
+          <p className="sanc-subtitle">
+            Share questions, prayer reflections, ministry collaborations, or feedback anytime.
+          </p>
+        </div>
 
-        <div className="d-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "4rem", marginTop: "4rem" }}>
-          {/* Author/Company Information Card */}
-          <div
-            style={{
-              background: "var(--secondary-background-color)",
-              padding: "4rem 3rem",
-              borderRadius: "12px",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "2.5rem"
-            }}
-          >
+        <div className="sanc-grid-2" style={{ alignItems: "start" }}>
+          <div className="sanc-card sanc-card-pad sanc-stack" style={{ gap: "2rem" }}>
             <div>
-              <h3 style={{ fontSize: "2.2rem", color: "var(--light-color)", marginBottom: "1.5rem" }}>
-                Ju & Vicky
-              </h3>
-              <p style={{ lineHeight: "1.6", color: "var(--light-color-alt)" }}>
-                We are Justine and Victorien, We are passionate about faith, hope, and testimonies of how the Lord works in modern lives. Feel free to reach out to us with any questions, reflections, or cooperation requests!
+              <span className="sanc-eyebrow">Founders</span>
+              <h2 className="sanc-section-title" style={{ marginBottom: "0.9rem" }}>
+                Justine &amp; Victorien
+              </h2>
+              <p style={{ fontSize: "1.42rem", lineHeight: 1.7, color: "var(--sanc-muted)", margin: 0 }}>
+                We are passionate about faith, hope, and living testimonies of how the Lord works
+                in everyday life. Feel free to write to us with questions, reflections, or
+                cooperation requests.
               </p>
             </div>
 
-            <hr style={{ border: "0", height: "1px", background: "var(--transparent-light-color)" }} />
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                <div
-                  className="place-items-center"
-                  style={{
-                    width: "4.5rem",
-                    height: "4.5rem",
-                    borderRadius: "50%",
-                    background: "var(--transparent-light-color)",
-                    color: "var(--light-color)"
-                  }}
-                >
-                  <i className="ri-mail-line" style={{ fontSize: "1.8rem" }}></i>
+            <div className="sanc-stack" style={{ gap: "1.4rem", paddingBlock: "1.4rem", borderTop: "1px solid var(--sanc-border)", borderBottom: "1px solid var(--sanc-border)" }}>
+              <div className="sanc-info-row">
+                <div className="sanc-info-icon">
+                  <i className="ri-mail-line" aria-hidden="true"></i>
                 </div>
                 <div>
-                  <span style={{ display: "block", fontSize: "1.2rem", color: "var(--light-color-alt)" }}>EMAIL US</span>
-                  <a href="mailto:tuyishime1angel@gmail.com" style={{ fontSize: "1.5rem", fontWeight: "600", color: "var(--light-color)" }}>
+                  <span className="sanc-label" style={{ display: "block", marginBottom: "0.2rem" }}>
+                    Email Us
+                  </span>
+                  <a
+                    href="mailto:tuyishime1angel@gmail.com"
+                    style={{ fontSize: "1.45rem", fontWeight: 600, color: "var(--sanc-text)" }}
+                  >
                     tuyishime1angel@gmail.com
                   </a>
                 </div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                <div
-                  className="place-items-center"
-                  style={{
-                    width: "4.5rem",
-                    height: "4.5rem",
-                    borderRadius: "50%",
-                    background: "var(--transparent-light-color)",
-                    color: "var(--light-color)"
-                  }}
-                >
-                  <i className="ri-map-pin-line" style={{ fontSize: "1.8rem" }}></i>
+              <div className="sanc-info-row">
+                <div className="sanc-info-icon">
+                  <i className="ri-map-pin-line" aria-hidden="true"></i>
                 </div>
                 <div>
-                  <span style={{ display: "block", fontSize: "1.2rem", color: "var(--light-color-alt)" }}>OUR LOCATION</span>
-                  <span style={{ fontSize: "1.5rem", fontWeight: "600", color: "var(--light-color)" }}>
+                  <span className="sanc-label" style={{ display: "block", marginBottom: "0.2rem" }}>
+                    Our Location
+                  </span>
+                  <span style={{ fontSize: "1.45rem", fontWeight: 600, color: "var(--sanc-text)" }}>
                     Kigali, Rwanda
                   </span>
                 </div>
               </div>
             </div>
 
-            <hr style={{ border: "0", height: "1px", background: "var(--transparent-light-color)" }} />
-
             <div>
-              <span style={{ display: "block", fontSize: "1.3rem", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
-                FOLLOW US ON
+              <span className="sanc-label" style={{ display: "block", marginBottom: "1rem" }}>
+                Follow PraisePage
               </span>
-              <ul className="list social-media" style={{ justifyContent: "flex-start", gap: "1.5rem" }}>
-                <li className="list-item">
-                  <a href="https://www.instagram.com/praisepage__?igsh=czB1MWpndDM5dmxl" className="list-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-                    <i className="ri-instagram-line"></i>
-                  </a>
-                </li>
-                <li className="list-item">
-                  <a href="https://www.facebook.com/share/17UGpy6s6P/" className="list-link" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
-                    <i className="ri-facebook-circle-line"></i>
-                  </a>
-                </li>
-                <li className="list-item">
-                  <a href="https://x.com/praisepage_" className="list-link" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer">
-                    <i className="ri-twitter-line"></i>
-                  </a>
-                </li>
-              </ul>
+              <div className="sanc-social-row">
+                <a
+                  href="https://www.instagram.com/praisepage__?igsh=czB1MWpndDM5dmxl"
+                  className="sanc-social-btn"
+                  aria-label="Instagram"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <i className="ri-instagram-line" aria-hidden="true"></i>
+                </a>
+                <a
+                  href="https://www.facebook.com/share/17UGpy6s6P/"
+                  className="sanc-social-btn"
+                  aria-label="Facebook"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <i className="ri-facebook-circle-line" aria-hidden="true"></i>
+                </a>
+                <a
+                  href="https://x.com/praisepage_"
+                  className="sanc-social-btn"
+                  aria-label="X (Twitter)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <i className="ri-twitter-line" aria-hidden="true"></i>
+                </a>
+              </div>
             </div>
           </div>
 
-          {/* Contact Form Card */}
-          <div
-            style={{
-              background: "var(--secondary-background-color)",
-              padding: "4rem 3rem",
-              borderRadius: "12px",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15)"
-            }}
-          >
+          <div className="sanc-card sanc-card-pad">
             {submitted ? (
-              <div style={{ textAlign: "center", padding: "4rem 2rem" }}>
-                <div
-                  className="place-items-center"
-                  style={{
-                    width: "8rem",
-                    height: "8rem",
-                    borderRadius: "50%",
-                    background: "var(--gradient-color)",
-                    color: "#fff",
-                    margin: "0 auto 2.5rem",
-                    fontSize: "4rem"
-                  }}
-                >
-                  <i className="ri-checkbox-circle-line"></i>
+              <div className="sanc-stack" style={{ alignItems: "center", textAlign: "center", paddingBlock: "2.4rem", gap: "1.5rem" }}>
+                <div className="sanc-stat-icon emerald" style={{ width: "6.4rem", height: "6.4rem", borderRadius: "50%" }}>
+                  <i className="ri-checkbox-circle-line" style={{ fontSize: "3.2rem" }} aria-hidden="true"></i>
                 </div>
-                <h3 style={{ fontSize: "2.4rem", color: "var(--light-color)", marginBottom: "1rem" }}>
-                  Message Sent!
-                </h3>
-                <p style={{ color: "var(--light-color-alt)", fontSize: "1.5rem" }}>
-                  Thank you for reaching out. We have received your message and will get back to you shortly.
-                </p>
+                <div className="sanc-alert ok" role="status">
+                  <span>Thank you for reaching out. Your message has been received and we will respond shortly.</span>
+                </div>
                 <button
+                  type="button"
                   onClick={() => setSubmitted(false)}
-                  style={{
-                    marginTop: "3rem",
-                    border: "2px solid var(--light-color)",
-                    padding: "1rem 2.5rem",
-                    borderRadius: "30px",
-                    cursor: "pointer",
-                    fontWeight: "600"
-                  }}
+                  className="sanc-btn-secondary"
                 >
-                  Send another message
+                  Send Another Message
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                <h3 style={{ fontSize: "2.2rem", color: "var(--light-color)", marginBottom: "1rem" }}>
-                  Send a Message
-                </h3>
+              <form onSubmit={handleSubmit} className="sanc-stack" style={{ gap: "1.65rem" }}>
+                <div>
+                  <span className="sanc-eyebrow">Direct Note</span>
+                  <h2 className="sanc-section-title">Send a Message</h2>
+                </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <label htmlFor="name" style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600" }}>
-                    YOUR NAME
+                <div className="sanc-field">
+                  <label htmlFor="name" className="sanc-label">
+                    Your Name
                   </label>
                   <input
                     type="text"
                     id="name"
                     name="name"
+                    className="sanc-input"
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    style={{
-                      border: "2px solid var(--transparent-light-color)",
-                      borderRadius: "6px",
-                      padding: "1.2rem",
-                      background: "var(--primary-background-color)",
-                      color: "var(--light-color)",
-                      outline: "none"
-                    }}
                   />
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <label htmlFor="email" style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600" }}>
-                    EMAIL ADDRESS
+                <div className="sanc-field">
+                  <label htmlFor="email" className="sanc-label">
+                    Email Address
                   </label>
                   <input
                     type="email"
                     id="email"
                     name="email"
+                    className="sanc-input"
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    style={{
-                      border: "2px solid var(--transparent-light-color)",
-                      borderRadius: "6px",
-                      padding: "1.2rem",
-                      background: "var(--primary-background-color)",
-                      color: "var(--light-color)",
-                      outline: "none"
-                    }}
                   />
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <label htmlFor="subject" style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600" }}>
-                    SUBJECT
+                <div className="sanc-field">
+                  <label htmlFor="subject" className="sanc-label">
+                    Subject
                   </label>
                   <input
                     type="text"
                     id="subject"
                     name="subject"
+                    className="sanc-input"
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    style={{
-                      border: "2px solid var(--transparent-light-color)",
-                      borderRadius: "6px",
-                      padding: "1.2rem",
-                      background: "var(--primary-background-color)",
-                      color: "var(--light-color)",
-                      outline: "none"
-                    }}
                   />
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <label htmlFor="message" style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600" }}>
-                    MESSAGE
+                <div className="sanc-field">
+                  <label htmlFor="message" className="sanc-label">
+                    Message
                   </label>
                   <textarea
                     id="message"
                     name="message"
+                    className="sanc-textarea"
                     value={formData.message}
                     onChange={handleChange}
                     required
-                    rows="5"
-                    style={{
-                      border: "2px solid var(--transparent-light-color)",
-                      borderRadius: "6px",
-                      padding: "1.2rem",
-                      background: "var(--primary-background-color)",
-                      color: "var(--light-color)",
-                      outline: "none",
-                      resize: "vertical"
-                    }}
+                    rows={5}
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  style={{
-                    background: "var(--accent-color)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "30px",
-                    padding: "1.5rem",
-                    fontSize: "1.6rem",
-                    fontWeight: "700",
-                    cursor: "pointer",
-                    transition: "opacity 0.25s",
-                    textAlign: "center"
-                  }}
-                  onMouseOver={(e) => (e.target.style.opacity = 0.9)}
-                  onMouseOut={(e) => (e.target.style.opacity = 1)}
-                >
-                  Send Message
+                <button type="submit" className="sanc-btn-primary" style={{ width: "100%" }}>
+                  <i className="ri-send-plane-line" aria-hidden="true"></i>
+                  <span>Send Message</span>
                 </button>
               </form>
             )}

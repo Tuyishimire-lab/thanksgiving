@@ -73,7 +73,7 @@ export default async function PlanPlayerLayout({ children, params }) {
       {schemaJson && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson).replace(/</g, "\\u003c") }}
         />
       )}
       {children}

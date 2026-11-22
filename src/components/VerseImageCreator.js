@@ -1,618 +1,1153 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from "react";
+import {
+  CARD_BG_PRESETS,
+  CARD_INK_COLORS,
+  CARD_FRAMES,
+  CARD_ASPECT_RATIOS,
+  CARD_FONTS,
+} from "@/data/cardPresets";
 
-const BG_PRESETS = [
-  { name: "Gold Watercolor", value: "url(/assets/images/card_bgs/gold_watercolor.png)", type: "image", src: "/assets/images/card_bgs/gold_watercolor.png" },
-  { name: "Autumn Leaves", value: "url(/assets/images/card_bgs/autumn_leaves.png)", type: "image", src: "/assets/images/card_bgs/autumn_leaves.png" },
-  { name: "Moody Forest", value: "url(/assets/images/card_bgs/moody_forest.png)", type: "image", src: "/assets/images/card_bgs/moody_forest.png" },
-  { name: "Marble Gold", value: "url(/assets/images/card_bgs/marble_gold.png)", type: "image", src: "/assets/images/card_bgs/marble_gold.png" },
-  { name: "Deep Slate", value: "#131417", type: "solid", colors: ["#131417"] },
-  { name: "Sunset", value: "linear-gradient(45deg, #ff5e62, #ff9966)", type: "gradient", colors: ["#ff5e62", "#ff9966"] },
-  { name: "Ocean", value: "linear-gradient(45deg, #12bcfe, #00f2fe)", type: "gradient", colors: ["#12bcfe", "#00f2fe"] },
-  { name: "Lavender", value: "linear-gradient(45deg, #a767e5, #c893f9)", type: "gradient", colors: ["#a767e5", "#c893f9"] }
-];
+const emptySubscribe = () => () => {};
+const getHostServerSnapshot = () => "praisepage.com";
 
-export default function VerseImageCreator({ verseText, verseTag, onClose }) {
-  const [selectedBg, setSelectedBg] = useState(BG_PRESETS[0]);
-  const [fontSize, setFontSize] = useState(20); // px in preview
+function normalizeBrandHost(host) {
+  if (!host || /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(host)) {
+    return "praisepage.com";
+  }
+  return host;
+}
+
+function getHostSnapshot() {
+  return normalizeBrandHost(window.location.host);
+}
+
+const imagePromiseCache = new Map();
+let cachedGrainCanvas = null;
+
+// Deterministic starry field for Starry Night preset
+const STAR_FIELD = Array.from({ length: 72 }, (_, idx) => {
+  const s1 = Math.sin((idx + 1) * 12.9898) * 43758.5453;
+  const s2 = Math.sin((idx + 1) * 78.233) * 24634.6345;
+  const s3 = Math.sin((idx + 1) * 45.164) * 19283.4712;
+  return {
+    x: s1 - Math.floor(s1),
+    y: (s2 - Math.floor(s2)) * 0.88,
+    r: 0.7 + (s3 - Math.floor(s3)) * 1.9,
+    alpha: 0.25 + ((idx * 17) % 10) * 0.06,
+    gold: idx % 4 === 0,
+  };
+});
+
+function loadCanvasImage(src) {
+  if (!src) return Promise.resolve(null);
+  if (imagePromiseCache.has(src)) {
+    return imagePromiseCache.get(src);
+  }
+  const promise = new Promise((resolve) => {
+    const img = new Image();
+    if (!src.startsWith("blob:") && !src.startsWith("data:")) {
+      img.crossOrigin = "anonymous";
+    }
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+  if (!src.startsWith("blob:")) {
+    imagePromiseCache.set(src, promise);
+  }
+  return promise;
+}
+
+function getGrainPatternCanvas() {
+  if (cachedGrainCanvas || typeof document === "undefined") {
+    return cachedGrainCanvas;
+  }
+  const size = 160;
+  const grain = document.createElement("canvas");
+  grain.width = size;
+  grain.height = size;
+  const gCtx = grain.getContext("2d");
+  if (!gCtx) return null;
+
+  const imgData = gCtx.createImageData(size, size);
+  const data = imgData.data;
+  let seed = 1337;
+  for (let i = 0; i < data.length; i += 4) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const v = (seed >>> 24) & 0xff;
+    data[i] = v;
+    data[i + 1] = v;
+    data[i + 2] = v;
+    data[i + 3] = 12;
+  }
+  gCtx.putImageData(imgData, 0, 0);
+  cachedGrainCanvas = grain;
+  return cachedGrainCanvas;
+}
+
+function hexToRgba(hex, alpha) {
+  const clean = String(hex || "#ffffff").replace("#", "");
+  if (clean.length !== 6) return `rgba(255, 255, 255, ${alpha})`;
+  const r = Number.parseInt(clean.slice(0, 2), 16);
+  const g = Number.parseInt(clean.slice(2, 4), 16);
+  const b = Number.parseInt(clean.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function isLightInkColor(hex) {
+  const clean = String(hex || "").toLowerCase();
+  return clean === "#ffffff" || clean === "#f7eedd" || clean === "#f0cf7b";
+}
+
+function resolveCanvasFont(fontId) {
+  const fontObj = CARD_FONTS.find((f) => f.id === fontId) || CARD_FONTS[0];
+  if (typeof window !== "undefined" && fontObj.cssVar) {
+    const val = getComputedStyle(document.documentElement)
+      .getPropertyValue(fontObj.cssVar)
+      .trim();
+    if (val) return val;
+  }
+  return fontObj.fallback;
+}
+
+function drawRoundedRectPath(ctx, x, y, w, h, r) {
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + w - radius, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+  ctx.lineTo(x + w, y + h - radius);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+  ctx.lineTo(x + radius, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function wrapVerseLines(ctx, text, maxWidth) {
+  const paragraphs = String(text || "").split(/\n+/);
+  const lines = [];
+
+  for (const para of paragraphs) {
+    const words = para.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) continue;
+
+    let current = "";
+    for (let i = 0; i < words.length; i++) {
+      const candidate = current ? `${current} ${words[i]}` : words[i];
+      if (ctx.measureText(candidate).width > maxWidth && current) {
+        lines.push(current);
+        current = words[i];
+      } else {
+        current = candidate;
+      }
+    }
+    if (current) lines.push(current);
+  }
+  return lines.length > 0 ? lines : [""];
+}
+
+async function renderVerseCard(canvas, config, isCancelled = () => false) {
+  if (!canvas || isCancelled()) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const activeFont = resolveCanvasFont(config.fontStyle);
+  const modernFont = resolveCanvasFont("Modern");
+  const fontWeight = config.fontStyle === "Book" ? 500 : 600;
+  const italicPrefix = config.isItalic ? "italic " : "";
+
+  if (typeof document !== "undefined" && document.fonts) {
+    if (typeof document.fonts.load === "function") {
+      await Promise.allSettled([
+        document.fonts.load(`${italicPrefix}${fontWeight} 48px ${activeFont}`),
+        document.fonts.load(`600 32px ${modernFont}`),
+      ]);
+      if (isCancelled()) return;
+    }
+    if (document.fonts.ready) {
+      await document.fonts.ready;
+      if (isCancelled()) return;
+    }
+  }
+
+  const ratioObj =
+    CARD_ASPECT_RATIOS.find((r) => r.id === config.aspectRatio) ||
+    CARD_ASPECT_RATIOS[0];
+  const width = ratioObj.width;
+  const height = ratioObj.height;
+  const bg = config.selectedBg;
+
+  let loadedBgImage = null;
+  if (bg.type === "image" && bg.src) {
+    loadedBgImage = await loadCanvasImage(bg.src);
+    if (isCancelled()) return;
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+
+  const minDim = Math.min(width, height);
+  const maxDim = Math.max(width, height);
+  const scalar = minDim / 400;
+
+  // 1. Background fill (image or rich-gradient)
+  if (bg.type === "image" && bg.src) {
+    if (loadedBgImage) {
+      const scale = Math.max(width / loadedBgImage.width, height / loadedBgImage.height);
+      const drawW = loadedBgImage.width * scale;
+      const drawH = loadedBgImage.height * scale;
+      const shiftX = (width - drawW) / 2;
+      const shiftY = (height - drawH) / 2;
+      ctx.drawImage(
+        loadedBgImage,
+        0,
+        0,
+        loadedBgImage.width,
+        loadedBgImage.height,
+        shiftX,
+        shiftY,
+        drawW,
+        drawH
+      );
+    } else {
+      ctx.fillStyle = "#151820";
+      ctx.fillRect(0, 0, width, height);
+    }
+  } else {
+    const angleRad = (((bg.angle ?? 145) - 90) * Math.PI) / 180;
+    const dx = Math.cos(angleRad) * (width / 2);
+    const dy = Math.sin(angleRad) * (height / 2);
+    const grad = ctx.createLinearGradient(
+      width / 2 - dx,
+      height / 2 - dy,
+      width / 2 + dx,
+      height / 2 + dy
+    );
+    const palette = Array.isArray(bg.colors) && bg.colors.length > 0 ? bg.colors : ["#151820", "#1d2b44"];
+    if (palette.length === 1) {
+      grad.addColorStop(0, palette[0]);
+      grad.addColorStop(1, palette[0]);
+    } else {
+      const step = 1 / (palette.length - 1);
+      palette.forEach((c, idx) => grad.addColorStop(idx * step, c));
+    }
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+
+    if (bg.glow) {
+      const gx = bg.glow.x * width;
+      const gy = bg.glow.y * height;
+      const gr = bg.glow.r * maxDim;
+      const radial = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      radial.addColorStop(0, bg.glow.color);
+      radial.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = radial;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    if (bg.stars) {
+      for (const s of STAR_FIELD) {
+        const sx = s.x * width;
+        const sy = s.y * height;
+        ctx.fillStyle = s.gold
+          ? `rgba(240, 207, 123, ${s.alpha})`
+          : `rgba(255, 255, 255, ${s.alpha * 0.85})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, s.r * (scalar * 0.55), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // 2. Overlay dimmer
+  if (config.overlayOpacity > 0) {
+    ctx.fillStyle = bg.isLight
+      ? `rgba(28, 22, 16, ${config.overlayOpacity})`
+      : `rgba(6, 8, 12, ${config.overlayOpacity})`;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  // 3. Soft vignette
+  if (config.showVignette) {
+    const vig = ctx.createRadialGradient(
+      width / 2,
+      height / 2,
+      minDim * 0.28,
+      width / 2,
+      height / 2,
+      maxDim * 0.78
+    );
+    vig.addColorStop(0, "rgba(0, 0, 0, 0)");
+    vig.addColorStop(1, bg.isLight ? "rgba(32, 24, 16, 0.16)" : "rgba(0, 0, 0, 0.44)");
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  // 4. Subtle paper/film grain
+  if (config.showGrain) {
+    const grainCanvas = getGrainPatternCanvas();
+    if (grainCanvas) {
+      const pattern = ctx.createPattern(grainCanvas, "repeat");
+      if (pattern) {
+        ctx.fillStyle = pattern;
+        ctx.fillRect(0, 0, width, height);
+      }
+    }
+  }
+
+  const lightInk = isLightInkColor(config.textColor);
+  const accentColor = lightInk ? "#e8c56b" : "#9a6d12";
+  const frameInset = Math.round(minDim * 0.055);
+  const innerPadX = config.frame === "glass" ? Math.round(width * 0.13) : Math.round(width * 0.11);
+  const maxTextWidth = width - innerPadX * 2;
+  const formattedQuote =
+    config.frame === "editorial"
+      ? String(config.verseText || "").trim()
+      : `\u201C${String(config.verseText || "").trim()}\u201D`;
+
+  const bottomSafeMargin =
+    config.frame === "framed"
+      ? frameInset + Math.round(28 * scalar)
+      : Math.round(36 * scalar);
+  const topSafeMargin =
+    config.frame === "framed"
+      ? frameInset + Math.round(26 * scalar)
+      : Math.round(34 * scalar);
+  const availableHeight = height - topSafeMargin - bottomSafeMargin;
+
+  // 5. Auto-fit typography calculation
+  let fitScale = 1.0;
+  let lines = [];
+  let renderFontSize = Math.round(config.fontSize * scalar);
+  let lineHeight = renderFontSize * 1.48;
+  let tagSize = Math.round(13.5 * scalar);
+  let crestHeight = 0;
+  let dividerGap = 0;
+
+  while (fitScale >= 0.42) {
+    renderFontSize = Math.round(config.fontSize * scalar * fitScale);
+    lineHeight = renderFontSize * 1.48;
+    tagSize = Math.max(Math.round(11 * scalar), Math.round(13.5 * scalar * Math.max(0.76, fitScale)));
+    crestHeight = config.frame === "editorial" ? Math.round(40 * scalar * fitScale) : 0;
+    dividerGap =
+      config.frame === "classic"
+        ? Math.round(28 * scalar * Math.max(0.75, fitScale))
+        : Math.round(20 * scalar * Math.max(0.75, fitScale));
+
+    ctx.font = `${italicPrefix}${fontWeight} ${renderFontSize}px ${activeFont}`;
+    lines = wrapVerseLines(ctx, formattedQuote, maxTextWidth);
+
+    const needed = crestHeight + lines.length * lineHeight + dividerGap + tagSize * 1.4;
+    if (needed <= availableHeight) {
+      break;
+    }
+    fitScale -= 0.04;
+  }
+
+  const contentHeight = crestHeight + lines.length * lineHeight + dividerGap + tagSize * 1.2;
+  const blockTopY = topSafeMargin + (availableHeight - contentHeight) / 2;
+
+  // 6. Frame containers (glass panel / framed border)
+  if (config.frame === "glass") {
+    const panelPadX = Math.round(26 * scalar);
+    const panelPadY = Math.round(28 * scalar);
+    const panelX = innerPadX - panelPadX;
+    const panelW = maxTextWidth + panelPadX * 2;
+    const panelY = Math.max(frameInset, blockTopY - panelPadY);
+    const panelH = Math.min(
+      height - frameInset * 2,
+      contentHeight + panelPadY * 2
+    );
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.24)";
+    ctx.shadowBlur = Math.round(24 * scalar);
+    ctx.shadowOffsetY = Math.round(8 * scalar);
+    drawRoundedRectPath(ctx, panelX, panelY, panelW, panelH, Math.round(14 * scalar));
+    ctx.fillStyle = lightInk
+      ? "rgba(12, 15, 22, 0.58)"
+      : "rgba(255, 252, 245, 0.78)";
+    ctx.fill();
+    ctx.restore();
+
+    drawRoundedRectPath(ctx, panelX, panelY, panelW, panelH, Math.round(14 * scalar));
+    ctx.strokeStyle = lightInk
+      ? "rgba(255, 255, 255, 0.2)"
+      : "rgba(59, 45, 34, 0.18)";
+    ctx.lineWidth = Math.max(1.5, Math.round(scalar * 0.7));
+    ctx.stroke();
+  } else if (config.frame === "framed") {
+    const inset = frameInset;
+    const rectW = width - inset * 2;
+    const rectH = height - inset * 2;
+    ctx.strokeStyle = hexToRgba(config.textColor, 0.24);
+    ctx.lineWidth = Math.max(1.5, Math.round(scalar * 0.65));
+    ctx.strokeRect(inset, inset, rectW, rectH);
+
+    // Subtle corner ticks
+    const tick = Math.round(14 * scalar);
+    ctx.strokeStyle = hexToRgba(accentColor, 0.78);
+    ctx.lineWidth = Math.max(2, Math.round(scalar * 0.9));
+    ctx.beginPath();
+    // Top-left
+    ctx.moveTo(inset, inset + tick);
+    ctx.lineTo(inset, inset);
+    ctx.lineTo(inset + tick, inset);
+    // Top-right
+    ctx.moveTo(inset + rectW - tick, inset);
+    ctx.lineTo(inset + rectW, inset);
+    ctx.lineTo(inset + rectW, inset + tick);
+    // Bottom-left
+    ctx.moveTo(inset, inset + rectH - tick);
+    ctx.lineTo(inset, inset + rectH);
+    ctx.lineTo(inset + tick, inset + rectH);
+    // Bottom-right
+    ctx.moveTo(inset + rectW - tick, inset + rectH);
+    ctx.lineTo(inset + rectW, inset + rectH);
+    ctx.lineTo(inset + rectW, inset + rectH - tick);
+    ctx.stroke();
+  }
+
+  // 7. Editorial opening quote crest
+  const textX =
+    config.alignment === "center"
+      ? width / 2
+      : config.alignment === "left"
+        ? innerPadX
+        : width - innerPadX;
+
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = config.alignment;
+
+  if (config.frame === "editorial") {
+    const crestSize = Math.round(52 * scalar * fitScale);
+    ctx.font = `700 ${crestSize}px ${resolveCanvasFont("Classic")}`;
+    ctx.fillStyle = hexToRgba(accentColor, 0.45);
+    ctx.fillText("\u201C", textX, blockTopY + crestSize * 0.65);
+  }
+
+  // 8. Verse lines
+  ctx.save();
+  if (bg.type === "image" && lightInk) {
+    ctx.shadowColor = "rgba(0, 0, 0, 0.52)";
+    ctx.shadowBlur = Math.round(10 * scalar);
+    ctx.shadowOffsetY = Math.round(2 * scalar);
+  } else if (!bg.isLight && lightInk) {
+    ctx.shadowColor = "rgba(0, 0, 0, 0.42)";
+    ctx.shadowBlur = Math.round(6 * scalar);
+    ctx.shadowOffsetY = Math.round(1.5 * scalar);
+  }
+  ctx.fillStyle = config.textColor;
+  ctx.font = `${italicPrefix}${fontWeight} ${renderFontSize}px ${activeFont}`;
+
+  let curY = blockTopY + crestHeight + renderFontSize * 0.92;
+  for (const lineStr of lines) {
+    ctx.fillText(lineStr, textX, curY);
+    curY += lineHeight;
+  }
+  ctx.restore();
+
+  // 9. Classic divider line + Scripture reference
+  const refBlockY = blockTopY + crestHeight + lines.length * lineHeight + dividerGap * 0.35;
+  if (config.frame === "classic") {
+    const ruleW = Math.round(56 * scalar);
+    const ruleX =
+      config.alignment === "center"
+        ? width / 2 - ruleW / 2
+        : config.alignment === "left"
+          ? innerPadX
+          : width - innerPadX - ruleW;
+    ctx.fillStyle = hexToRgba(accentColor, 0.78);
+    ctx.fillRect(ruleX, refBlockY - dividerGap * 0.18, ruleW, Math.max(2, Math.round(scalar * 0.75)));
+  }
+
+  ctx.fillStyle = hexToRgba(config.textColor, 0.86);
+  ctx.textAlign = config.alignment;
+  ctx.font = `600 ${tagSize}px ${resolveCanvasFont("Modern")}`;
+  const citationLabel = `\u2014 ${String(config.verseTag || "").toUpperCase()}`;
+  ctx.fillText(citationLabel, textX, refBlockY + tagSize * 0.95);
+
+  // 10. Optional brand mark
+  if (config.showWatermark) {
+    const markSize = Math.round(10 * scalar);
+    const markInsetX = config.frame === "framed" ? frameInset + Math.round(16 * scalar) : Math.round(28 * scalar);
+    const markInsetY = config.frame === "framed" ? frameInset + Math.round(14 * scalar) : Math.round(22 * scalar);
+    ctx.fillStyle = hexToRgba(config.textColor, 0.45);
+    ctx.textAlign = "right";
+    ctx.font = `italic 600 ${markSize}px ${resolveCanvasFont("Modern")}`;
+    ctx.fillText(config.brandHost, width - markInsetX, height - markInsetY);
+  }
+}
+
+export default function VerseImageCreator({
+  verseText,
+  verseTag,
+  onClose,
+  embedded = false,
+}) {
+  const [selectedBg, setSelectedBg] = useState(CARD_BG_PRESETS[0]);
+  const [bgCategory, setBgCategory] = useState("all");
+  const [customUploadBg, setCustomUploadBg] = useState(null);
+  const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [frame, setFrame] = useState("classic");
+  const [fontStyle, setFontStyle] = useState("Classic");
+  const [isItalic, setIsItalic] = useState(true);
+  const [fontSize, setFontSize] = useState(21);
   const [alignment, setAlignment] = useState("center");
-  const [textColor, setTextColor] = useState("#ffffff");
-  const [aspectRatio, setAspectRatio] = useState("1:1"); // "1:1", "9:16", "16:9"
-  const [fontStyle, setFontStyle] = useState("Modern"); // "Modern", "Classic", "Typewriter", "Handwritten"
-  const [overlayOpacity, setOverlayOpacity] = useState(0.2); // contrast dark overlay
-  const canvasRef = useRef(null);
+  const [textColor, setTextColor] = useState(CARD_BG_PRESETS[0].defaultTextColor);
+  const [overlayOpacity, setOverlayOpacity] = useState(CARD_BG_PRESETS[0].defaultOverlay);
+  const [showVignette, setShowVignette] = useState(true);
+  const [showGrain, setShowGrain] = useState(false);
+  const [showWatermark, setShowWatermark] = useState(true);
+  const [fileFormat, setFileFormat] = useState("image/jpeg");
+  const [showSharePopover, setShowSharePopover] = useState(false);
+  const [toast, setToast] = useState(null);
 
-  const [fileFormat, setFileFormat] = useState("image/jpeg"); // image/jpeg or image/png
+  const previewCanvasRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const customUrlRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
-  const renderCanvas = (canvas) => {
-    return new Promise((resolve) => {
-      const ctx = canvas.getContext("2d");
-      
-      let canvasWidth = 1080;
-      let canvasHeight = 1080;
+  const brandHost = useSyncExternalStore(
+    emptySubscribe,
+    getHostSnapshot,
+    getHostServerSnapshot
+  );
 
-      if (aspectRatio === "9:16") {
-        canvasWidth = 1080;
-        canvasHeight = 1920;
-      } else if (aspectRatio === "16:9") {
-        canvasWidth = 1920;
-        canvasHeight = 1080;
+  const showToast = useCallback((type, message) => {
+    setToast({ type, message });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2800);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (customUrlRef.current) {
+        URL.revokeObjectURL(customUrlRef.current);
+        customUrlRef.current = null;
       }
-
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-
-      const drawTextAndResolve = () => {
-        // Settings for text drawing
-        ctx.fillStyle = textColor;
-        ctx.textAlign = alignment;
-        const fontScalar = Math.min(canvasWidth, canvasHeight) / 400;
-        const renderFontSize = Math.round(fontSize * fontScalar);
-
-        let activeFont = `'Poppins', 'Segoe UI', Roboto, sans-serif`;
-        if (typeof window !== "undefined") {
-          const rootStyle = getComputedStyle(document.documentElement);
-          if (fontStyle === "Classic") {
-            activeFont = rootStyle.getPropertyValue("--font-family-serif").trim() || `'Playfair Display', Georgia, serif`;
-          } else if (fontStyle === "Typewriter") {
-            activeFont = `'Courier New', Courier, monospace`;
-          } else if (fontStyle === "Handwritten") {
-            activeFont = rootStyle.getPropertyValue("--font-family-cursive").trim() || `'Caveat', cursive`;
-          } else if (fontStyle === "Modern") {
-            activeFont = rootStyle.getPropertyValue("--font-family").trim() || `'Poppins', 'Segoe UI', Roboto, sans-serif`;
-          }
-        } else {
-          if (fontStyle === "Classic") {
-            activeFont = `'Playfair Display', Georgia, serif`;
-          } else if (fontStyle === "Typewriter") {
-            activeFont = `'Courier New', Courier, monospace`;
-          } else if (fontStyle === "Handwritten") {
-            activeFont = `'Caveat', cursive`;
-          }
-        }
-
-        ctx.font = `italic 600 ${renderFontSize}px ${activeFont}`;
-
-        const padding = Math.round(canvasWidth * 0.08);
-        const maxTextWidth = canvasWidth - padding * 2;
-        const textX = alignment === "center" ? canvasWidth / 2 : alignment === "left" ? padding : canvasWidth - padding;
-        let textY;
-
-        // Word wrapping algorithm
-        const words = `"${verseText}"`.split(" ");
-        let line = "";
-        const lines = [];
-        const lineHeight = renderFontSize * 1.4;
-
-        for (let n = 0; n < words.length; n++) {
-          const testLine = line + words[n] + " ";
-          const metrics = ctx.measureText(testLine);
-          const testWidth = metrics.width;
-          if (testWidth > maxTextWidth && n > 0) {
-            lines.push(line);
-            line = words[n] + " ";
-          } else {
-            line = testLine;
-          }
-        }
-        lines.push(line);
-
-        // Adjust textY so the block of text is perfectly centered vertically
-        const totalTextHeight = lines.length * lineHeight;
-        textY = (canvasHeight - totalTextHeight) / 2;
-
-        // Draw the verse lines
-        lines.forEach((lineStr) => {
-          ctx.fillText(lineStr.trim(), textX, textY);
-          textY += lineHeight;
-        });
-
-        // Draw the tag reference
-        ctx.fillStyle = textColor === "#ffffff" ? "rgba(255, 255, 255, 0.85)" : "rgba(0, 0, 0, 0.75)";
-        ctx.textAlign = "center";
-        ctx.font = `600 ${Math.round(18 * fontScalar)}px ${activeFont}`;
-        ctx.fillText(verseTag.toUpperCase(), canvasWidth / 2, canvasHeight - Math.round(80 * fontScalar));
-
-        // Draw the website watermark branding at the bottom-right corner
-        const domainName = typeof window !== "undefined" ? window.location.host : "praisepage.com";
-        ctx.fillStyle = textColor === "#ffffff" ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.3)";
-        ctx.textAlign = "right";
-        ctx.font = `italic 600 ${Math.round(12 * fontScalar)}px 'Poppins', sans-serif`;
-        ctx.fillText(domainName, canvasWidth - Math.round(40 * fontScalar), canvasHeight - Math.round(30 * fontScalar));
-
-        resolve();
-      };
-
-      // Draw background
-      if (selectedBg.type === "solid") {
-        ctx.fillStyle = selectedBg.colors[0];
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-        
-        if (overlayOpacity > 0) {
-          ctx.fillStyle = `rgba(0, 0, 0, ${overlayOpacity})`;
-          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-        }
-        drawTextAndResolve();
-      } else if (selectedBg.type === "gradient") {
-        const grad = ctx.createLinearGradient(0, 0, canvasWidth, canvasHeight);
-        const step = 1 / (selectedBg.colors.length - 1);
-        selectedBg.colors.forEach((color, idx) => {
-          grad.addColorStop(idx * step, color);
-        });
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-        
-        if (overlayOpacity > 0) {
-          ctx.fillStyle = `rgba(0, 0, 0, ${overlayOpacity})`;
-          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-        }
-        drawTextAndResolve();
-      } else if (selectedBg.type === "image") {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = selectedBg.src;
-        img.onload = () => {
-          const hRatio = canvasWidth / img.width;
-          const vRatio = canvasHeight / img.height;
-          const ratio = Math.max(hRatio, vRatio);
-          const centerShift_x = (canvasWidth - img.width * ratio) / 2;
-          const centerShift_y = (canvasHeight - img.height * ratio) / 2;
-          ctx.drawImage(img, 0, 0, img.width, img.height,
-                             centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
-          
-          if (overlayOpacity > 0) {
-            ctx.fillStyle = `rgba(0, 0, 0, ${overlayOpacity})`;
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-          }
-          drawTextAndResolve();
-        };
-        img.onerror = () => {
-          ctx.fillStyle = "#131417";
-          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-          drawTextAndResolve();
-        };
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
       }
-    });
+    };
+  }, []);
+
+  const renderConfig = {
+    verseText,
+    verseTag,
+    selectedBg,
+    aspectRatio,
+    frame,
+    fontStyle,
+    isItalic,
+    fontSize,
+    alignment,
+    textColor,
+    overlayOpacity,
+    showVignette,
+    showGrain,
+    showWatermark,
+    brandHost,
   };
 
-  const downloadImage = async () => {
-    const canvas = canvasRef.current;
+  useEffect(() => {
+    let cancelled = false;
+    const canvas = previewCanvasRef.current;
     if (!canvas) return;
+    renderVerseCard(
+      canvas,
+      {
+        verseText,
+        verseTag,
+        selectedBg,
+        aspectRatio,
+        frame,
+        fontStyle,
+        isItalic,
+        fontSize,
+        alignment,
+        textColor,
+        overlayOpacity,
+        showVignette,
+        showGrain,
+        showWatermark,
+        brandHost,
+      },
+      () => cancelled
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    verseText,
+    verseTag,
+    selectedBg,
+    aspectRatio,
+    frame,
+    fontStyle,
+    isItalic,
+    fontSize,
+    alignment,
+    textColor,
+    overlayOpacity,
+    showVignette,
+    showGrain,
+    showWatermark,
+    brandHost,
+  ]);
 
-    await renderCanvas(canvas);
+  const handleSelectPreset = (preset) => {
+    setSelectedBg(preset);
+    setTextColor(preset.defaultTextColor);
+    setOverlayOpacity(preset.defaultOverlay);
+  };
 
+  const handleUploadPhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      showToast("error", "Please select an image file.");
+      return;
+    }
+
+    if (customUrlRef.current) {
+      URL.revokeObjectURL(customUrlRef.current);
+    }
+    const objectUrl = URL.createObjectURL(file);
+    customUrlRef.current = objectUrl;
+
+    const customPreset = {
+      id: "custom-upload",
+      name: "Your Photo",
+      category: "textures",
+      type: "image",
+      src: objectUrl,
+      colors: ["#151820", "#1d2b44"],
+      defaultTextColor: "#ffffff",
+      defaultOverlay: 0.28,
+      previewBg: `url("${objectUrl}")`,
+    };
+    setCustomUploadBg(customPreset);
+    setSelectedBg(customPreset);
+    setTextColor("#ffffff");
+    setOverlayOpacity(0.28);
+    e.target.value = "";
+  };
+
+  const handleDownload = async () => {
+    const canvas = previewCanvasRef.current;
+    if (!canvas) return;
     try {
+      await renderVerseCard(canvas, renderConfig);
       const ext = fileFormat === "image/jpeg" ? "jpg" : "png";
-      const url = canvas.toDataURL(fileFormat, fileFormat === "image/jpeg" ? 0.92 : undefined);
-      
+      const quality = fileFormat === "image/jpeg" ? 0.92 : undefined;
+      const url = canvas.toDataURL(fileFormat, quality);
+      const slug = String(verseTag || "Verse").replace(/[^a-zA-Z0-9]+/g, "_");
+
       const a = document.createElement("a");
       a.href = url;
-      a.download = `PraisePage_Verse_${verseTag.replace(/\s+/g, "_")}.${ext}`;
+      a.download = `PraisePage_${slug}.${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      showToast("ok", `Saved ${ext.toUpperCase()}!`);
     } catch (err) {
       console.error("Canvas export failed:", err);
-      alert("Failed to export image. Try using a standard browser.");
+      showToast("error", "Could not export image in this browser.");
     }
   };
 
-  const shareImage = async () => {
-    const canvas = canvasRef.current;
+  const handleCopyImage = async () => {
+    const canvas = previewCanvasRef.current;
     if (!canvas) return;
+    if (
+      typeof ClipboardItem === "undefined" ||
+      !navigator.clipboard?.write
+    ) {
+      showToast("error", "Image copy isn\u2019t supported here \u2014 try Download.");
+      return;
+    }
 
-    await renderCanvas(canvas);
-
-    const ext = fileFormat === "image/jpeg" ? "jpg" : "png";
-    const filename = `PraisePage_Verse_${verseTag.replace(/\s+/g, "_")}.${ext}`;
-
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-
-      const file = new File([blob], filename, { type: fileFormat });
-      
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: "Daily Word of PraisePage",
-            text: `"${verseText}" - ${verseTag}`
-          });
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            console.error("Native share failed:", err);
-          }
-        }
-      } else {
-        const shareText = encodeURIComponent(`"${verseText}" - ${verseTag} via praisepage.com`);
-        const url = encodeURIComponent(window.location.origin);
-        
-        const method = prompt(
-          "Native sharing is not supported by your browser.\nChoose a fallback sharing options:\n1. Twitter / X\n2. Facebook\n3. WhatsApp\n(Type 1, 2, or 3)", 
-          "1"
-        );
-        
-        if (method === "1") {
-          window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${url}`, "_blank");
-        } else if (method === "2") {
-          window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${shareText}`, "_blank");
-        } else if (method === "3") {
-          window.open(`https://api.whatsapp.com/send?text=${shareText}%20${url}`, "_blank");
-        }
-      }
-    }, fileFormat, fileFormat === "image/jpeg" ? 0.92 : undefined);
+    try {
+      await renderVerseCard(canvas, renderConfig);
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, "image/png")
+      );
+      if (!blob) throw new Error("Failed to encode PNG");
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob }),
+      ]);
+      showToast("ok", "Image copied to clipboard!");
+    } catch (err) {
+      console.error("Clipboard image copy failed:", err);
+      showToast("error", "Could not copy image \u2014 try Download instead.");
+    }
   };
 
-  return (
-    <div style={{ paddingBlock: "2rem" }}>
-      <h3 style={{ fontSize: "2rem", marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>Shareable Verse Card</span>
-        <button onClick={onClose} style={{ cursor: "pointer", fontSize: "1.4rem", color: "var(--light-color-alt)" }}>
-          <i className="ri-close-line" style={{ fontSize: "2rem" }}></i>
-        </button>
-      </h3>
+  const handleShare = async () => {
+    const canvas = previewCanvasRef.current;
+    if (!canvas) return;
 
-      <div className="image-creator-layout">
-        {/* Preview Card */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", alignItems: "center" }}>
-          <div
-            style={{
-              width: aspectRatio === "1:1" ? "300px" : aspectRatio === "9:16" ? "220px" : "350px",
-              height: aspectRatio === "1:1" ? "300px" : aspectRatio === "9:16" ? "390px" : "197px",
-              background: selectedBg.value,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              borderRadius: "12px",
-              padding: "3rem 2rem",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: alignment === "center" ? "center" : alignment === "left" ? "flex-start" : "flex-end",
-              color: textColor,
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)",
-              textAlign: alignment,
-              position: "relative",
-              overflow: "hidden"
-            }}
-          >
-            {/* Dark Overlay in Preview */}
-            {overlayOpacity > 0 && (
-              <div 
-                style={{ 
-                  position: "absolute", 
-                  top: 0, 
-                  left: 0, 
-                  width: "100%", 
-                  height: "100%", 
-                  background: `rgba(0, 0, 0, ${overlayOpacity})`, 
-                  zIndex: 1 
-                }} 
-              />
-            )}
-            <p
-              style={{
-                fontSize: `${fontSize}px`,
-                fontStyle: "italic",
-                fontWeight: "600",
-                lineHeight: "1.4",
-                marginBottom: "3rem",
-                width: "100%",
-                wordBreak: "break-word",
-                zIndex: 2,
-                fontFamily: fontStyle === "Modern" ? "var(--font-family)" : fontStyle === "Classic" ? "var(--font-family-serif)" : fontStyle === "Typewriter" ? "monospace" : "var(--font-family-cursive)"
-              }}
+    try {
+      await renderVerseCard(canvas, renderConfig);
+      const ext = fileFormat === "image/jpeg" ? "jpg" : "png";
+      const quality = fileFormat === "image/jpeg" ? 0.92 : undefined;
+      const filename = `PraisePage_Verse_${String(verseTag || "Verse").replace(/\s+/g, "_")}.${ext}`;
+
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, fileFormat, quality)
+      );
+      if (blob) {
+        const file = new File([blob], filename, { type: fileFormat });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Daily Word of PraisePage",
+              text: `"${verseText}" - ${verseTag}`,
+            });
+            showToast("ok", "Shared card!");
+            return;
+          } catch (err) {
+            if (err?.name === "AbortError") return;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Native share check failed:", err);
+    }
+
+    setShowSharePopover((prev) => !prev);
+  };
+
+  const ratioInfo =
+    CARD_ASPECT_RATIOS.find((r) => r.id === aspectRatio) ||
+    CARD_ASPECT_RATIOS[0];
+  const activeInk =
+    CARD_INK_COLORS.find((ink) => ink.hex.toLowerCase() === textColor.toLowerCase()) ||
+    null;
+
+  const allPresets = customUploadBg
+    ? [customUploadBg, ...CARD_BG_PRESETS]
+    : CARD_BG_PRESETS;
+  const visiblePresets =
+    bgCategory === "all"
+      ? allPresets
+      : allPresets.filter((p) => p.category === bgCategory);
+
+  const shareText = encodeURIComponent(
+    `"${verseText}" \u2014 ${verseTag} via ${brandHost}`
+  );
+  const shareUrl = encodeURIComponent(`https://${brandHost}`);
+
+  return (
+    <div>
+      {!embedded && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1.6rem",
+          }}
+        >
+          <h3 style={{ fontSize: "1.9rem", fontWeight: 700, margin: 0 }}>
+            Shareable Verse Card
+          </h3>
+          {onClose && (
+            <button
+              type="button"
+              className="study-modal-close"
+              onClick={onClose}
+              aria-label="Close card creator"
             >
-              &quot;{verseText}&quot;
-            </p>
-            <span
-              style={{
-                position: "absolute",
-                bottom: aspectRatio === "9:16" ? "4.5rem" : "3.5rem",
-                left: "50%",
-                transform: "translateX(-50%)",
-                fontSize: "1.2rem",
-                fontWeight: "700",
-                letterSpacing: "1px",
-                opacity: 0.85,
-                textTransform: "uppercase",
-                width: "100%",
-                textAlign: "center",
-                zIndex: 2,
-                fontFamily: fontStyle === "Modern" ? "var(--font-family)" : fontStyle === "Classic" ? "var(--font-family-serif)" : fontStyle === "Typewriter" ? "monospace" : "var(--font-family-cursive)"
-              }}
-            >
-              {verseTag}
-            </span>
-            {/* Watermark in Preview */}
-            <span
-              style={{
-                position: "absolute",
-                bottom: "1.2rem",
-                right: "1.5rem",
-                fontSize: "1rem",
-                fontWeight: "600",
-                fontStyle: "italic",
-                opacity: 0.4,
-                zIndex: 2
-              }}
-            >
-              {typeof window !== "undefined" ? window.location.host : "praisepage.com"}
-            </span>
+              <i className="ri-close-line" aria-hidden="true"></i>
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="vc-studio">
+        {/* Left: Sticky WYSIWYG Live Canvas Preview */}
+        <div className="vc-preview-col">
+          <div className="vc-canvas-frame">
+            <canvas
+              ref={previewCanvasRef}
+              width={ratioInfo.width}
+              height={ratioInfo.height}
+              style={{ aspectRatio: `${ratioInfo.width} / ${ratioInfo.height}` }}
+              className="vc-canvas-preview"
+              aria-label={`Live preview of ${verseTag} scripture card`}
+            />
           </div>
-          <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)" }}>
-            Preview ({aspectRatio === "1:1" ? "Square 1:1" : aspectRatio === "9:16" ? "Story 9:16" : "Landscape 16:9"} ratio)
+          <span className="vc-preview-meta">
+            {ratioInfo.label} ({ratioInfo.short}) &bull; {ratioInfo.width} &times; {ratioInfo.height} px
           </span>
         </div>
 
-        {/* Customization Settings */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-          {/* Aspect Ratio Selector */}
-          <div>
-            <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
-              ASPECT RATIO
-            </span>
-            <div style={{ display: "flex", gap: "1rem" }}>
-              {["1:1", "9:16", "16:9"].map((ratio) => (
+        {/* Right: Studio Controls */}
+        <div className="vc-controls-col">
+          {/* Aspect Ratio */}
+          <div className="vc-group">
+            <div className="vc-group-head">
+              <span className="vc-label">Aspect Ratio</span>
+              <span className="vc-value-badge">{ratioInfo.short}</span>
+            </div>
+            <div className="vc-ratio-grid">
+              {CARD_ASPECT_RATIOS.map((r) => (
                 <button
-                  key={ratio}
-                  onClick={() => setAspectRatio(ratio)}
-                  style={{
-                    flex: 1,
-                    padding: "0.8rem",
-                    borderRadius: "6px",
-                    background: aspectRatio === ratio ? "var(--transparent-light-color)" : "transparent",
-                    border: `1px solid ${aspectRatio === ratio ? "var(--light-color)" : "var(--transparent-light-color)"}`,
-                    color: "var(--light-color)",
-                    cursor: "pointer",
-                    fontWeight: aspectRatio === ratio ? "600" : "400",
-                    fontSize: "1.3rem"
-                  }}
+                  key={r.id}
+                  type="button"
+                  onClick={() => setAspectRatio(r.id)}
+                  className={`vc-chip${aspectRatio === r.id ? " active" : ""}`}
                 >
-                  <i className={ratio === "1:1" ? "ri-aspect-ratio-line" : ratio === "9:16" ? "ri-smartphone-line" : "ri-tv-line"} style={{ fontSize: "1.5rem", marginRight: "0.5rem", verticalAlign: "middle" }}></i>
-                  {ratio === "1:1" ? "Square" : ratio === "9:16" ? "Story" : "Landscape"}
+                  <i className={r.icon} aria-hidden="true"></i>
+                  {r.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Background Presets */}
-          <div>
-            <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
-              BACKGROUND STYLE
-            </span>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              {BG_PRESETS.map((preset, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedBg(preset)}
-                  title={preset.name}
-                  style={{
-                    width: "3.5rem",
-                    height: "3.5rem",
-                    borderRadius: "50%",
-                    background: preset.value,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    border: selectedBg.name === preset.name ? "3px solid var(--light-color)" : "2px solid rgba(255,255,255,0.1)",
-                    cursor: "pointer",
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.15)",
-                    transition: "transform 0.2s"
-                  }}
-                  onMouseOver={(e) => (e.target.style.transform = "scale(1.1)")}
-                  onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
-                />
-              ))}
+          {/* Background Gallery + Photo Upload */}
+          <div className="vc-group">
+            <div className="vc-group-head">
+              <span className="vc-label">Backdrop</span>
+              <div className="vc-bg-tabs">
+                {[
+                  { id: "all", label: "All" },
+                  { id: "sanctuary", label: "Sanctuary" },
+                  { id: "textures", label: "Textures" },
+                  { id: "minimal", label: "Minimal" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setBgCategory(tab.id)}
+                    className={`vc-bg-tab${bgCategory === tab.id ? " active" : ""}`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Dark Overlay Slider */}
-          <div>
-            <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
-              BACKGROUND CONTRAST OVERLAY ({Math.round(overlayOpacity * 100)}%)
-            </span>
+            <div className="vc-bg-grid">
+              {visiblePresets.map((preset) => {
+                const isSelected = selectedBg.id === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectPreset(preset)}
+                    title={preset.name}
+                    className={`vc-bg-swatch${isSelected ? " active" : ""}`}
+                    style={{
+                      backgroundImage: preset.previewBg,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  >
+                    {isSelected && (
+                      <span className="vc-bg-swatch-check">
+                        <i className="ri-check-line" aria-hidden="true"></i>
+                      </span>
+                    )}
+                    <span className="vc-bg-swatch-label">{preset.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="vc-upload-btn"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <i className="ri-upload-cloud-2-line" aria-hidden="true"></i>
+              <span>Upload Custom Photo</span>
+            </button>
             <input
-              type="range"
-              min="0"
-              max="0.8"
-              step="0.1"
-              value={overlayOpacity}
-              onChange={(e) => setOverlayOpacity(parseFloat(e.target.value))}
-              style={{
-                width: "100%",
-                accentColor: "var(--accent-color)",
-                cursor: "pointer"
-              }}
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleUploadPhoto}
+              style={{ display: "none" }}
+              aria-label="Upload custom card background photo"
             />
           </div>
 
-          {/* Typography Font Style selector */}
-          <div>
-            <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
-              TYPOGRAPHY
-            </span>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              {["Modern", "Classic", "Typewriter", "Handwritten"].map((style) => (
+          {/* Editorial Frame */}
+          <div className="vc-group">
+            <div className="vc-group-head">
+              <span className="vc-label">Frame Style</span>
+            </div>
+            <div className="vc-frame-grid">
+              {CARD_FRAMES.map((f) => (
                 <button
-                  key={style}
-                  onClick={() => setFontStyle(style)}
-                  style={{
-                    flex: "1 1 calc(50% - 0.5rem)",
-                    padding: "0.8rem",
-                    borderRadius: "6px",
-                    background: fontStyle === style ? "var(--transparent-light-color)" : "transparent",
-                    border: `1px solid ${fontStyle === style ? "var(--light-color)" : "var(--transparent-light-color)"}`,
-                    color: "var(--light-color)",
-                    cursor: "pointer",
-                    fontWeight: fontStyle === style ? "600" : "400",
-                    fontSize: "1.3rem",
-                    fontFamily: style === "Modern" ? "var(--font-family)" : style === "Classic" ? "var(--font-family-serif)" : style === "Typewriter" ? "monospace" : "var(--font-family-cursive)"
-                  }}
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFrame(f.id)}
+                  className={`vc-chip${frame === f.id ? " active" : ""}`}
+                  title={f.desc}
                 >
-                  {style}
+                  {f.name}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Font Size Adjust */}
-          <div>
-            <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
-              FONT SIZE ({fontSize}px)
-            </span>
-            <input
-              type="range"
-              min="16"
-              max="32"
-              value={fontSize}
-              onChange={(e) => setFontSize(parseInt(e.target.value))}
-              style={{
-                width: "100%",
-                accentColor: "var(--accent-color)",
-                cursor: "pointer"
-              }}
-            />
+          {/* Mood & Overlay Adjustments */}
+          <div className="vc-group">
+            <div className="vc-group-head">
+              <span className="vc-label">Overlay Dimmer</span>
+              <span className="vc-value-badge">{Math.round(overlayOpacity * 100)}%</span>
+            </div>
+            <div className="vc-slider-row">
+              <input
+                type="range"
+                min="0"
+                max="0.8"
+                step="0.05"
+                value={overlayOpacity}
+                onChange={(e) => setOverlayOpacity(Number.parseFloat(e.target.value))}
+                className="vc-range"
+                aria-label="Background overlay dimmer"
+              />
+            </div>
+            <div className="vc-toggle-row">
+              <button
+                type="button"
+                onClick={() => setShowVignette((v) => !v)}
+                className={`vc-toggle-pill${showVignette ? " active" : ""}`}
+                aria-pressed={showVignette}
+              >
+                <i className={showVignette ? "ri-check-line" : "ri-add-line"} aria-hidden="true"></i>
+                Vignette
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowGrain((v) => !v)}
+                className={`vc-toggle-pill${showGrain ? " active" : ""}`}
+                aria-pressed={showGrain}
+              >
+                <i className={showGrain ? "ri-check-line" : "ri-add-line"} aria-hidden="true"></i>
+                Film Grain
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowWatermark((v) => !v)}
+                className={`vc-toggle-pill${showWatermark ? " active" : ""}`}
+                aria-pressed={showWatermark}
+              >
+                <i className={showWatermark ? "ri-check-line" : "ri-add-line"} aria-hidden="true"></i>
+                Show Brand Mark
+              </button>
+            </div>
           </div>
 
-          {/* Alignment Selector */}
-          <div>
-            <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
-              ALIGNMENT
-            </span>
-            <div style={{ display: "flex", gap: "1rem" }}>
-              {["left", "center", "right"].map((align) => (
+          {/* Typography */}
+          <div className="vc-group">
+            <div className="vc-group-head">
+              <span className="vc-label">Typography</span>
+              <button
+                type="button"
+                onClick={() => setIsItalic((v) => !v)}
+                className={`vc-toggle-pill${isItalic ? " active" : ""}`}
+                aria-pressed={isItalic}
+              >
+                <i className={isItalic ? "ri-check-line" : "ri-add-line"} aria-hidden="true"></i>
+                Italic
+              </button>
+            </div>
+            <div className="vc-font-grid">
+              {CARD_FONTS.map((f) => (
                 <button
-                  key={align}
-                  onClick={() => setAlignment(align)}
-                  style={{
-                    flex: 1,
-                    padding: "0.8rem",
-                    borderRadius: "6px",
-                    background: alignment === align ? "var(--transparent-light-color)" : "transparent",
-                    border: `1px solid ${alignment === align ? "var(--light-color)" : "var(--transparent-light-color)"}`,
-                    color: "var(--light-color)",
-                    cursor: "pointer",
-                    textTransform: "capitalize",
-                    fontWeight: alignment === align ? "600" : "400"
-                  }}
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFontStyle(f.id)}
+                  className={`vc-chip${fontStyle === f.id ? " active" : ""}`}
+                  style={{ fontFamily: f.cssVar ? `var(${f.cssVar}), ${f.fallback}` : f.fallback }}
                 >
-                  <i className={`ri-align-${align}`} style={{ fontSize: "1.6rem", marginRight: "0.5rem" }}></i>
-                  {align}
+                  {f.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Format and Text Color selection side-by-side */}
-          <div style={{ display: "flex", gap: "2rem" }}>
-            {/* Format Selection */}
-            <div style={{ flex: 1 }}>
-              <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
-                FORMAT
-              </span>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
+          {/* Font Size */}
+          <div className="vc-group">
+            <div className="vc-group-head">
+              <span className="vc-label">Text Size</span>
+              <span className="vc-value-badge">{fontSize}px</span>
+            </div>
+            <div className="vc-slider-row">
+              <input
+                type="range"
+                min="14"
+                max="32"
+                step="1"
+                value={fontSize}
+                onChange={(e) => setFontSize(Number.parseInt(e.target.value, 10))}
+                className="vc-range"
+                aria-label="Verse font size"
+              />
+            </div>
+          </div>
+
+          {/* Ink Color */}
+          <div className="vc-group">
+            <div className="vc-group-head">
+              <span className="vc-label">Ink Color</span>
+              <span className="vc-value-badge">{activeInk?.name || "Custom"}</span>
+            </div>
+            <div className="vc-ink-row">
+              {CARD_INK_COLORS.map((ink) => {
+                const isSelected = textColor === ink.hex;
+                const checkColor = isLightInkColor(ink.hex) ? "#181b22" : "#ffffff";
+                return (
+                  <button
+                    key={ink.id}
+                    type="button"
+                    onClick={() => setTextColor(ink.hex)}
+                    title={ink.name}
+                    aria-label={`Ink color: ${ink.name}`}
+                    aria-pressed={isSelected}
+                    className={`vc-ink-dot${isSelected ? " active" : ""}`}
+                    style={{ backgroundColor: ink.hex, color: checkColor }}
+                  >
+                    {isSelected && <i className="ri-check-line" aria-hidden="true"></i>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Alignment & Format */}
+          <div className="vc-inline-grid">
+            <div className="vc-group">
+              <span className="vc-label">Alignment</span>
+              <div className="vc-pill-row">
+                {["left", "center", "right"].map((align) => (
+                  <button
+                    key={align}
+                    type="button"
+                    onClick={() => setAlignment(align)}
+                    className={`vc-chip${alignment === align ? " active" : ""}`}
+                    aria-label={`Align ${align}`}
+                  >
+                    <i className={`ri-align-${align}`} aria-hidden="true"></i>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="vc-group">
+              <span className="vc-label">Format</span>
+              <div className="vc-pill-row">
                 {[
                   { id: "image/jpeg", label: "JPG" },
-                  { id: "image/png", label: "PNG" }
+                  { id: "image/png", label: "PNG" },
                 ].map((fmt) => (
                   <button
                     key={fmt.id}
+                    type="button"
                     onClick={() => setFileFormat(fmt.id)}
-                    style={{
-                      flex: 1,
-                      padding: "0.6rem",
-                      borderRadius: "6px",
-                      background: fileFormat === fmt.id ? "var(--transparent-light-color)" : "transparent",
-                      border: `1px solid ${fileFormat === fmt.id ? "var(--light-color)" : "var(--transparent-light-color)"}`,
-                      fontSize: "1.2rem",
-                      fontWeight: "600",
-                      cursor: "pointer"
-                    }}
+                    className={`vc-chip${fileFormat === fmt.id ? " active" : ""}`}
                   >
                     {fmt.label}
                   </button>
                 ))}
               </div>
             </div>
-
-            {/* Text Color Switcher */}
-            <div style={{ flex: 1 }}>
-              <span style={{ display: "block", fontSize: "1.2rem", fontWeight: "600", color: "var(--light-color-alt)", marginBottom: "1rem" }}>
-                TEXT COLOR
-              </span>
-              <div style={{ display: "flex", gap: "1rem", alignItems: "center", height: "3.2rem" }}>
-                {["#ffffff", "#131417"].map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setTextColor(color)}
-                    style={{
-                      width: "3rem",
-                      height: "3rem",
-                      borderRadius: "50%",
-                      background: color,
-                      border: textColor === color ? "3px solid var(--accent-color)" : "1px solid var(--transparent-light-color)",
-                      cursor: "pointer",
-                      boxShadow: "0 2px 5px rgba(0,0,0,0.15)"
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
           </div>
 
-          {/* Action Trigger Row */}
-          <div style={{ display: "flex", gap: "1.5rem", marginTop: "1rem" }}>
-            <button
-              onClick={downloadImage}
-              style={{
-                flex: 1,
-                background: "var(--accent-color)",
-                color: "#fff",
-                border: "none",
-                borderRadius: "30px",
-                padding: "1.2rem",
-                fontSize: "1.4rem",
-                fontWeight: "700",
-                cursor: "pointer",
-                textAlign: "center",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.8rem"
-              }}
-            >
-              <i className="ri-download-2-line" style={{ fontSize: "1.8rem" }}></i>
-              Save {fileFormat === "image/jpeg" ? "JPG" : "PNG"}
-            </button>
+          {/* Export & Share Bar */}
+          <div className="vc-group">
+            <div className="vc-export-bar">
+              <button
+                type="button"
+                onClick={handleDownload}
+                className="study-btn-primary"
+              >
+                <i className="ri-download-2-line" aria-hidden="true"></i>
+                Download {fileFormat === "image/jpeg" ? "JPG" : "PNG"}
+              </button>
 
-            <button
-              onClick={shareImage}
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "2px solid var(--light-color)",
-                color: "var(--light-color)",
-                borderRadius: "30px",
-                padding: "1.2rem",
-                fontSize: "1.4rem",
-                fontWeight: "700",
-                cursor: "pointer",
-                textAlign: "center",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.8rem"
-              }}
-            >
-              <i className="ri-share-forward-line" style={{ fontSize: "1.8rem" }}></i>
-              Share Card
-            </button>
+              <button
+                type="button"
+                onClick={handleCopyImage}
+                className="study-btn-secondary"
+              >
+                <i className="ri-file-copy-line" aria-hidden="true"></i>
+                Copy Image
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShare}
+                className="study-btn-secondary"
+                aria-expanded={showSharePopover}
+              >
+                <i className="ri-share-forward-line" aria-hidden="true"></i>
+                Share
+              </button>
+            </div>
+
+            {toast && (
+              <div
+                className={`vc-toast${toast.type === "error" ? " error" : ""}`}
+                role={toast.type === "error" ? "alert" : "status"}
+              >
+                <i
+                  className={
+                    toast.type === "ok"
+                      ? "ri-checkbox-circle-line"
+                      : "ri-error-warning-line"
+                  }
+                  aria-hidden="true"
+                ></i>
+                {toast.message}
+              </div>
+            )}
+
+            {showSharePopover && (
+              <div className="vc-share-popover">
+                <a
+                  href={`https://api.whatsapp.com/send?text=${shareText}%20${shareUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="vc-share-link"
+                >
+                  <i className="ri-whatsapp-line" aria-hidden="true"></i>
+                  WhatsApp
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="vc-share-link"
+                >
+                  <i className="ri-twitter-line" aria-hidden="true"></i>
+                  X / Twitter
+                </a>
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="vc-share-link"
+                >
+                  <i className="ri-facebook-circle-line" aria-hidden="true"></i>
+                  Facebook
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Hidden high-res rendering canvas */}
-      <canvas ref={canvasRef} style={{ display: "none" }} />
     </div>
   );
 }

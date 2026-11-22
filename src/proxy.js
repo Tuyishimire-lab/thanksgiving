@@ -25,18 +25,31 @@ function isRateLimited(ip) {
   return false;
 }
 
-// Periodically prune stale entries (every 500 requests)
+// Periodically prune stale entries and cap map size
 let requestCounter = 0;
 function pruneRateLimitMap() {
   requestCounter++;
-  if (requestCounter % 500 === 0) {
+  if (requestCounter % 500 === 0 || rateLimitMap.size > 5000) {
     const now = Date.now();
     for (const [ip, entry] of rateLimitMap) {
       if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS * 2) {
         rateLimitMap.delete(ip);
       }
     }
+    // Evict oldest entries if still oversized under flood
+    if (rateLimitMap.size > 10000) {
+      const overflow = rateLimitMap.size - 10000;
+      let removed = 0;
+      for (const key of rateLimitMap.keys()) {
+        rateLimitMap.delete(key);
+        if (++removed >= overflow) break;
+      }
+    }
   }
+}
+
+function matchesPrefix(pathname, prefix) {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
 // ─── Proxy (named export required by Next.js 16) ──────────────────────────────
@@ -46,11 +59,12 @@ export function proxy(request) {
 
   // --- Rate limiting on sensitive mutation endpoints ---
   const rateLimitedPaths = ["/login", "/signup", "/api/notifications"];
-  const shouldRateLimit = rateLimitedPaths.some(p => pathname.startsWith(p));
+  const shouldRateLimit = rateLimitedPaths.some(p => matchesPrefix(pathname, p));
 
   if (shouldRateLimit) {
     const forwarded = request.headers.get("x-forwarded-for");
-    const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+    const realIp = request.headers.get("x-real-ip");
+    const ip = forwarded ? forwarded.split(",")[0].trim() : (realIp ? realIp.trim() : "unknown");
 
     pruneRateLimitMap();
     if (isRateLimited(ip)) {
@@ -65,7 +79,7 @@ export function proxy(request) {
   const sessionToken = request.cookies.get("session")?.value;
   const protectedRoutes = ["/profile", "/admin"];
 
-  if (protectedRoutes.some(route => pathname.startsWith(route))) {
+  if (protectedRoutes.some(route => matchesPrefix(pathname, route))) {
     if (!sessionToken) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
@@ -79,7 +93,7 @@ export function proxy(request) {
     const book = searchParams.get("book");
     const chapter = searchParams.get("chapter");
     if (book && chapter) {
-      canonicalPath = `/bible?book=${encodeURIComponent(book)}&chapter=${chapter}`;
+      canonicalPath = `/bible?book=${encodeURIComponent(book)}&chapter=${encodeURIComponent(chapter)}`;
     }
   }
 

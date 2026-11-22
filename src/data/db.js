@@ -15,7 +15,10 @@ let initPromise = null;
 
 export async function getDb() {
   if (!initPromise) {
-    initPromise = initializeDb(client);
+    initPromise = initializeDb(client).catch((err) => {
+      initPromise = null;
+      throw err;
+    });
   }
   await initPromise;
   return client;
@@ -30,8 +33,20 @@ export function hashPassword(password) {
 }
 
 export function verifyPassword(password, storedHash) {
-  if (!storedHash || !storedHash.includes(":")) return false;
-  const [salt, hash] = storedHash.split(":");
-  const verifyHash = crypto.pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
-  return hash === verifyHash;
+  if (typeof password !== "string" || typeof storedHash !== "string" || !storedHash.includes(":")) {
+    return false;
+  }
+  const parts = storedHash.split(":");
+  if (parts.length !== 2) return false;
+  const [salt, hash] = parts;
+  if (!salt || !hash) return false;
+  const verifyHash = crypto.pbkdf2Sync(password, salt, 10000, 64, "sha512");
+  if (hash.length !== verifyHash.length * 2) {
+    return false;
+  }
+  const hashBuffer = Buffer.from(hash, "hex");
+  if (hashBuffer.length !== verifyHash.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(hashBuffer, verifyHash);
 }

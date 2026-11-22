@@ -1,0 +1,1600 @@
+/* Homepage Stylesheet — Warm Candlelit Sanctuary (Dark) & Sunlit Parchment (Light) */
+
+.home-shell {
+  --home-bg: #131417;
+  --home-surface: #151820;
+  --home-surface-2: #1c202a;
+  --home-surface-hover: #222735;
+  --home-gold: #e8c56b;
+  --home-gold-soft: rgba(232, 197, 107, 0.13);
+  --home-gold-border: rgba(232, 197, 107, 0.34);
+  --home-emerald: #4fcf70;
+  --home-emerald-soft: rgba(79, 207, 112, 0.13);
+  --home-emerald-border: rgba(79, 207, 112, 0.34);
+  --home-sky: #7cc4fa;
+  --home-sky-soft: rgba(124, 196, 250, 0.12);
+  --home-error: #f07167;
+  --home-error-soft: rgba(240, 113, 103, 0.14);
+  --home-text: #f5f2eb;
+  --home-text-muted: #b0b7c6;
+  --home-border: rgba(255, 255, 255, 0.08);
+  --home-border-strong: rgba(255, 255, 255, 0.16);
+  --home-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  --home-shadow-hover: 0 18px 40px rgba(0, 0, 0, 0.4);
+  --home-btn-ink: #111513;
+
+  background-color: var(--home-bg);
+  color: var(--home-text);
+  letter-spacing: 0;
+  font-family: var(--font-family), system-ui, -apple-system, sans-serif;
+  overflow-x: clip;
+  padding-bottom: 3rem;
+}
+
+body.light-theme .home-shell {
+  --home-bg: #f7f6f2;
+  --home-surface: #ffffff;
+  --home-surface-2: #f4f1ea;
+  --home-surface-hover: #ece7da;
+  --home-gold: #9a6d12;
+  --home-gold-soft: rgba(182, 134, 33, 0.12);
+  --home-gold-border: rgba(168, 121, 24, 0.32);
+  --home-emerald: #237a3b;
+  --home-emerald-soft: rgba(43, 147, 72, 0.11);
+  --home-emerald-border: rgba(43, 147, 72, 0.32);
+  --home-sky: #1e6fa8;
+  --home-sky-soft: rgba(30, 111, 168, 0.1);
+  --home-error: #c43c30;
+  --home-error-soft: rgba(196, 60, 48, 0.1);
+  --home-text: #1c2028;
+  --home-text-muted: #565e6d;
+  --home-border: rgba(20, 25, 35, 0.08);
+  --home-border-strong: rgba(20, 25, 35, 0.16);
+  --home-shadow: 0 10px 28px rgba(20, 25, 35, 0.06);
+  --home-shadow-hover: 0 16px 36px rgba(20, 25, 35, 0.11);
+  --home-btn-ink: #ffffff;
+}
+
+.home-shell .container {
+  max-width: 114rem;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.home-shell a:focus-visible,
+.home-shell button:focus-visible,
+.home-shell textarea:focus-visible {
+  outline: 2px solid var(--home-gold);
+  outline-offset: 2px;
+}
+
+body.light-theme .home-shell .shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(20, 25, 35, 0.06) 25%,
+    rgba(20, 25, 35, 0.12) 37%,
+    rgba(20, 25, 35, 0.06) 63%
+  );
+  background-size: 400% 100%;
+}
+
+/* ==========================================================================
+   Shared Sections & Headers
+   ========================================================================== */
+.home-section {
+  padding-block: 4.2rem;
+}
+
+.home-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-bottom: 2.4rem;
+}
+
+.home-eyebrow {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--home-gold);
+  margin-bottom: 0.45rem;
+}
+
+.home-section-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: clamp(2.4rem, 3vw, 3.1rem);
+  font-weight: 700;
+  line-height: 1.18;
+  color: var(--home-text);
+  margin: 0;
+}
+
+.home-section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--home-emerald);
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.home-section-link i {
+  font-size: 1.5rem;
+  transition: transform 0.2s ease;
+}
+
+.home-section-link:hover {
+  border-bottom-color: var(--home-emerald);
+}
+
+.home-section-link:hover i {
+  transform: translateX(3px);
+}
+
+/* ==========================================================================
+   Editorial Split Hero
+   ========================================================================== */
+.home-hero {
+  position: relative;
+  padding-block: 3.2rem 3.6rem;
+  border-bottom: 1px solid var(--home-border);
+  background:
+    radial-gradient(ellipse 70% 75% at 84% 12%, rgba(232, 197, 107, 0.11), transparent 65%),
+    radial-gradient(ellipse 65% 70% at 12% 24%, rgba(79, 207, 112, 0.08), transparent 60%),
+    var(--home-bg);
+}
+
+body.light-theme .home-hero {
+  background:
+    radial-gradient(ellipse 75% 75% at 85% 10%, rgba(232, 197, 107, 0.18), transparent 65%),
+    radial-gradient(ellipse 65% 70% at 10% 25%, rgba(43, 147, 72, 0.07), transparent 60%),
+    var(--home-bg);
+}
+
+.home-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 3.2rem;
+  align-items: stretch;
+}
+
+.home-hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.7rem;
+}
+
+.home-hero-pill {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  background: var(--home-surface);
+  border: 1px solid var(--home-gold-border);
+  color: var(--home-gold);
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.home-hero-pill i {
+  font-size: 1.45rem;
+}
+
+.home-hero-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: clamp(3.1rem, 4.1vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--home-text);
+  margin: 0;
+}
+
+.home-hero-accent {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--home-gold);
+  padding-right: 0.14em;
+}
+
+.home-hero-subtitle {
+  font-size: 1.55rem;
+  line-height: 1.65;
+  color: var(--home-text-muted);
+  max-width: 54rem;
+  margin: 0;
+}
+
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.2rem;
+}
+
+.home-btn-primary,
+.home-btn-secondary,
+.home-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 999px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.home-btn-primary i,
+.home-btn-secondary i,
+.home-btn-ghost i {
+  font-size: 1.55rem;
+}
+
+.home-btn-primary {
+  padding: 1.05rem 2.2rem;
+  background-color: var(--home-emerald);
+  color: var(--home-btn-ink);
+  border: 1px solid var(--home-emerald);
+  box-shadow: 0 8px 20px var(--home-emerald-soft);
+}
+
+.home-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px var(--home-emerald-border);
+  color: var(--home-btn-ink);
+}
+
+.home-btn-secondary {
+  padding: 1.05rem 2.1rem;
+  background-color: var(--home-surface);
+  color: var(--home-text);
+  border: 1px solid var(--home-border-strong);
+}
+
+.home-btn-secondary:hover {
+  transform: translateY(-2px);
+  background-color: var(--home-surface-2);
+  border-color: var(--home-gold-border);
+  color: var(--home-text);
+}
+
+.home-btn-ghost {
+  padding: 0.9rem 1.25rem;
+  background-color: transparent;
+  color: var(--home-gold);
+  border: 1px solid transparent;
+}
+
+.home-btn-ghost:hover {
+  background-color: var(--home-gold-soft);
+  border-color: var(--home-gold-border);
+  color: var(--home-gold);
+}
+
+/* ==========================================================================
+   Community Pulse Strip (FaithFootprintsTracker)
+   ========================================================================== */
+.home-pulse-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 0.4rem;
+}
+
+.home-pulse-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.15rem 1.3rem;
+  border-radius: 14px;
+  background-color: var(--home-surface);
+  border: 1px solid var(--home-border);
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  min-width: 0;
+}
+
+.home-pulse-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--home-gold-border);
+  background-color: var(--home-surface-2);
+}
+
+.home-pulse-icon {
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--home-emerald-soft);
+  color: var(--home-emerald);
+}
+
+.home-pulse-item:nth-child(2) .home-pulse-icon {
+  background: var(--home-sky-soft);
+  color: var(--home-sky);
+}
+
+.home-pulse-item:nth-child(3) .home-pulse-icon {
+  background: var(--home-gold-soft);
+  color: var(--home-gold);
+}
+
+.home-pulse-icon i {
+  font-size: 1.85rem;
+}
+
+.home-pulse-value {
+  display: block;
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--home-text);
+}
+
+.home-pulse-label {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--home-text-muted);
+  margin-top: 0.15rem;
+}
+
+/* ==========================================================================
+   Verse of the Day Sanctuary Card
+   ========================================================================== */
+.home-votd-card {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.8rem;
+  padding: 2.5rem;
+  border-radius: 18px;
+  background: linear-gradient(165deg, var(--home-surface) 0%, var(--home-surface-2) 100%);
+  border: 1px solid var(--home-border);
+  border-top: 2px solid var(--home-gold);
+  box-shadow: var(--home-shadow);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.home-votd-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--home-shadow-hover);
+  border-color: var(--home-gold-border);
+}
+
+/* Highlight classes on .home-votd-card (higher specificity than main.css .highlight-*) */
+.home-shell .home-votd-card.highlight-yellow,
+.home-shell .home-votd-card .highlight-yellow {
+  background: linear-gradient(165deg, rgba(232, 197, 107, 0.2), rgba(232, 197, 107, 0.09));
+  border-color: rgba(232, 197, 107, 0.5);
+  color: var(--home-text) !important;
+}
+
+.home-shell .home-votd-card.highlight-green,
+.home-shell .home-votd-card .highlight-green {
+  background: linear-gradient(165deg, rgba(79, 207, 112, 0.18), rgba(79, 207, 112, 0.08));
+  border-color: rgba(79, 207, 112, 0.48);
+  color: var(--home-text) !important;
+}
+
+.home-shell .home-votd-card.highlight-blue,
+.home-shell .home-votd-card .highlight-blue {
+  background: linear-gradient(165deg, rgba(116, 192, 252, 0.18), rgba(116, 192, 252, 0.08));
+  border-color: rgba(116, 192, 252, 0.48);
+  color: var(--home-text) !important;
+}
+
+.home-shell .home-votd-card.highlight-pink,
+.home-shell .home-votd-card .highlight-pink {
+  background: linear-gradient(165deg, rgba(250, 162, 193, 0.18), rgba(250, 162, 193, 0.08));
+  border-color: rgba(250, 162, 193, 0.48);
+  color: var(--home-text) !important;
+}
+
+body.light-theme .home-shell .home-votd-card.highlight-yellow,
+body.light-theme .home-shell .home-votd-card .highlight-yellow {
+  background: linear-gradient(165deg, rgba(255, 224, 102, 0.34), rgba(255, 243, 191, 0.52));
+  border-color: rgba(182, 134, 33, 0.55);
+  color: var(--home-text) !important;
+}
+
+body.light-theme .home-shell .home-votd-card.highlight-green,
+body.light-theme .home-shell .home-votd-card .highlight-green {
+  background: linear-gradient(165deg, rgba(169, 227, 75, 0.3), rgba(216, 245, 162, 0.42));
+  border-color: rgba(43, 147, 72, 0.48);
+  color: var(--home-text) !important;
+}
+
+body.light-theme .home-shell .home-votd-card.highlight-blue,
+body.light-theme .home-shell .home-votd-card .highlight-blue {
+  background: linear-gradient(165deg, rgba(116, 192, 252, 0.3), rgba(208, 235, 255, 0.45));
+  border-color: rgba(30, 111, 168, 0.46);
+  color: var(--home-text) !important;
+}
+
+body.light-theme .home-shell .home-votd-card.highlight-pink,
+body.light-theme .home-shell .home-votd-card .highlight-pink {
+  background: linear-gradient(165deg, rgba(250, 162, 193, 0.3), rgba(255, 222, 235, 0.45));
+  border-color: rgba(190, 75, 120, 0.46);
+  color: var(--home-text) !important;
+}
+
+.home-votd-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.home-votd-top i {
+  font-size: 2.1rem;
+  color: var(--home-gold);
+  opacity: 0.85;
+}
+
+.home-votd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.42rem 1.05rem;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--home-gold-soft);
+  border: 1px solid var(--home-gold-border);
+  color: var(--home-gold);
+}
+
+.home-votd-quote {
+  font-family: var(--font-family-reader), Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(1.8rem, 2.1vw, 2.2rem);
+  line-height: 1.65;
+  color: var(--home-text);
+  margin: auto 0;
+  padding: 0;
+}
+
+.home-votd-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--home-border);
+}
+
+.home-votd-ref {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--home-gold);
+}
+
+.home-votd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.home-votd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1.25rem;
+  border-radius: 999px;
+  background-color: var(--home-surface);
+  border: 1px solid var(--home-border-strong);
+  color: var(--home-text);
+  font-size: 1.22rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.home-votd-chip i {
+  font-size: 1.45rem;
+}
+
+.home-votd-chip:hover {
+  background-color: var(--home-emerald-soft);
+  border-color: var(--home-emerald-border);
+  color: var(--home-emerald);
+}
+
+/* ==========================================================================
+   Daily Rhythm Bento Grid (Streak + Journal Left | Quiz Right)
+   ========================================================================== */
+.home-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2.2rem;
+  align-items: stretch;
+}
+
+.home-bento-left {
+  grid-column: span 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.home-bento-right {
+  grid-column: span 7;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Streak Tracker */
+.home-streak-card {
+  background: var(--home-surface);
+  border: 1px solid var(--home-border);
+  border-radius: 18px;
+  padding: 2.2rem;
+  box-shadow: var(--home-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.7rem;
+}
+
+.home-streak-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.home-streak-identity {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.home-streak-identity h3 {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--home-text);
+  margin: 0;
+}
+
+.home-streak-identity p {
+  font-size: 1.25rem;
+  color: var(--home-text-muted);
+  margin: 0.25rem 0 0;
+}
+
+.home-streak-flame {
+  width: 4.6rem;
+  height: 4.6rem;
+  border-radius: 13px;
+  background: var(--home-gold-soft);
+  border: 1px solid var(--home-gold-border);
+  color: var(--home-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.home-streak-flame i {
+  font-size: 2.3rem;
+}
+
+.home-streak-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.home-badge-active {
+  background: var(--home-emerald-soft);
+  border: 1px solid var(--home-emerald-border);
+  color: var(--home-emerald);
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-badge-freeze {
+  background: var(--home-sky-soft);
+  color: var(--home-sky);
+  padding: 0.3rem 0.95rem;
+  border-radius: 999px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.home-badge-freeze i {
+  font-size: 1.35rem;
+}
+
+.home-week-bar {
+  border-top: 1px solid var(--home-border);
+  padding-top: 1.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.home-week-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--home-text-muted);
+}
+
+.home-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.home-day-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.home-day-circle {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background-color: var(--home-surface-2);
+  color: var(--home-text-muted);
+  border: 1px solid var(--home-border-strong);
+  transition: all 0.2s ease;
+}
+
+.home-day-circle i {
+  font-size: 1.45rem;
+}
+
+.home-day-circle.active {
+  background-color: var(--home-emerald);
+  border-color: var(--home-emerald);
+  color: var(--home-btn-ink);
+  box-shadow: 0 0 12px var(--home-emerald-soft);
+}
+
+.home-day-circle.today {
+  border: 2px solid var(--home-gold);
+  color: var(--home-text);
+}
+
+.home-day-circle.active.today {
+  color: var(--home-btn-ink);
+}
+
+.home-day-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--home-text-muted);
+}
+
+/* Journal Widget */
+.home-journal-card {
+  background: var(--home-surface);
+  border: 1px solid var(--home-border);
+  border-radius: 18px;
+  padding: 2.2rem;
+  box-shadow: var(--home-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  flex: 1;
+}
+
+.home-journal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.home-journal-header > div {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.home-journal-header h3 {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--home-text);
+  margin: 0;
+}
+
+.home-journal-header i {
+  font-size: 2rem;
+  color: var(--home-gold);
+}
+
+.home-journal-sync {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  background: var(--home-sky-soft);
+  color: var(--home-sky);
+  white-space: nowrap;
+}
+
+.home-journal-prompt {
+  background: var(--home-surface-2);
+  border-left: 3px solid var(--home-gold);
+  border-radius: 10px;
+  padding: 1.35rem 1.5rem;
+}
+
+.home-journal-prompt > span {
+  display: block;
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--home-gold);
+  margin-bottom: 0.4rem;
+}
+
+.home-journal-prompt p {
+  font-family: var(--font-family-reader), Georgia, serif;
+  font-size: 1.45rem;
+  line-height: 1.55;
+  color: var(--home-text);
+  margin: 0;
+}
+
+.home-shell .home-journal-textarea {
+  width: 100%;
+  min-height: 9.6rem;
+  padding: 1.3rem 1.45rem;
+  border-radius: 12px;
+  border: 1px solid var(--home-border-strong);
+  background-color: var(--home-surface-2);
+  color: var(--home-text);
+  font-family: inherit;
+  font-size: 1.4rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-shell .home-journal-textarea::placeholder {
+  color: var(--home-text-muted);
+  opacity: 0.8;
+}
+
+.home-shell .home-journal-textarea:hover {
+  background-color: var(--home-surface-2);
+  border-color: var(--home-gold-border);
+}
+
+.home-shell .home-journal-textarea:focus {
+  background-color: var(--home-surface-2);
+  border-color: var(--home-gold);
+  box-shadow: 0 0 0 3px var(--home-gold-soft);
+}
+
+.home-journal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.home-journal-footer > span {
+  font-size: 1.2rem;
+  line-height: 1.45;
+  color: var(--home-text-muted);
+  max-width: 36rem;
+}
+
+.home-journal-btn {
+  padding: 0.9rem 1.9rem;
+  border-radius: 999px;
+  background-color: var(--home-emerald);
+  color: var(--home-btn-ink);
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--home-emerald);
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.home-journal-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.home-journal-btn:disabled {
+  background-color: var(--home-surface-2);
+  border-color: var(--home-border);
+  color: var(--home-text-muted);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.home-journal-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--home-emerald-soft);
+  border: 1px solid var(--home-emerald-border);
+  color: var(--home-emerald);
+  border-radius: 12px;
+  padding: 1.4rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.home-journal-status i {
+  font-size: 2rem;
+}
+
+.home-journal-error {
+  background: var(--home-error-soft);
+  border: 1px solid var(--home-error);
+  color: var(--home-error);
+  border-radius: 10px;
+  padding: 0.9rem 1.2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Bible Reflection Quiz */
+.home-quiz-card {
+  background: var(--home-surface);
+  border: 1px solid var(--home-border);
+  border-radius: 18px;
+  padding: 2.5rem;
+  box-shadow: var(--home-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  height: 100%;
+}
+
+.home-quiz-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.home-quiz-header > span {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--home-text);
+}
+
+.home-quiz-header i {
+  font-size: 1.95rem;
+  color: var(--home-gold);
+}
+
+.home-quiz-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 1.05rem;
+  border-radius: 999px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  background: var(--home-surface-2);
+  border: 1px solid var(--home-border);
+  color: var(--home-text-muted);
+}
+
+.home-quiz-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.home-quiz-dot {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: 1px solid var(--home-border-strong);
+  background: var(--home-surface-2);
+  color: var(--home-text-muted);
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.home-quiz-dot:hover {
+  border-color: var(--home-gold-border);
+  color: var(--home-text);
+}
+
+.home-quiz-dot.active {
+  border-color: var(--home-gold);
+  color: var(--home-text);
+  box-shadow: 0 0 0 3px var(--home-gold-soft);
+}
+
+.home-quiz-dot.correct {
+  background: var(--home-emerald-soft);
+  border-color: var(--home-emerald);
+  color: var(--home-emerald);
+}
+
+.home-quiz-dot.incorrect {
+  background: var(--home-error-soft);
+  border-color: var(--home-error);
+  color: var(--home-error);
+}
+
+.home-quiz-question {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: clamp(1.8rem, 2.1vw, 2.15rem);
+  font-weight: 600;
+  line-height: 1.42;
+  color: var(--home-text);
+}
+
+.home-quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.home-quiz-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  text-align: left;
+  padding: 1.15rem 1.4rem;
+  border-radius: 12px;
+  background-color: var(--home-surface-2);
+  border: 1px solid var(--home-border);
+  color: var(--home-text);
+  font-size: 1.38rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.home-quiz-option i {
+  font-size: 1.65rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.home-quiz-option:hover:not(:disabled) {
+  background-color: var(--home-surface-hover);
+  border-color: var(--home-gold-border);
+}
+
+.home-quiz-option:disabled {
+  cursor: default;
+}
+
+.home-quiz-option.correct {
+  background-color: var(--home-emerald-soft);
+  border-color: var(--home-emerald);
+  color: var(--home-emerald);
+  font-weight: 600;
+}
+
+.home-quiz-option.incorrect {
+  background-color: var(--home-error-soft);
+  border-color: var(--home-error);
+  color: var(--home-error);
+}
+
+.home-quiz-letter {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 8px;
+  background-color: var(--home-surface);
+  border: 1px solid var(--home-border-strong);
+  color: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.home-quiz-explanation {
+  margin-top: auto;
+  padding-top: 1.4rem;
+  border-top: 1px dashed var(--home-border-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 1.32rem;
+  line-height: 1.55;
+  color: var(--home-text-muted);
+}
+
+.home-quiz-explanation > div:first-child > span {
+  display: block;
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.home-quiz-explanation p {
+  margin: 0;
+}
+
+.home-quiz-summary {
+  padding: 1.15rem 1.35rem;
+  border-radius: 12px;
+  background: var(--home-emerald-soft);
+  border: 1px solid var(--home-emerald-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  color: var(--home-text);
+}
+
+.home-quiz-summary strong {
+  font-size: 1.32rem;
+  font-weight: 700;
+  color: var(--home-emerald);
+}
+
+.home-quiz-summary span {
+  font-size: 1.25rem;
+  color: var(--home-text-muted);
+}
+
+.home-quiz-next {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  background-color: var(--home-emerald);
+  color: var(--home-btn-ink);
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-quiz-next:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px var(--home-emerald-soft);
+}
+
+/* ==========================================================================
+   Active Devotional Plans
+   ========================================================================== */
+.home-active-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 2rem;
+}
+
+.home-active-card {
+  background: var(--home-surface);
+  border: 1px solid var(--home-border);
+  border-radius: 16px;
+  padding: 2.2rem;
+  box-shadow: var(--home-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.6rem;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.home-active-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--home-emerald-border);
+  box-shadow: var(--home-shadow-hover);
+}
+
+.home-active-card h3 {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--home-text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-active-card i {
+  font-size: 1.55rem;
+}
+
+.home-progress-track {
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--home-surface-2);
+  border: 1px solid var(--home-border);
+  overflow: hidden;
+}
+
+.home-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--home-emerald), var(--home-gold));
+  transition: width 0.4s ease;
+}
+
+/* ==========================================================================
+   Six Beacons — Guided Devotionals
+   ========================================================================== */
+.home-beacons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.home-beacon-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--home-border);
+  box-shadow: var(--home-shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.home-beacon-card img {
+  transition: transform 0.45s ease;
+}
+
+.home-beacon-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--home-shadow-hover);
+  border-color: var(--home-gold-border);
+}
+
+.home-beacon-card:hover img {
+  transform: scale(1.06);
+}
+
+.home-beacon-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 16, 22, 0.14) 0%,
+    rgba(13, 16, 22, 0.48) 46%,
+    rgba(13, 16, 22, 0.92) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 1.7rem 1.8rem;
+  transition: background 0.3s ease;
+}
+
+.home-beacon-card:hover .home-beacon-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(13, 16, 22, 0.08) 0%,
+    rgba(13, 16, 22, 0.45) 42%,
+    rgba(13, 16, 22, 0.94) 100%
+  );
+}
+
+.home-beacon-tag {
+  display: inline-block;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(232, 197, 107, 0.18);
+  border: 1px solid rgba(232, 197, 107, 0.42);
+  color: #f6dc8d;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.home-beacon-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #ffffff;
+}
+
+.home-beacon-meta {
+  font-size: 1.22rem;
+  font-weight: 500;
+  color: rgba(245, 242, 235, 0.85);
+}
+
+/* ==========================================================================
+   Praise Wall Snippet (Answered Prayers)
+   ========================================================================== */
+.home-praise-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.home-praise-card {
+  background: var(--home-surface);
+  border: 1px solid var(--home-border);
+  border-top: 2px solid var(--home-emerald);
+  border-radius: 16px;
+  padding: 2.2rem;
+  box-shadow: var(--home-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.home-praise-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--home-emerald-border);
+  box-shadow: var(--home-shadow-hover);
+}
+
+.home-praise-card h3 {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--home-text);
+  margin: 0;
+}
+
+.home-praise-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 0.95rem;
+  border-radius: 999px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--home-emerald-soft);
+  border: 1px solid var(--home-emerald-border);
+  color: var(--home-emerald);
+}
+
+.home-praise-badge i {
+  font-size: 1.3rem;
+}
+
+.home-praise-meta {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--home-text-muted);
+}
+
+.home-praise-excerpt {
+  font-size: 1.38rem;
+  line-height: 1.6;
+  color: var(--home-text-muted);
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-praise-stats {
+  margin-top: auto;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--home-border);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+  font-size: 1.22rem;
+  font-weight: 500;
+  color: var(--home-text-muted);
+}
+
+.home-praise-stats > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.home-praise-stats i {
+  font-size: 1.45rem;
+  color: var(--home-gold);
+}
+
+/* ==========================================================================
+   Community Testimonies
+   ========================================================================== */
+.home-stories-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.2rem;
+}
+
+.home-story-card {
+  background: var(--home-surface);
+  border: 1px solid var(--home-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--home-shadow);
+  display: grid;
+  grid-template-columns: 18rem minmax(0, 1fr);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.home-story-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--home-gold-border);
+  box-shadow: var(--home-shadow-hover);
+}
+
+.home-story-media {
+  position: relative;
+  width: 100%;
+  min-height: 19rem;
+  overflow: hidden;
+  background: var(--home-surface-2);
+}
+
+.home-story-media img {
+  transition: transform 0.4s ease;
+}
+
+.home-story-card:hover .home-story-media img {
+  transform: scale(1.05);
+}
+
+.home-story-body {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.home-story-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--home-gold);
+}
+
+.home-story-title {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--home-text);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-story-excerpt {
+  font-size: 1.34rem;
+  line-height: 1.55;
+  color: var(--home-text-muted);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-story-author {
+  margin-top: auto;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--home-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  font-size: 1.22rem;
+  font-weight: 600;
+  color: var(--home-emerald);
+}
+
+.home-story-author i {
+  font-size: 1.45rem;
+}
+
+/* ==========================================================================
+   Closing Sanctuary Banner
+   ========================================================================== */
+.home-closing-card {
+  background:
+    radial-gradient(circle at top right, var(--home-gold-soft), transparent 55%),
+    linear-gradient(145deg, var(--home-surface) 0%, var(--home-surface-2) 100%);
+  border: 1px solid var(--home-border);
+  border-top: 2px solid var(--home-gold);
+  border-radius: 20px;
+  padding: 3.4rem 3.2rem;
+  box-shadow: var(--home-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2.2rem;
+}
+
+.home-closing-card h2 {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: clamp(2.2rem, 2.8vw, 2.85rem);
+  font-weight: 700;
+  color: var(--home-text);
+  line-height: 1.2;
+  margin: 0 0 0.7rem;
+}
+
+.home-closing-card p {
+  font-size: 1.45rem;
+  line-height: 1.6;
+  color: var(--home-text-muted);
+  max-width: 56rem;
+  margin: 0;
+}
+
+.home-closing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 960px) {
+  .home-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 2.4rem;
+  }
+
+  .home-beacons-grid,
+  .home-praise-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-story-card {
+    grid-template-columns: 1fr;
+  }
+
+  .home-story-media {
+    height: 18rem;
+    min-height: 18rem;
+  }
+}
+
+@media (max-width: 920px) {
+  .home-bento-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-bento-left,
+  .home-bento-right {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-shell .container {
+    padding: 0 1.5rem;
+  }
+
+  .home-section {
+    padding-block: 3.2rem;
+  }
+
+  .home-hero {
+    padding-block: 2.4rem 2.8rem;
+  }
+
+  .home-pulse-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .home-praise-grid,
+  .home-stories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-beacons-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.2rem;
+  }
+
+  .home-beacon-overlay {
+    padding: 1.2rem;
+  }
+
+  .home-beacon-title {
+    font-size: 1.65rem;
+  }
+
+  .home-votd-card,
+  .home-streak-card,
+  .home-journal-card,
+  .home-quiz-card,
+  .home-closing-card {
+    padding: 2rem 1.8rem;
+  }
+
+  .home-streak-badges {
+    align-items: flex-start;
+  }
+}

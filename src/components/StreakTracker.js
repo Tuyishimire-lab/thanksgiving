@@ -1,81 +1,98 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { updateStreak, getStreak } from "@/data/userState";
 
+const STREAK_EVENT = "praisepage-streak-change";
+let hasSyncedClientStreak = false;
+let cachedLocalStreak = null;
+
+function subscribeStreak(callback) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(STREAK_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(STREAK_EVENT, callback);
+  };
+}
+
+function getStreakServerSnapshot() {
+  return null;
+}
+
+function getStreakSnapshot() {
+  if (!hasSyncedClientStreak) return null;
+  const current = getStreak();
+  if (
+    cachedLocalStreak &&
+    cachedLocalStreak.count === current.count &&
+    cachedLocalStreak.lastActive === current.lastActive &&
+    cachedLocalStreak.freezes === current.freezes
+  ) {
+    return cachedLocalStreak;
+  }
+  cachedLocalStreak = current;
+  return cachedLocalStreak;
+}
+
 export default function StreakTracker({ currentUser, dbStreak, dayOfWeek }) {
-  const [streak, setStreak] = useState({ count: 0, lastActive: null });
-  const [loading, setLoading] = useState(true);
+  const localStreak = useSyncExternalStore(
+    subscribeStreak,
+    getStreakSnapshot,
+    getStreakServerSnapshot
+  );
 
   useEffect(() => {
-    if (currentUser) {
-      setStreak(dbStreak || { count: 0, lastActive: null });
-    } else {
-      // Offline/guest: calculate and update local storage streak
-      const localStreak = updateStreak();
-      setStreak(localStreak);
-    }
-    setLoading(false);
-  }, [currentUser, dbStreak]);
+    if (currentUser) return;
+    // Offline/guest: calculate and update local storage streak once mounted
+    const updated = updateStreak();
+    hasSyncedClientStreak = true;
+    cachedLocalStreak = updated;
+    window.dispatchEvent(new Event(STREAK_EVENT));
+  }, [currentUser]);
 
-  const freezes = currentUser 
-    ? (currentUser.streak_freezes_count ?? 1) 
+  const loading = !currentUser && localStreak === null;
+  const streak = currentUser
+    ? (dbStreak || { count: 0, lastActive: null })
+    : (localStreak || { count: 0, lastActive: null, freezes: 1 });
+
+  const freezes = currentUser
+    ? (currentUser.streak_freezes_count ?? 1)
     : (streak.freezes ?? 1);
 
   return (
-    <div className="streak-card" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", flexWrap: "wrap", gap: "1rem" }}>
-        <div className="streak-number-wrapper" style={{ gap: "1.2rem", display: "flex", alignItems: "center" }}>
-          <div className="streak-fire-icon" style={{ fontSize: "3.2rem", color: "var(--accent-color)" }}>
+    <div className="home-streak-card">
+      <div className="home-streak-top">
+        <div className="home-streak-identity">
+          <div className="home-streak-flame" aria-hidden="true">
             <i className="ri-fire-fill"></i>
           </div>
           <div>
             {loading ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                <div className="shimmer" style={{ width: "100px", height: "1.6rem", borderRadius: "4px" }}></div>
-                <div className="shimmer" style={{ width: "80px", height: "1.1rem", borderRadius: "4px" }}></div>
+                <div className="shimmer" style={{ width: "110px", height: "1.8rem", borderRadius: "4px" }}></div>
+                <div className="shimmer" style={{ width: "90px", height: "1.2rem", borderRadius: "4px" }}></div>
               </div>
             ) : (
               <>
-                <h3 style={{ fontSize: "1.8rem", fontWeight: "600", color: "var(--light-color)" }}>
-                  {streak.count} Day Streak
+                <h3>
+                  {streak.count} {streak.count === 1 ? "Day" : "Days"} Streak
                 </h3>
-                <p style={{ fontSize: "1.2rem", color: "var(--light-color-alt)" }}>
-                  Nourish your soul daily
-                </p>
+                <p>Nourish your soul daily</p>
               </>
             )}
           </div>
         </div>
-        <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "0.6rem", alignItems: "flex-end" }}>
+
+        <div className="home-streak-badges">
           {loading ? (
-            <span className="shimmer" style={{ width: "60px", height: "2rem", borderRadius: "30px", display: "inline-block" }}></span>
+            <span className="shimmer" style={{ width: "68px", height: "2.2rem", borderRadius: "30px", display: "inline-block" }}></span>
           ) : (
             <>
-              <span style={{
-                background: "rgba(79, 207, 112, 0.12)",
-                color: "var(--accent-color)",
-                padding: "0.4rem 1.2rem",
-                borderRadius: "30px",
-                fontSize: "1.2rem",
-                fontWeight: "600",
-                letterSpacing: "0.5px"
-              }}>
-                ACTIVE
-              </span>
-              <span style={{
-                background: "rgba(18, 188, 254, 0.12)",
-                color: "#12bcfe",
-                padding: "0.2rem 1rem",
-                borderRadius: "20px",
-                fontSize: "1.1rem",
-                fontWeight: "700",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.4rem"
-              }}>
-                <i className="ri-snowflake-line"></i>
-                {freezes} Freezes
+              <span className="home-badge-active">ACTIVE</span>
+              <span className="home-badge-freeze">
+                <i className="ri-snowflake-line" aria-hidden="true"></i>
+                {freezes} {freezes === 1 ? "Freeze" : "Freezes"}
               </span>
             </>
           )}
@@ -84,72 +101,33 @@ export default function StreakTracker({ currentUser, dbStreak, dayOfWeek }) {
 
       {/* 7-Day Habit Progress Row */}
       {!loading && (
-        <div style={{
-          borderTop: "1px solid var(--transparent-light-color)",
-          paddingTop: "1.5rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "1.5rem"
-        }}>
-          <span style={{ fontSize: "1.2rem", color: "var(--light-color-alt)", fontWeight: "600", letterSpacing: "1px" }}>
-            THIS WEEK'S WALK:
-          </span>
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayAbbr, idx) => {
-              const dayIndexMap = { 'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6 };
-              const todayAbbr = dayOfWeek.substring(0, 3);
+        <div className="home-week-bar">
+          <span className="home-week-label">THIS WEEK&apos;S WALK</span>
+          <div className="home-week-grid">
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((dayAbbr, idx) => {
+              const dayIndexMap = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+              const todayAbbr = (dayOfWeek || "").substring(0, 3);
               const currentDayIdx = dayIndexMap[todayAbbr] ?? 0;
-              
+
               // Highlight if it's today or within the active streak range
-              const isActive = idx === currentDayIdx || 
+              const isActive =
+                idx === currentDayIdx ||
                 (idx < currentDayIdx && idx >= currentDayIdx - (streak.count - 1));
-              
+
               const isToday = idx === currentDayIdx;
 
               return (
-                <div 
-                  key={dayAbbr} 
-                  style={{ 
-                    display: "flex", 
-                    flexDirection: "column", 
-                    alignItems: "center", 
-                    gap: "0.5rem" 
-                  }}
-                >
-                  <div 
-                    style={{
-                      width: "3rem",
-                      height: "3rem",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.2rem",
-                      fontWeight: "700",
-                      background: isActive 
-                        ? "var(--accent-color)" 
-                        : "rgba(255, 255, 255, 0.05)",
-                      color: isActive ? "#131417" : "var(--light-color-alt)",
-                      border: isToday ? "1.5px solid var(--accent-color)" : "1px solid transparent",
-                      boxShadow: isActive ? "0 0 10px rgba(79, 207, 112, 0.4)" : "none",
-                      transition: "all 0.3s ease"
-                    }}
+                <div key={dayAbbr} className="home-day-cell">
+                  <div
+                    className={`home-day-circle${isActive ? " active" : ""}${isToday ? " today" : ""}`}
                   >
                     {isActive ? (
-                      <i className="ri-check-line" style={{ fontSize: "1.4rem" }}></i>
+                      <i className="ri-check-line" aria-hidden="true"></i>
                     ) : (
                       dayAbbr[0]
                     )}
                   </div>
-                  <span style={{ 
-                    fontSize: "1rem", 
-                    fontWeight: isToday ? "700" : "500", 
-                    color: isToday ? "var(--light-color)" : "var(--light-color-alt)" 
-                  }}>
-                    {dayAbbr}
-                  </span>
+                  <span className="home-day-name">{dayAbbr}</span>
                 </div>
               );
             })}

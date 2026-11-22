@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { Suspense } from "react";
+import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 
-// Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -70,7 +70,7 @@ const QUOTES_DATA = [
     category: "Harvest",
     text: "Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.",
     image: "/assets/images/quick_read/quick_read_5.jpg",
-  }
+  },
 ];
 
 const CATEGORIES = ["Gratitude", "Praise", "Harvest", "Love", "Justice", "Salvation"];
@@ -78,146 +78,103 @@ const CATEGORIES = ["Gratitude", "Praise", "Harvest", "Love", "Justice", "Salvat
 function QuotesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const categoryParam = searchParams.get("category");
-  const [selectedCategory, setSelectedCategory] = useState(categoryParam || "All");
-
-  useEffect(() => {
-    if (categoryParam) {
-      setSelectedCategory(categoryParam);
-    } else {
-      setSelectedCategory("All");
-    }
-  }, [categoryParam]);
+  const selectedCategory = searchParams.get("category") || "All";
 
   const handleCategoryClick = (category) => {
     if (category === "All") {
       router.push("/quotes");
     } else {
-      router.push(`/quotes?category=${category}`);
+      router.push(`/quotes?category=${encodeURIComponent(category)}`);
     }
   };
 
-  const filteredQuotes = selectedCategory === "All"
-    ? QUOTES_DATA
-    : QUOTES_DATA.filter(q => q.category === selectedCategory);
+  const filteredQuotes =
+    selectedCategory === "All"
+      ? QUOTES_DATA
+      : QUOTES_DATA.filter((q) => q.category.toLowerCase() === selectedCategory.toLowerCase());
 
-  // If a category has no quotes, fall back to showing all to avoid an empty slider
   const displayedQuotes = filteredQuotes.length > 0 ? filteredQuotes : QUOTES_DATA;
 
   return (
-    <section className="quick-read section">
-      <div className="container">
-        {/* Categories Banner */}
-        <div className="quotes-categories headline-banner">
-          <h3 className="headline fancy-border" style={{ flexWrap: "wrap", justifyContent: "center" }}>
+    <section className="sanc-page">
+      <div className="sanc-container">
+        <div className="sanc-hero">
+          <div className="sanc-hero-row">
+            <div>
+              <span className="sanc-eyebrow">Scripture Cards</span>
+              <h1 className="sanc-title">
+                Words of <span className="sanc-title-accent">Hope &amp;</span> Inspiration
+              </h1>
+              <p className="sanc-subtitle">
+                {selectedCategory === "All"
+                  ? "Find quiet comfort and encouragement in Jesus across curated Scripture reflections."
+                  : `Reflecting on ${selectedCategory} through timeless passages of Scripture.`}
+              </p>
+            </div>
+          </div>
+
+          <div className="sanc-filter-row" style={{ marginTop: "2rem" }}>
             <button
+              type="button"
               onClick={() => handleCategoryClick("All")}
-              style={{ cursor: "pointer" }}
-              className={selectedCategory === "All" ? "active-category" : ""}
+              className={`sanc-pill${selectedCategory === "All" ? " active-gold" : ""}`}
             >
-              <span className="place-items-center">All</span>
+              All Quotes
             </button>
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
+                type="button"
                 onClick={() => handleCategoryClick(cat)}
-                style={{ cursor: "pointer" }}
-                className={selectedCategory === cat ? "active-category" : ""}
+                className={`sanc-pill${
+                  selectedCategory.toLowerCase() === cat.toLowerCase() ? " active-gold" : ""
+                }`}
               >
-                <span className="place-items-center">{cat}</span>
+                {cat}
               </button>
             ))}
-          </h3>
-          <span className="headline-description">
-            {selectedCategory === "All" ? "Find comfort in Jesus..." : `Reflecting on ${selectedCategory}...`}
-          </span>
+          </div>
         </div>
 
-        <h2 className="quotes title section-title" data-name="Uplifting">
-          Hope & Inspiration
-        </h2>
-
-        {/* Carousel Slider */}
-        <div className="swiper-container-react" style={{ position: "relative", paddingBottom: "3rem" }}>
+        <div className="quotes-slider-wrap">
           <Swiper
+            key={selectedCategory}
             modules={[Navigation, Pagination]}
             slidesPerView={1}
-            spaceBetween={20}
+            spaceBetween={22}
             navigation
             pagination={{ clickable: true }}
             breakpoints={{
-              700: {
-                slidesPerView: 2,
-              },
-              1200: {
-                slidesPerView: 3,
-              },
+              700: { slidesPerView: 2 },
+              1120: { slidesPerView: 3 },
             }}
             style={{ width: "100%", height: "auto" }}
           >
-            {displayedQuotes.map((quote, index) => (
-              <SwiperSlide key={index}>
-                <div className="article" style={{ height: "40rem", borderRadius: "8px", overflow: "hidden" }}>
-                  <img src={quote.image} alt={quote.reference} className="quotes-image" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            {displayedQuotes.map((quote) => (
+              <SwiperSlide key={quote.reference}>
+                <article className="sanc-quote-slide">
+                  <Image
+                    src={quote.image}
+                    alt={quote.reference}
+                    fill
+                    sizes="(max-width: 699px) 100vw, (max-width: 1119px) 50vw, 33vw"
+                    style={{ objectFit: "cover" }}
+                  />
 
-                  <div className="article-data-container">
-                    <div className="article-data">
-                      <span>{quote.reference}</span>
-                      <span className="article-data-spacer"></span>
-                      <span>{quote.category}</span>
-                    </div>
-                    <h3 className="title article-title" style={{ fontSize: "1.8rem", lineHeight: "1.4" }}>
-                      {quote.text}
-                    </h3>
+                  <div className="sanc-quote-overlay">
+                    <span className="sanc-badge gold" style={{ alignSelf: "flex-start" }}>
+                      {quote.category}
+                    </span>
+                    <blockquote className="sanc-quote-text">
+                      &ldquo;{quote.text}&rdquo;
+                    </blockquote>
+                    <cite className="sanc-quote-ref">&mdash; {quote.reference}</cite>
                   </div>
-                </div>
+                </article>
               </SwiperSlide>
             ))}
           </Swiper>
         </div>
-
-        {/* Inline styles for category tagging */}
-        <style jsx global>{`
-          .active-category span {
-            color: var(--light-color) !important;
-            border-bottom: 2px solid var(--light-color);
-          }
-          .headline button {
-            background: transparent;
-            border: none;
-            outline: none;
-            padding: 0.5rem 1rem;
-            color: var(--light-color-alt);
-            font: inherit;
-            transition: color 0.25s;
-          }
-          .headline button:hover {
-            color: var(--light-color);
-          }
-          /* Custom overrides for React Swiper controls */
-          .swiper-button-prev,
-          .swiper-button-next {
-            width: 4rem;
-            height: 4rem;
-            background-color: var(--secondary-background-color);
-            color: var(--light-color) !important;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-          }
-          .swiper-button-prev::after,
-          .swiper-button-next::after {
-            font-size: 1.6rem !important;
-            font-weight: bold;
-          }
-          .swiper-button-prev:hover,
-          .swiper-button-next:hover {
-            background-color: var(--light-color);
-            color: var(--primary-background-color) !important;
-          }
-          .swiper-pagination-bullet-active {
-            background: var(--light-color) !important;
-          }
-        `}</style>
       </div>
     </section>
   );
@@ -225,7 +182,15 @@ function QuotesContent() {
 
 export default function Quotes() {
   return (
-    <Suspense fallback={<div className="container" style={{ padding: "5rem", textAlign: "center" }}>Loading quotes...</div>}>
+    <Suspense
+      fallback={
+        <section className="sanc-page">
+          <div className="sanc-container" style={{ textAlign: "center", paddingBlock: "6rem", color: "var(--sanc-muted)" }}>
+            Loading inspirational quotes...
+          </div>
+        </section>
+      }
+    >
       <QuotesContent />
     </Suspense>
   );

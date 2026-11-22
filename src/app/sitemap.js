@@ -5,9 +5,14 @@ import { getCustomDevotionals } from "@/app/actions/dbActions";
 
 export const revalidate = 86400; // Regenerate sitemap at most once per day
 
+function toSafeIsoDate(value) {
+  if (!value) return new Date().toISOString();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+}
+
 export default async function sitemap() {
   const baseUrl = "https://praisepage.com";
-
 
   // Static core routes
   const staticUrls = [
@@ -39,20 +44,12 @@ export default async function sitemap() {
   try {
     const customRes = await getCustomDevotionals();
     if (customRes && customRes.success && Array.isArray(customRes.plans)) {
-      customPlanUrls = customRes.plans.map((plan) => {
-        let parsedDate;
-        try {
-          parsedDate = plan.created_at ? new Date(plan.created_at).toISOString() : new Date().toISOString();
-        } catch (e) {
-          parsedDate = new Date().toISOString();
-        }
-        return {
-          url: `${baseUrl}/plans/${plan.id}`,
-          lastModified: parsedDate,
-          changeFrequency: "weekly",
-          priority: 0.7,
-        };
-      });
+      customPlanUrls = customRes.plans.map((plan) => ({
+        url: `${baseUrl}/plans/${plan.id}`,
+        lastModified: toSafeIsoDate(plan.created_at),
+        changeFrequency: "weekly",
+        priority: 0.7,
+      }));
     }
   } catch (error) {
     console.error("Error fetching custom devotionals for sitemap:", error);
@@ -72,20 +69,12 @@ export default async function sitemap() {
   });
 
   // Blog posts
-  const postUrls = posts.map((post) => {
-    let parsedDate;
-    try {
-      parsedDate = new Date(post.date).toISOString();
-    } catch (e) {
-      parsedDate = new Date().toISOString();
-    }
-    return {
-      url: `${baseUrl}/posts/${post.id}`,
-      lastModified: parsedDate,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    };
-  });
+  const postUrls = posts.map((post) => ({
+    url: `${baseUrl}/posts/${post.id}`,
+    lastModified: toSafeIsoDate(post.date),
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
 
   return [...staticUrls, ...staticPlanUrls, ...customPlanUrls, ...postUrls, ...bibleUrls];
 }

@@ -1,56 +1,86 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { getMe, logout } from "@/app/actions/authActions";
+import { parseBibleReference } from "@/data/bibleParser";
+
+const QUICK_SCRIPTURES = [
+  "Psalm 23",
+  "John 3:16",
+  "Romans 8:28",
+  "Proverbs 3:5",
+  "Philippians 4:6",
+  "Isaiah 41:10",
+];
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState(null);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
+    let cancelled = false;
     async function loadUser() {
       const currentUser = await getMe();
-      setUser(currentUser);
+      if (!cancelled) {
+        setUser(currentUser);
+      }
     }
     loadUser();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleLogout = async () => {
     await logout();
     setUser(null);
+    setIsMenuOpen(false);
     window.location.href = "/";
   };
 
-  // Add scroll event listener for header activation
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY >= 15) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      const next = window.scrollY >= 15;
+      setIsScrolled((prev) => (prev === next ? prev : next));
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Handle ESC keypress to close search
   useEffect(() => {
-    const handleKeyUp = (e) => {
+    if (!isSearchOpen && !isMenuOpen) return;
+    const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         setIsSearchOpen(false);
+        setIsMenuOpen(false);
       }
     };
-    window.addEventListener("keyup", handleKeyUp);
-    return () => window.removeEventListener("keyup", handleKeyUp);
-  }, []);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSearchOpen, isMenuOpen]);
 
-  // Handle theme toggling
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const raf = requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isSearchOpen]);
+
   const toggleTheme = () => {
     if (document.body.classList.contains("light-theme")) {
       document.body.classList.remove("light-theme");
@@ -61,100 +91,102 @@ export default function Header() {
     }
   };
 
+  const isNavActive = (href) => {
+    if (!pathname) return false;
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  const navigateSearch = (rawQuery) => {
+    const trimmed = String(rawQuery || "").trim();
+    if (!trimmed) return;
+
+    const parsed = parseBibleReference(trimmed);
+    setIsSearchOpen(false);
+    setIsMenuOpen(false);
+    setSearchQuery("");
+
+    if (parsed) {
+      const params = new URLSearchParams({
+        book: parsed.book,
+        chapter: String(parsed.chapter),
+      });
+      if (parsed.verse) {
+        params.set("verse", String(parsed.verse));
+      }
+      router.push(`/bible?${params.toString()}`);
+    } else {
+      router.push(`/bible?q=${encodeURIComponent(trimmed)}`);
+    }
+  };
+
+  const navItems = [
+    { href: "/", label: "Home" },
+    { href: "/bible", label: "Bible" },
+    { href: "/plans", label: "Plans" },
+    { href: "/feed", label: "Feed" },
+    { href: "/prayers", label: "Prayers" },
+  ];
+
   return (
     <>
-      {/* Header */}
-      <header className={`header ${isScrolled ? "activated" : ""}`} id="header">
-        <nav className="navbar container">
-          <Link href="/">
-            <h2 className="logo">PraisePage</h2>
+      <header className={`sanc-header${isScrolled ? " activated" : ""}`} id="header">
+        <nav className="sanc-navbar" aria-label="Main Navigation">
+          <Link href="/" className="sanc-brand" onClick={() => setIsMenuOpen(false)}>
+            PraisePage
           </Link>
 
-          <div className={`menu ${isMenuOpen ? "activated" : ""}`} id="menu">
-            <ul className="list">
-              <li className="list-item">
-                <Link
-                  href="/"
-                  className={`list-link ${pathname === "/" ? "current" : ""}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Home
-                </Link>
-              </li>
-              <li className="list-item">
-                <Link
-                  href="/bible"
-                  className={`list-link ${pathname === "/bible" ? "current" : ""}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Bible
-                </Link>
-              </li>
-              <li className="list-item">
-                <Link
-                  href="/plans"
-                  className={`list-link ${pathname === "/plans" ? "current" : ""}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Plans
-                </Link>
-              </li>
-              <li className="list-item">
-                <Link
-                  href="/feed"
-                  className={`list-link ${pathname === "/feed" ? "current" : ""}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Feed
-                </Link>
-              </li>
-              <li className="list-item">
-                <Link
-                  href="/prayers"
-                  className={`list-link ${pathname === "/prayers" ? "current" : ""}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Prayers
-                </Link>
-              </li>
+          <div className={`sanc-nav-menu${isMenuOpen ? " activated" : ""}`} id="menu">
+            <ul className="sanc-nav-list">
+              {navItems.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`sanc-nav-link${isNavActive(item.href) ? " current" : ""}`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+
               {user ? (
                 <>
                   {user.role === "admin" && (
-                    <li className="list-item">
+                    <li>
                       <Link
                         href="/admin"
-                        className={`list-link ${pathname === "/admin" ? "current" : ""}`}
+                        className={`sanc-nav-link admin${isNavActive("/admin") ? " current" : ""}`}
                         onClick={() => setIsMenuOpen(false)}
-                        style={{ color: "#fad648", fontWeight: "600" }}
                       >
                         Admin
                       </Link>
                     </li>
                   )}
-                  <li className="list-item">
+                  <li>
                     <Link
                       href="/profile"
-                      className={`list-link ${pathname === "/profile" ? "current" : ""}`}
+                      className={`sanc-nav-link${isNavActive("/profile") ? " current" : ""}`}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Profile
                     </Link>
                   </li>
-                  <li className="list-item">
+                  <li>
                     <button
+                      type="button"
                       onClick={handleLogout}
-                      className="list-link"
-                      style={{ cursor: "pointer", background: "none", border: "none", font: "inherit", padding: "0" }}
+                      className="sanc-nav-link"
                     >
                       Log Out
                     </button>
                   </li>
                 </>
               ) : (
-                <li className="list-item">
+                <li>
                   <Link
                     href="/login"
-                    className={`list-link ${pathname === "/login" ? "current" : ""}`}
+                    className={`sanc-nav-link${isNavActive("/login") ? " current" : ""}`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Log In
@@ -164,129 +196,194 @@ export default function Header() {
             </ul>
           </div>
 
-          <div className="list list-right">
+          <div className="sanc-nav-actions">
             <button
-              className="btn place-items-center"
+              type="button"
+              className="sanc-icon-btn"
               id="theme-toggle-btn"
               onClick={toggleTheme}
               aria-label="Toggle Theme"
             >
-              <i className="ri-sun-line sun-icon"></i>
-              <i className="ri-moon-line moon-icon"></i>
+              <i
+                className="ri-sun-line sun-icon"
+                style={{ fontSize: "1.75rem", lineHeight: 1 }}
+                aria-hidden="true"
+              ></i>
+              <i
+                className="ri-moon-line moon-icon"
+                style={{ fontSize: "1.75rem", lineHeight: 1 }}
+                aria-hidden="true"
+              ></i>
             </button>
 
             <button
-              className="btn place-items-center"
+              type="button"
+              className="sanc-icon-btn"
               id="search-icon"
               onClick={() => setIsSearchOpen(true)}
-              aria-label="Open Search"
+              aria-label="Open Scripture Search"
             >
-              <i className="ri-search-line"></i>
+              <i
+                className="ri-search-line"
+                style={{ fontSize: "1.75rem", lineHeight: 1 }}
+                aria-hidden="true"
+              ></i>
             </button>
 
             <button
-              className={`btn place-items-center screen-lg-hidden menu-toggle-icon ${
-                isMenuOpen ? "activated" : ""
-              }`}
+              type="button"
+              className={`sanc-icon-btn screen-lg-hidden menu-toggle-icon${isMenuOpen ? " activated" : ""}`}
               id="menu-toggle-icon"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={() => setIsMenuOpen((open) => !open)}
               aria-label="Toggle Menu"
+              aria-expanded={isMenuOpen}
             >
-              <i className="ri-menu-3-line open-menu-icon"></i>
-              <i className="ri-close-line close-menu-icon"></i>
+              <i
+                className="ri-menu-3-line open-menu-icon"
+                style={{ fontSize: "1.8rem", lineHeight: 1 }}
+                aria-hidden="true"
+              ></i>
+              <i
+                className="ri-close-line close-menu-icon"
+                style={{ fontSize: "1.8rem", lineHeight: 1 }}
+                aria-hidden="true"
+              ></i>
             </button>
           </div>
         </nav>
       </header>
 
-      {/* Mobile Sticky Bottom Navigation Tab Bar */}
-      <div className="mobile-bottom-nav">
+      <nav className="sanc-mobile-nav" aria-label="Mobile Navigation">
         <ul className="nav-list">
           <li className="nav-item">
-            <Link href="/" className={`nav-link ${pathname === "/" ? "active" : ""}`}>
-              <i className="ri-home-5-line"></i>
+            <Link href="/" className={`nav-link${isNavActive("/") ? " active" : ""}`}>
+              <i className="ri-home-5-line" aria-hidden="true"></i>
               <span>Home</span>
             </Link>
           </li>
           <li className="nav-item">
-            <Link href="/bible" className={`nav-link ${pathname === "/bible" ? "active" : ""}`}>
-              <i className="ri-book-open-line"></i>
+            <Link href="/bible" className={`nav-link${isNavActive("/bible") ? " active" : ""}`}>
+              <i className="ri-book-open-line" aria-hidden="true"></i>
               <span>Bible</span>
             </Link>
           </li>
           <li className="nav-item">
-            <Link href="/plans" className={`nav-link ${pathname === "/plans" ? "active" : ""}`}>
-              <i className="ri-calendar-check-line"></i>
+            <Link href="/plans" className={`nav-link${isNavActive("/plans") ? " active" : ""}`}>
+              <i className="ri-calendar-check-line" aria-hidden="true"></i>
               <span>Plans</span>
             </Link>
           </li>
           <li className="nav-item">
-            <Link href="/prayers" className={`nav-link ${pathname === "/prayers" ? "active" : ""}`}>
-              <i className="ri-chat-heart-line"></i>
+            <Link href="/prayers" className={`nav-link${isNavActive("/prayers") ? " active" : ""}`}>
+              <i className="ri-chat-heart-line" aria-hidden="true"></i>
               <span>Prayers</span>
             </Link>
           </li>
           <li className="nav-item">
-            <Link href="/feed" className={`nav-link ${pathname === "/feed" ? "active" : ""}`}>
-              <i className="ri-message-3-line"></i>
+            <Link href="/feed" className={`nav-link${isNavActive("/feed") ? " active" : ""}`}>
+              <i className="ri-message-3-line" aria-hidden="true"></i>
               <span>Feed</span>
             </Link>
           </li>
           <li className="nav-item">
-            <Link href="/profile" className={`nav-link ${pathname === "/profile" ? "active" : ""}`}>
-              <i className="ri-user-3-line"></i>
+            <Link href="/profile" className={`nav-link${isNavActive("/profile") ? " active" : ""}`}>
+              <i className="ri-user-3-line" aria-hidden="true"></i>
               <span>Profile</span>
             </Link>
           </li>
           {user && user.role === "admin" && (
             <li className="nav-item">
-              <Link href="/admin" className={`nav-link ${pathname === "/admin" ? "active" : ""}`} style={{ color: "#fad648" }}>
-                <i className="ri-shield-user-line"></i>
+              <Link href="/admin" className={`nav-link admin${isNavActive("/admin") ? " active" : ""}`}>
+                <i className="ri-shield-user-line" aria-hidden="true"></i>
                 <span>Admin</span>
               </Link>
             </li>
           )}
         </ul>
-      </div>
+      </nav>
 
-      {/* Search popup */}
-      <div
-        className={`search-form-container container ${
-          isSearchOpen ? "activated" : ""
-        }`}
-        id="search-form-container"
-      >
-        <div className="form-container-inner">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert("Search functionality is currently simulated.");
-              setIsSearchOpen(false);
+      {isSearchOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="sanc-search-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search Scripture"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsSearchOpen(false);
+              }
             }}
-            className="form"
           >
-            <input
-              className="form-input"
-              type="text"
-              placeholder="What are you looking for?"
-              autoFocus={isSearchOpen}
-            />
-            <button className="btn form-btn" type="submit">
-              <i className="ri-search-line"></i>
-            </button>
-          </form>
-          <span className="form-note">Or press ESC to close.</span>
-        </div>
+            <div className="sanc-search-dialog">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "1.2rem",
+                }}
+              >
+                <div>
+                  <span className="sanc-eyebrow">Scripture Search</span>
+                  <h2 className="sanc-modal-title">Jump to a Passage or Keyword</h2>
+                </div>
+                <button
+                  type="button"
+                  className="sanc-modal-close"
+                  onClick={() => setIsSearchOpen(false)}
+                  aria-label="Close Search"
+                >
+                  <i className="ri-close-line" aria-hidden="true"></i>
+                </button>
+              </div>
 
-        <button
-          className="btn form-close-btn place-items-center"
-          id="form-close-btn"
-          onClick={() => setIsSearchOpen(false)}
-          aria-label="Close Search"
-        >
-          <i className="ri-close-line"></i>
-        </button>
-      </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  navigateSearch(searchQuery);
+                }}
+                className="sanc-search-form"
+              >
+                <div className="sanc-input-wrap" style={{ flex: 1, minWidth: 0 }}>
+                  <i className="ri-search-line sanc-input-icon" aria-hidden="true"></i>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    className="sanc-input has-icon"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Try Psalm 23, John 3:16, Rom 8, or grace..."
+                    aria-label="Search scripture reference or keyword"
+                  />
+                </div>
+                <button type="submit" className="sanc-btn-primary">
+                  <i className="ri-arrow-right-line" aria-hidden="true"></i>
+                  Go
+                </button>
+              </form>
+
+              <div className="sanc-search-quick">
+                {QUICK_SCRIPTURES.map((ref) => (
+                  <button
+                    key={ref}
+                    type="button"
+                    className="sanc-pill"
+                    onClick={() => navigateSearch(ref)}
+                  >
+                    {ref}
+                  </button>
+                ))}
+              </div>
+
+              <p className="sanc-subtitle" style={{ margin: 0, fontSize: "1.22rem" }}>
+                Enter any book &amp; chapter reference to open it directly, or search by keyword. Press Esc to close.
+              </p>
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }

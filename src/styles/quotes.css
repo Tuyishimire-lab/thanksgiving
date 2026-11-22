@@ -1,89 +1,71 @@
-/* Quick read */
-.section-title{
-    position: relative;
-    font-size: var(--font-size-md);
-    margin-bottom: 6rem;
+/* Quotes Carousel Stylesheet — Harmonized to Sanctuary Tokens */
+
+.quotes-slider-wrap {
+  position: relative;
+  padding-bottom: 3.6rem;
 }
 
-.section-title::after{
-    content: attr(data-name);
-    font-size: var(--font-size-lg);
-    text-transform: uppercase;
-    opacity: .1;
-    position: absolute;
-    top: 1.5rem;
-    left: 2rem;
+.quotes-slider-wrap .swiper-button-prev,
+.quotes-slider-wrap .swiper-button-next {
+  width: 4.2rem;
+  height: 4.2rem;
+  border-radius: 50%;
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border-strong);
+  color: var(--sanc-text);
+  box-shadow: var(--sanc-shadow);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
-.article.swiper-slide{
-    height: 40rem;
+.quotes-slider-wrap .swiper-button-prev svg,
+.quotes-slider-wrap .swiper-button-next svg {
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
-/* Quick read - Swiper */
-.swiper-wrapper{
-    height: auto;
-}
-.swiper-controls{
-    width: 3.5rem;
-    height: 3.5rem;
-    background-color: var(--secondary-background-color);
+.quotes-slider-wrap .swiper-button-prev::after,
+.quotes-slider-wrap .swiper-button-next::after {
+  font-size: 1.55rem;
+  font-weight: 700;
 }
 
-.swiper-controls::after{
-    font-size: 1.6rem;
-    color: var(--light-color);
+.quotes-slider-wrap .swiper-button-prev:hover,
+.quotes-slider-wrap .swiper-button-next:hover {
+  background: var(--sanc-gold);
+  border-color: var(--sanc-gold);
+  color: var(--sanc-btn-ink);
+  transform: scale(1.05);
 }
 
-.swiper-pagination{
-    bottom: .5rem !important;
+.quotes-slider-wrap .swiper-pagination {
+  bottom: 0.4rem !important;
 }
 
-.swiper-pagination-bullet{
-    background-color:var(--light-color);
+.quotes-slider-wrap .swiper-pagination-bullet {
+  background: var(--sanc-muted);
+  opacity: 0.45;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
 }
 
-
-
-.article-title{
-    font-size: var(--font-size-md);
+.quotes-slider-wrap .swiper-pagination-bullet-active {
+  background: var(--sanc-gold);
+  opacity: 1;
+  transform: scale(1.15);
 }
 
-.article{
-    position: relative;
-    min-height: var(--item-min-height-md);
+.sanc-quote-text {
+  font-family: var(--font-family-reader), Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: #ffffff;
+  margin: 0;
 }
 
-.article-data-container{
-    width: 100%;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    padding: 2rem 1.5rem;
-    background-color: var(--transparent-dark-color);
-    z-index: 10;
-    transition: background-color .5s;
+.sanc-quote-ref {
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-style: normal;
+  color: #f4d67c;
 }
-
-/* Light theme color hover styles */
-.article:hover .article-data-container{
-    background-color: var(--hover-dark-color);
-    color: var(--hover-light-color);
-}
-
-.article:hover .article-data-spacer{
-    background-color: var(--hover-light-color);
-}
-
-.article:hover .article-title{
-    color: var(--hover-light-color);
-}
-
-
-.article-data{
-    display: flex;
-    align-items: center;
-    gap: var(--gap);
-    font-size: var(--font-size-xsm);
-    margin-bottom: 1rem;
-}
-

@@ -2,85 +2,108 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="footer section">
-      <div className="footer-container container d-grid">
-        <div className="company-data">
-          <Link href="/">
-            <h2 className="logo">PraisePage</h2>
+    <footer className="sanc-footer">
+      <div className="sanc-footer-grid">
+        <div>
+          <Link href="/" className="sanc-brand">
+            PraisePage
           </Link>
-          <p className="company-description">
+          <p
+            className="sanc-subtitle"
+            style={{ marginTop: "1.1rem", fontSize: "1.35rem", maxWidth: "34rem" }}
+          >
             Stories about faith and how it has impacted our lives. Share your PraisePage reflection and touch the hearts of others.
           </p>
 
-          <ul className="list social-media">
-            <li className="list-item">
-              <a href="https://www.instagram.com/praisepage__?igsh=czB1MWpndDM5dmxl" className="list-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-                <i className="ri-instagram-line"></i>
-              </a>
+          <div className="sanc-social-row" style={{ marginTop: "1.8rem" }}>
+            <a
+              href="https://www.instagram.com/praisepage__?igsh=czB1MWpndDM5dmxl"
+              className="sanc-social-btn"
+              aria-label="Instagram"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i className="ri-instagram-line" aria-hidden="true"></i>
+            </a>
+            <a
+              href="https://www.facebook.com/share/17UGpy6s6P/"
+              className="sanc-social-btn"
+              aria-label="Facebook"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i className="ri-facebook-circle-line" aria-hidden="true"></i>
+            </a>
+            <a
+              href="https://x.com/praisepage_"
+              className="sanc-social-btn"
+              aria-label="X (Twitter)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i className="ri-twitter-line" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h6 className="sanc-label" style={{ marginBottom: "1.2rem" }}>
+            Explore
+          </h6>
+          <ul style={{ display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "1.36rem" }}>
+            <li>
+              <Link href="/bible">Bible Reader</Link>
             </li>
-            <li className="list-item">
-              <a href="https://www.facebook.com/share/17UGpy6s6P/" className="list-link" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
-                <i className="ri-facebook-circle-line"></i>
-              </a>
+            <li>
+              <Link href="/plans">Reading Plans</Link>
             </li>
-            <li className="list-item">
-              <a href="https://x.com/praisepage_" className="list-link" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer">
-                <i className="ri-twitter-line"></i>
-              </a>
+            <li>
+              <Link href="/quotes">Daily Quotes</Link>
             </li>
           </ul>
         </div>
 
         <div>
-          <h6 className="title footer-title">Explore</h6>
-          <ul className="footer-list list">
-            <li className="list-item">
-              <Link href="/bible" className="list-link">
-                Bible Reader
-              </Link>
+          <h6 className="sanc-label" style={{ marginBottom: "1.2rem" }}>
+            Community
+          </h6>
+          <ul style={{ display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "1.36rem" }}>
+            <li>
+              <Link href="/feed">Community Feed</Link>
             </li>
-            <li className="list-item">
-              <Link href="/plans" className="list-link">
-                Reading Plans
-              </Link>
+            <li>
+              <Link href="/prayers">Prayer Wall</Link>
             </li>
-            <li className="list-item">
-              <Link href="/feed" className="list-link">
-                Community Feed
-              </Link>
+            <li>
+              <Link href="/share">Share PraisePage</Link>
             </li>
           </ul>
         </div>
 
         <div>
-          <h6 className="title footer-title">Support</h6>
-          <ul className="footer-list list">
-            <li className="list-item">
-              <Link href="/" className="list-link">
-                Home
-              </Link>
+          <h6 className="sanc-label" style={{ marginBottom: "1.2rem" }}>
+            Support
+          </h6>
+          <ul style={{ display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "1.36rem" }}>
+            <li>
+              <Link href="/">Home</Link>
             </li>
-            <li className="list-item">
-              <Link href="/contacts" className="list-link">
-                Contact us
-              </Link>
+            <li>
+              <Link href="/profile">My Profile</Link>
             </li>
-            <li className="list-item">
-              <Link href="/profile" className="list-link">
-                My Profile
-              </Link>
+            <li>
+              <Link href="/contacts">Contact Us</Link>
             </li>
-            <li className="list-item">
-              <Link href="/privacy" className="list-link">
-                Privacy Policy
-              </Link>
+            <li>
+              <Link href="/privacy">Privacy Policy</Link>
             </li>
           </ul>
         </div>
+      </div>
 
-        <span className="copyright-notice">
-          &copy; {new Date().getFullYear()} Ju & Vicky. All rights reserved.
-        </span>
+      <div className="sanc-footer-bottom">
+        <span>&copy; {new Date().getFullYear()} Ju &amp; Vicky. All rights reserved.</span>
+        <span>A sanctuary for daily scripture, prayer &amp; gratitude.</span>
       </div>
     </footer>
   );
