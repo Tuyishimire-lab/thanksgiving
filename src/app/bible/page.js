@@ -11,16 +11,20 @@ export async function generateMetadata({ searchParams }) {
   const target = resolveBibleParams(resolvedSearchParams);
 
   if (target.hasExplicitTarget) {
-    const title = `${target.book} ${target.chapter} | PraisePage Bible`;
+    const title = `${target.book} ${target.chapter} (${target.translation.toUpperCase()}) Bible`;
     const description = `Read and reflect on ${target.book} Chapter ${target.chapter} (${target.translation.toUpperCase()}) in the PraisePage Bible Reader. Highlight verses, write daily reflections, and grow in faith.`;
+    const canonicalPath = `/bible?book=${encodeURIComponent(target.book)}&chapter=${target.chapter}`;
 
     return {
       title,
       description,
+      alternates: {
+        canonical: canonicalPath,
+      },
       openGraph: {
-        title,
+        title: `${title} | PraisePage`,
         description,
-        url: `https://praisepage.com/bible?book=${encodeURIComponent(target.book)}&chapter=${target.chapter}&translation=${encodeURIComponent(target.translation)}`,
+        url: `https://praisepage.com${canonicalPath}`,
         images: [
           {
             url: "/assets/images/praisepage.jpeg",
@@ -32,15 +36,18 @@ export async function generateMetadata({ searchParams }) {
       },
       twitter: {
         card: "summary_large_image",
-        title,
+        title: `${title} | PraisePage`,
         description
       }
     };
   }
 
   return {
-    title: "Bible Reader | PraisePage",
-    description: "Read, search, highlight, and write reflections on Holy Scriptures of gratitude and faith."
+    title: "Bible Reader",
+    description: "Read, search, highlight, and write reflections on Holy Scriptures of gratitude and faith.",
+    alternates: {
+      canonical: "/bible",
+    },
   };
 }
 

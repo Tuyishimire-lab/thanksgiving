@@ -1,16 +1,36 @@
 import { devotionals } from "@/data/devotionals";
 import { getCustomDevotionalById } from "@/app/actions/dbActions";
+import {
+  SITE_URL,
+  DEFAULT_OG_IMAGE,
+  toAbsoluteUrl,
+  serializeJsonLd,
+  truncateDescription,
+} from "@/lib/seo";
 
-export async function generateMetadata({ params }) {
-  const { id } = await params;
+async function resolvePlanById(id) {
   let plan = devotionals[id];
-
   if (!plan) {
     const res = await getCustomDevotionalById(id);
-    if (res.success && res.plan) {
+    if (res?.success && res?.plan) {
       plan = res.plan;
     }
   }
+  return plan || null;
+}
+
+function buildPlanDescription(plan) {
+  const days = Array.isArray(plan?.days) ? plan.days : [];
+  const dayCount = days.length;
+  const categoryLabel = plan?.category || "Faith";
+  const firstReflection = days[0]?.reflection || "";
+  const summary = `${dayCount}-day ${categoryLabel} devotional plan on PraisePage.`;
+  return truncateDescription(firstReflection ? `${summary} ${firstReflection}` : summary, 155);
+}
+
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const plan = await resolvePlanById(id);
 
   if (!plan) {
     return {
@@ -19,65 +39,107 @@ export async function generateMetadata({ params }) {
   }
 
   const title = `${plan.title} Devotional Plan`;
-  const description = `Start reading the "${plan.title}" plan in our devotional area. Track your daily reflections, highlights, and growth.`;
+  const description = buildPlanDescription(plan);
+  const canonicalPath = `/plans/${encodeURIComponent(id)}`;
+  const imageUrl = toAbsoluteUrl(plan.image || DEFAULT_OG_IMAGE);
 
   return {
     title,
     description,
+    alternates: {
+      canonical: canonicalPath,
+    },
     openGraph: {
-      title,
+      title: `${title} | PraisePage`,
       description,
+      url: toAbsoluteUrl(canonicalPath),
       type: "article",
       images: [
         {
-          url: plan.image || "/assets/images/praisepage.jpeg",
+          url: imageUrl,
           alt: plan.title,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: `${title} | PraisePage`,
       description,
-      images: [plan.image || "/assets/images/praisepage.jpeg"],
+      images: [imageUrl],
     },
   };
 }
 
 export default async function PlanPlayerLayout({ children, params }) {
   const { id } = await params;
-  let plan = devotionals[id];
+  const plan = await resolvePlanById(id);
+  const days = Array.isArray(plan?.days) ? plan.days : [];
+  const canonicalUrl = toAbsoluteUrl(`/plans/${encodeURIComponent(id)}`);
+  const imageUrl = toAbsoluteUrl(plan?.image || DEFAULT_OG_IMAGE);
 
-  if (!plan) {
-    const res = await getCustomDevotionalById(id);
-    if (res.success && res.plan) {
-      plan = res.plan;
-    }
-  }
-
-  const schemaJson = plan ? {
-    "@context": "https://schema.org",
-    "@type": "CreativeWorkSeries",
-    "name": `${plan.title} Devotional Plan`,
-    "description": `Start reading the "${plan.title}" plan in our devotional area. Track your daily reflections, highlights, and growth.`,
-    "genre": "Faith & Devotional",
-    "provider": {
-      "@type": "Organization",
-      "name": "PraisePage",
-      "url": "https://praisepage.com"
-    }
-  } : null;
+  const schemaJson = plan
+    ? {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: SITE_URL,
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "Devotional Plans",
+                item: toAbsoluteUrl("/plans"),
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: plan.title,
+                item: canonicalUrl,
+              },
+            ],
+          },
+          {
+            "@type": "CreativeWorkSeries",
+            name: `${plan.title} Devotional Plan`,
+            description: buildPlanDescription(plan),
+            numberOfItems: days.length,
+            genre: "Faith & Devotional",
+            about: plan.category || "Faith",
+            isAccessibleForFree: true,
+            image: imageUrl,
+            url: canonicalUrl,
+            provider: {
+              "@type": "Organization",
+              name: "PraisePage",
+              url: SITE_URL,
+            },
+            hasPart: days.map((d, idx) => ({
+              "@type": "CreativeWork",
+              position: d.day || idx + 1,
+              name: d.title,
+              text: truncateDescription(d.reflection || "", 160),
+              ...(d.verseTag ? { citation: d.verseTag } : {}),
+            })),
+          },
+        ],
+      }
+    : null;
 
   return (
     <>
       {schemaJson && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson).replace(/</g, "\\u003c") }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
         />
       )}
       {children}
     </>
   );
 }
-

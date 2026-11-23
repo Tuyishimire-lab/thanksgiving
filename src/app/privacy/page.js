@@ -2,6 +2,9 @@ export const metadata = {
   title: "Privacy Policy",
   description:
     "Learn how PraisePage collects, uses, protects, and handles your sensitive user and device data in accordance with Google Play Store guidelines.",
+  alternates: {
+    canonical: "/privacy",
+  },
 };
 
 export default function PrivacyPolicy() {

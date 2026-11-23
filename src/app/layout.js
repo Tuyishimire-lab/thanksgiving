@@ -6,6 +6,7 @@ import ThemeProvider from "@/components/ThemeProvider";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import NotificationManager from "@/components/NotificationManager";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { SITE_URL, SOCIAL_PROFILES, serializeJsonLd } from "@/lib/seo";
 
 
 
@@ -44,18 +45,37 @@ const lora = Lora({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://praisepage.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     template: "%s | PraisePage",
     default: "PraisePage | A Sanctuary of Gratitude & Faith",
   },
   description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
+  alternates: {
+    canonical: "/",
+  },
+  authors: [{ name: "PraisePage", url: SITE_URL }],
+  creator: "PraisePage",
+  publisher: "PraisePage",
+  category: "Religion & Spirituality",
+  keywords: [
+    "PraisePage",
+    "Christian devotionals",
+    "Bible reader",
+    "gratitude journal",
+    "community testimonies",
+    "prayer board",
+    "scripture quotes",
+    "daily faith",
+  ],
   icons: {
     icon: "/assets/images/praisepage.jpeg",
   },
   openGraph: {
     title: "PraisePage | A Sanctuary of Gratitude & Faith",
     description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
+    url: SITE_URL,
+    siteName: "PraisePage",
     images: [
       {
         url: "/assets/images/praisepage.jpeg",
@@ -80,10 +100,10 @@ export default function RootLayout({ children }) {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "PraisePage",
-    "url": "https://praisepage.com",
+    "url": SITE_URL,
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://praisepage.com/bible?q={search_term_string}",
+      "target": `${SITE_URL}/bible?q={search_term_string}`,
       "query-input": "required name=search_term_string"
     }
   };
@@ -92,8 +112,25 @@ export default function RootLayout({ children }) {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "PraisePage",
-    "url": "https://praisepage.com",
-    "logo": "https://praisepage.com/assets/images/praisepage.jpeg"
+    "url": SITE_URL,
+    "logo": `${SITE_URL}/assets/images/praisepage.jpeg`,
+    "description": "A Christian sanctuary offering free Bible reading, guided devotional plans, gratitude journaling, prayer requests, and faith testimonies.",
+    "sameAs": SOCIAL_PROFILES
+  };
+
+  const webApplicationSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "PraisePage",
+    "url": SITE_URL,
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Web, PWA",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
   };
 
   return (
@@ -109,11 +146,15 @@ export default function RootLayout({ children }) {
       <body>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(webApplicationSchema) }}
         />
         <ThemeProvider>
           <Header />

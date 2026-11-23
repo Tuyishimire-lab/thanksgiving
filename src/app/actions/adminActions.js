@@ -31,6 +31,15 @@ function safeRevalidateTag(tag) {
   }
 }
 
+function revalidatePublicContentPaths(extraPaths = []) {
+  for (const target of extraPaths) {
+    if (target) safeRevalidatePath(target);
+  }
+  safeRevalidatePath("/llms.txt");
+  safeRevalidatePath("/llms-full.txt");
+  safeRevalidatePath("/sitemap.xml");
+}
+
 function logAdminAction(message) {
   try {
     const logPath = path.join(process.cwd(), "admin_actions.log");
@@ -614,6 +623,7 @@ export async function updateTestimonyMeta(testimonyId, title, tag, image = undef
     safeRevalidatePath("/");
     safeRevalidatePath("/feed");
     safeRevalidatePath("/admin");
+    revalidatePublicContentPaths([`/posts/${testimonyId}`]);
     return { success: true, title: cleanTitle, tag: cleanTag, image: nextImage };
   } catch (error) {
     return { error: error.message };
@@ -888,6 +898,7 @@ export async function deleteTestimony(testimonyId) {
     safeRevalidatePath("/");
     safeRevalidatePath("/feed");
     safeRevalidatePath("/admin");
+    revalidatePublicContentPaths([`/posts/${testimonyId}`]);
     return { success: true };
   } catch (error) {
     logAdminAction(`deleteTestimony error: ${error.message}`);
@@ -994,7 +1005,9 @@ export async function createCustomDevotional(title, category, days, image) {
 
     safeRevalidateTag("custom-devotionals");
     safeRevalidatePath("/plans");
+    safeRevalidatePath(`/plans/${id}`);
     safeRevalidatePath("/admin");
+    revalidatePublicContentPaths();
     return { success: true, id };
   } catch (error) {
     logAdminAction(`createCustomDevotional error: ${error.message}`);
@@ -1036,6 +1049,7 @@ export async function updateCustomDevotional(id, title, category, days, image) {
     safeRevalidatePath("/plans");
     safeRevalidatePath(`/plans/${id}`);
     safeRevalidatePath("/admin");
+    revalidatePublicContentPaths();
     return { success: true };
   } catch (error) {
     logAdminAction(`updateCustomDevotional error: ${error.message}`);
@@ -1080,7 +1094,9 @@ export async function deleteCustomDevotional(id) {
 
     safeRevalidateTag("custom-devotionals");
     safeRevalidatePath("/plans");
+    safeRevalidatePath(`/plans/${id}`);
     safeRevalidatePath("/admin");
+    revalidatePublicContentPaths();
     return { success: true };
   } catch (error) {
     logAdminAction(`deleteCustomDevotional error: ${error.message}`);

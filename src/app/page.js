@@ -20,6 +20,12 @@ import { getDefaultTestimonyCover, shouldBypassNextImageOpt } from "@/data/testi
 
 export const revalidate = 3600; // Revalidate homepage at most once per hour
 
+export const metadata = {
+  alternates: {
+    canonical: "/",
+  },
+};
+
 const PLANS_MAPPING = [
   {
     id: "love",
@@ -333,7 +339,7 @@ export default async function Home() {
                 const postImg = post.image || getDefaultTestimonyCover(post.tag);
                 return (
                   <Link
-                    href={`/feed?post=${encodeURIComponent(post.id)}`}
+                    href={`/posts/${encodeURIComponent(post.id)}`}
                     key={post.id}
                     className="home-story-card"
                   >

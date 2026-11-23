@@ -2,6 +2,33 @@ import { posts } from "@/data/posts";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { getPublicTestimonyById } from "@/app/actions/dbActions";
+import { getDefaultTestimonyCover, shouldBypassNextImageOpt } from "@/data/testimonyCovers";
+import {
+  SITE_URL,
+  DEFAULT_OG_IMAGE,
+  toAbsoluteUrl,
+  serializeJsonLd,
+  truncateDescription,
+  sanitizeArticleHtml,
+} from "@/lib/seo";
+
+export const revalidate = 300;
+
+function toSafeIsoDate(value) {
+  if (value) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
+  }
+  return "2026-01-01T00:00:00.000Z";
+}
+
+function extractFirstParagraph(post) {
+  if (!Array.isArray(post?.content)) return "";
+  return post.content.find((c) => c.type === "paragraph")?.text || "";
+}
 
 export async function generateStaticParams() {
   return posts.map((post) => ({
@@ -11,7 +38,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  const post = posts.find((p) => p.id === id);
+  const post = await getPublicTestimonyById(id);
 
   if (!post) {
     return {
@@ -19,20 +46,33 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const firstParagraph = post.content.find((c) => c.type === "paragraph")?.text || "";
-  const cleanDescription = firstParagraph.replace(/<[^>]*>/g, "").substring(0, 160) + "...";
+  const cleanDescription =
+    truncateDescription(post.excerpt || extractFirstParagraph(post) || post.title, 155) ||
+    "Read this community testimony of gratitude and faith on PraisePage.";
+  const coverSrc = post.image || getDefaultTestimonyCover(post.tag) || DEFAULT_OG_IMAGE;
+  const coverUrl = toAbsoluteUrl(coverSrc);
+  const canonicalPath = `/posts/${encodeURIComponent(id)}`;
+  const publishedTime = toSafeIsoDate(post.createdAtRaw || post.date);
+  const authorName = post.author || "PraisePage";
+  const postTags = post.tag ? [post.tag] : ["Faith"];
 
   return {
     title: post.title,
     description: cleanDescription,
+    alternates: {
+      canonical: canonicalPath,
+    },
     openGraph: {
       title: `${post.title} | PraisePage`,
       description: cleanDescription,
       type: "article",
-      publishedTime: post.date,
+      url: toAbsoluteUrl(canonicalPath),
+      publishedTime,
+      authors: [authorName],
+      tags: postTags,
       images: [
         {
-          url: post.image,
+          url: coverUrl,
           alt: post.title,
         },
       ],
@@ -41,71 +81,117 @@ export async function generateMetadata({ params }) {
       card: "summary_large_image",
       title: `${post.title} | PraisePage`,
       description: cleanDescription,
-      images: [post.image],
+      images: [coverUrl],
     },
   };
 }
 
 export default async function PostPage({ params }) {
   const { id } = await params;
-  const post = posts.find((p) => p.id === id);
+  const post = await getPublicTestimonyById(id);
 
   if (!post) {
     notFound();
   }
 
-  const firstParagraph = post.content.find((c) => c.type === "paragraph")?.text || "";
-  const cleanDescription = firstParagraph.replace(/<[^>]*>/g, "").substring(0, 160) + "...";
-
-  let publishedDate;
-  try {
-    publishedDate = new Date(post.date).toISOString();
-  } catch {
-    publishedDate = new Date().toISOString();
-  }
+  const coverSrc = post.image || getDefaultTestimonyCover(post.tag) || DEFAULT_OG_IMAGE;
+  const coverUrl = toAbsoluteUrl(coverSrc);
+  const cleanDescription =
+    truncateDescription(post.excerpt || extractFirstParagraph(post) || post.title, 155) ||
+    "Read this community testimony of gratitude and faith on PraisePage.";
+  const publishedDate = toSafeIsoDate(post.createdAtRaw || post.date);
+  const canonicalUrl = toAbsoluteUrl(`/posts/${encodeURIComponent(id)}`);
+  const authorName = post.author || "PraisePage";
+  const postTag = post.tag || "Gratitude";
+  const blocks = Array.isArray(post.content) ? post.content : [];
 
   const schemaJson = {
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
-    description: cleanDescription,
-    image: [
-      post.image.startsWith("http") ? post.image : `https://praisepage.com${post.image}`,
-    ],
-    datePublished: publishedDate,
-    dateModified: publishedDate,
-    author: {
-      "@type": "Person",
-      name: "PraisePage",
-      url: "https://praisepage.com",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "PraisePage",
-      logo: {
-        "@type": "ImageObject",
-        url: "https://praisepage.com/assets/images/praisepage.jpeg",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: SITE_URL,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Community Feed",
+            item: toAbsoluteUrl("/feed"),
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: post.title,
+            item: canonicalUrl,
+          },
+        ],
       },
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": `https://praisepage.com/posts/${id}`,
-    },
+      {
+        "@type": "Article",
+        headline: post.title,
+        description: cleanDescription,
+        image: [coverUrl],
+        datePublished: publishedDate,
+        dateModified: publishedDate,
+        articleSection: postTag,
+        author: {
+          "@type": "Person",
+          name: authorName,
+        },
+        publisher: {
+          "@type": "Organization",
+          name: "PraisePage",
+          url: SITE_URL,
+          logo: {
+            "@type": "ImageObject",
+            url: toAbsoluteUrl(DEFAULT_OG_IMAGE),
+          },
+        },
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": canonicalUrl,
+        },
+      },
+    ],
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
       />
 
       <section className="sanc-page">
         <div className="sanc-container-sm">
-          <Link href="/feed" className="sanc-back-link">
-            <i className="ri-arrow-left-line" aria-hidden="true"></i>
-            <span>Back to Community Feed</span>
-          </Link>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "1rem",
+              marginBottom: "1.8rem",
+            }}
+          >
+            <Link href="/feed" className="sanc-back-link" style={{ marginBottom: 0 }}>
+              <i className="ri-arrow-left-line" aria-hidden="true"></i>
+              <span>Back to Community Feed</span>
+            </Link>
+
+            <Link
+              href={`/feed?post=${encodeURIComponent(post.id)}`}
+              className="sanc-btn-secondary"
+            >
+              <i className="ri-chat-3-line" aria-hidden="true"></i>
+              <span>Join Discussion in Feed</span>
+            </Link>
+          </div>
 
           <article className="sanc-stack" style={{ gap: "2.4rem" }}>
             <header className="sanc-hero sanc-hero-center" style={{ marginBottom: 0 }}>
@@ -121,17 +207,23 @@ export default async function PostPage({ params }) {
                   marginTop: "1.4rem",
                 }}
               >
-                <span className="sanc-badge gold">{post.date}</span>
-                <span className="sanc-badge">{post.readTime}</span>
+                <span className="sanc-badge gold">#{postTag}</span>
+                <span className="sanc-badge">
+                  <i className="ri-user-heart-line" aria-hidden="true"></i>
+                  <span>{authorName}</span>
+                </span>
+                {post.date && <span className="sanc-badge">{post.date}</span>}
+                {post.readTime && <span className="sanc-badge">{post.readTime}</span>}
               </div>
             </header>
 
-            <div className="sanc-card">
+            <div className="sanc-card" style={{ overflow: "hidden" }}>
               <Image
-                src={post.image}
-                alt={post.title}
+                src={coverSrc}
+                alt={post.title || "Testimony cover"}
                 width={900}
                 height={500}
+                unoptimized={shouldBypassNextImageOpt(coverSrc)}
                 style={{ width: "100%", height: "auto", display: "block" }}
                 preload
               />
@@ -139,12 +231,14 @@ export default async function PostPage({ params }) {
 
             <div className="sanc-card sanc-card-pad">
               <div className="sanc-article-prose">
-                {post.content.map((block, index) => {
+                {blocks.map((block, index) => {
                   if (block.type === "paragraph") {
                     return (
                       <p
                         key={index}
-                        dangerouslySetInnerHTML={{ __html: block.text }}
+                        dangerouslySetInnerHTML={{
+                          __html: sanitizeArticleHtml(block.text),
+                        }}
                       />
                     );
                   }
@@ -156,10 +250,16 @@ export default async function PostPage({ params }) {
                     );
                   }
                   if (block.type === "list") {
+                    const items = Array.isArray(block.items) ? block.items : [];
                     return (
                       <ul key={index}>
-                        {block.items.map((item, itemIdx) => (
-                          <li key={itemIdx} dangerouslySetInnerHTML={{ __html: item }} />
+                        {items.map((item, itemIdx) => (
+                          <li
+                            key={itemIdx}
+                            dangerouslySetInnerHTML={{
+                              __html: sanitizeArticleHtml(item),
+                            }}
+                          />
                         ))}
                       </ul>
                     );

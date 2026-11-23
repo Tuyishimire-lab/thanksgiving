@@ -4,6 +4,7 @@ import { getDb } from "@/data/db";
 import { unstable_cache, revalidatePath, revalidateTag } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { parseContentBlocks } from "@/data/utils";
+import { posts } from "@/data/posts";
 import {
   estimateReadTime,
   getDefaultTestimonyCover,
@@ -119,6 +120,26 @@ function parseReflectionsRows(rows) {
   return reflections;
 }
 
+function formatStaticFallbackPost(p) {
+  const cleanTag = p.tag || (p.id === "post1" ? "Hope" : "Gratitude");
+  return {
+    id: p.id,
+    user_id: null,
+    author: p.author || "Ju & Vicky",
+    title: p.title,
+    content: p.content,
+    tag: cleanTag,
+    date: formatDateLabel(p.date),
+    createdAtRaw: p.date || "",
+    readTime: p.readTime,
+    image: p.image || getDefaultTestimonyCover(cleanTag),
+    excerpt: p.excerpt,
+    likesCount: 0,
+    commentsCount: 0,
+    isLikedByUser: false,
+  };
+}
+
 function formatPublicTestimonyRow(r) {
   let contentParsed;
   try {
@@ -142,6 +163,7 @@ function formatPublicTestimonyRow(r) {
     content: contentParsed,
     tag: r.tag || "Gratitude",
     date: formatDateLabel(r.created_at),
+    createdAtRaw: r.created_at || "",
     readTime: r.read_time,
     image: r.image || getDefaultTestimonyCover(r.tag || "Gratitude"),
     excerpt: r.excerpt || fallbackText.substring(0, 100) + "...",
@@ -297,17 +319,56 @@ const getCachedCommunityStats = unstable_cache(
 
 // ================= TESTIMONIES FEED =================
 
+export async function getPublicTestimoniesList(limit = 0) {
+  const parsedLimit = Number(limit);
+  const safeLimit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? parsedLimit : 0;
+
+  try {
+    return await runWithOptionalCache(
+      () => getCachedPublicTestimonies(safeLimit),
+      () => fetchPublicTestimoniesRaw(safeLimit)
+    );
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("Error fetching public testimonies, using static fallback:", error);
+    const fallback = posts.map(formatStaticFallbackPost);
+    return safeLimit > 0 ? fallback.slice(0, safeLimit) : fallback;
+  }
+}
+
+export async function getPublicTestimonyById(id) {
+  if (!id || typeof id !== "string") return null;
+
+  try {
+    const db = await getDb();
+    const res = await db.execute({
+      sql: `
+        SELECT t.*,
+               (SELECT COUNT(*) FROM likes WHERE testimony_id = t.id) as likes_count,
+               (SELECT COUNT(*) FROM comments WHERE testimony_id = t.id) as comments_count
+        FROM testimonies t
+        WHERE t.id = ?
+        LIMIT 1
+      `,
+      args: [id],
+    });
+    if (res.rows[0]) {
+      return formatPublicTestimonyRow(res.rows[0]);
+    }
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("Error fetching public testimony by id, checking static fallback:", error);
+  }
+
+  const staticPost = posts.find((p) => p.id === id);
+  return staticPost ? formatStaticFallbackPost(staticPost) : null;
+}
+
 export async function getTestimonies(limit = 0) {
   try {
-    const parsedLimit = Number(limit);
-    const safeLimit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? parsedLimit : 0;
-
     const [currentUserId, publicTestimonies] = await Promise.all([
       getCurrentUserId(),
-      runWithOptionalCache(
-        () => getCachedPublicTestimonies(safeLimit),
-        () => fetchPublicTestimoniesRaw(safeLimit)
-      ),
+      getPublicTestimoniesList(limit),
     ]);
 
     if (!currentUserId) {
@@ -398,6 +459,10 @@ export async function createTestimony(title, content, tag = "Gratitude", coverIm
     safeRevalidateTag("public-testimonies");
     safeRevalidatePath("/");
     safeRevalidatePath("/feed");
+    safeRevalidatePath(`/posts/${id}`);
+    safeRevalidatePath("/llms.txt");
+    safeRevalidatePath("/llms-full.txt");
+    safeRevalidatePath("/sitemap.xml");
     return { success: true };
   } catch (error) {
     console.error("Error creating testimony:", error);

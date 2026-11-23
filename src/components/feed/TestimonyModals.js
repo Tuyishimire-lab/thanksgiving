@@ -100,7 +100,7 @@ function ReaderDialogContent({
 
   const handleCopyStoryLink = async () => {
     try {
-      const shareUrl = `${window.location.origin}/feed?post=${encodeURIComponent(post.id)}`;
+      const shareUrl = `${window.location.origin}/posts/${encodeURIComponent(post.id)}`;
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl);
       }
@@ -254,6 +254,13 @@ function ReaderDialogContent({
               </div>
 
               <div className="sanc-story-engage-right">
+                <Link
+                  href={`/posts/${encodeURIComponent(post.id)}`}
+                  className="sanc-story-action-pill"
+                >
+                  <i className="ri-article-line" aria-hidden="true"></i>
+                  <span>Full Page</span>
+                </Link>
                 <button
                   type="button"
                   className={`sanc-story-action-pill ${copiedLink ? "copied" : ""}`}
