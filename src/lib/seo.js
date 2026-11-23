@@ -1,4 +1,4 @@
-export const SITE_URL = "https://praisepage.com";
+export const SITE_URL = "https://www.praisepage.com";
 export const SITE_NAME = "PraisePage";
 export const DEFAULT_OG_IMAGE = "/assets/images/praisepage.jpeg";
 

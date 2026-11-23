@@ -4,6 +4,7 @@ import { MOOD_META, resolveBibleParams } from "@/data/bibleParser";
 import { fetchBibleChapter } from "@/data/bibleApi";
 import { getMe } from "@/app/actions/authActions";
 import { getNotebookData } from "@/app/actions/dbActions";
+import { SITE_URL } from "@/lib/seo";
 import BibleReaderClient from "./BibleReaderClient";
 
 export async function generateMetadata({ searchParams }) {
@@ -29,7 +30,7 @@ export async function generateMetadata({ searchParams }) {
       openGraph: {
         title: `${title} | PraisePage`,
         description,
-        url: `https://praisepage.com${canonicalPath}`,
+        url: `${SITE_URL}${canonicalPath}`,
         images: [
           {
             url: ogImageUrl,
@@ -61,7 +62,7 @@ export async function generateMetadata({ searchParams }) {
     openGraph: {
       title: `${defaultTitle} | PraisePage`,
       description: defaultDescription,
-      url: "https://praisepage.com/bible",
+      url: `${SITE_URL}/bible`,
       type: "website",
       images: [
         {

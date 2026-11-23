@@ -15,6 +15,15 @@ function toSafeIsoDate(value) {
   return Number.isNaN(parsed.getTime()) ? STATIC_LAST_MODIFIED : parsed.toISOString();
 }
 
+function escapeXml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 export default async function sitemap() {
   const staticRoutes = [
     { path: "", changeFrequency: "daily", priority: 1.0 },
@@ -106,7 +115,7 @@ export default async function sitemap() {
     priority: 0.7,
   }));
 
-  // Bible books and chapters (single ampersand; Next.js handles XML escaping)
+  // Bible books and chapters (escape XML entities because Next.js resolveSitemap writes url raw into <loc>)
   const bibleUrls = [];
   for (const book of bibleBooks) {
     for (let c = 1; c <= book.chapters; c++) {
@@ -119,7 +128,7 @@ export default async function sitemap() {
     }
   }
 
-  return [
+  const entries = [
     ...staticUrls,
     ...topicUrls,
     ...staticPlanUrls,
@@ -127,4 +136,9 @@ export default async function sitemap() {
     ...postUrls,
     ...bibleUrls,
   ];
+
+  return entries.map((entry) => ({
+    ...entry,
+    url: escapeXml(entry.url),
+  }));
 }

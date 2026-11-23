@@ -23,7 +23,7 @@ export default function CopyVerseButton({
     const origin =
       typeof window !== "undefined" && window.location?.origin
         ? window.location.origin
-        : "https://praisepage.com";
+        : "https://www.praisepage.com";
     const normalizedPath =
       typeof sharePath === "string" && sharePath.startsWith("/")
         ? sharePath

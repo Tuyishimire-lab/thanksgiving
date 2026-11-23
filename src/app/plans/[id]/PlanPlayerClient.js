@@ -377,7 +377,7 @@ export default function PlanPlayerClient({
     provider: {
       "@type": "Organization",
       name: "PraisePage",
-      url: "https://praisepage.com",
+      url: "https://www.praisepage.com",
     },
     educationalUse: "Devotional Reading",
     hasPart: planData.days?.map((d) => ({
