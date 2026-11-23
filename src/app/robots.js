@@ -1,6 +1,13 @@
 import { SITE_URL } from "@/lib/seo";
 
-const SHARED_ALLOW = ["/", "/api/media/", "/llms.txt", "/llms-full.txt"];
+const SHARED_ALLOW = [
+  "/",
+  "/api/media/",
+  "/llms.txt",
+  "/llms-full.txt",
+  "/rss.xml",
+  "/indexnow-key.txt",
+];
 const SHARED_DISALLOW = ["/profile", "/login", "/signup", "/admin", "/offline", "/api/"];
 
 const CRAWLER_USER_AGENTS = [

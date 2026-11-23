@@ -53,6 +53,9 @@ export const metadata = {
   description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
   alternates: {
     canonical: "/",
+    types: {
+      "application/rss+xml": [{ url: "/rss.xml", title: "PraisePage RSS Feed" }],
+    },
   },
   authors: [{ name: "PraisePage", url: SITE_URL }],
   creator: "PraisePage",

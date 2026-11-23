@@ -13,6 +13,7 @@ import {
   isUploadedMediaUrl,
 } from "@/data/testimonyCovers";
 import { verifyUploadedCoverOwnership } from "@/lib/mediaStorage";
+import { pingIndexNow } from "@/lib/indexNow";
 import { getMe, updateStreakAction } from "./authActions";
 import crypto from "node:crypto";
 
@@ -463,6 +464,8 @@ export async function createTestimony(title, content, tag = "Gratitude", coverIm
     safeRevalidatePath("/llms.txt");
     safeRevalidatePath("/llms-full.txt");
     safeRevalidatePath("/sitemap.xml");
+    safeRevalidatePath("/rss.xml");
+    void pingIndexNow([`/posts/${id}`, "/feed", "/sitemap.xml", "/rss.xml"]);
     return { success: true };
   } catch (error) {
     console.error("Error creating testimony:", error);

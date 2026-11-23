@@ -1,6 +1,7 @@
 import { posts } from "@/data/posts";
 import { devotionals } from "@/data/devotionals";
 import { bibleBooks } from "@/data/bibleBooks";
+import { TOPICS } from "@/data/topics";
 import { SITE_URL } from "@/lib/seo";
 import { getCustomDevotionals, getPublicTestimoniesList } from "@/app/actions/dbActions";
 
@@ -17,6 +18,8 @@ function toSafeIsoDate(value) {
 export default async function sitemap() {
   const staticRoutes = [
     { path: "", changeFrequency: "daily", priority: 1.0 },
+    { path: "/verse-of-the-day", changeFrequency: "daily", priority: 0.9 },
+    { path: "/topics", changeFrequency: "weekly", priority: 0.9 },
     { path: "/bible", changeFrequency: "weekly", priority: 0.8 },
     { path: "/plans", changeFrequency: "weekly", priority: 0.8 },
     { path: "/feed", changeFrequency: "weekly", priority: 0.8 },
@@ -32,6 +35,13 @@ export default async function sitemap() {
     lastModified: STATIC_LAST_MODIFIED,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
+  }));
+
+  const topicUrls = TOPICS.map((topic) => ({
+    url: `${SITE_URL}/topics/${encodeURIComponent(topic.slug)}`,
+    lastModified: STATIC_LAST_MODIFIED,
+    changeFrequency: "weekly",
+    priority: 0.85,
   }));
 
   // Static devotional plans
@@ -109,5 +119,12 @@ export default async function sitemap() {
     }
   }
 
-  return [...staticUrls, ...staticPlanUrls, ...customPlanUrls, ...postUrls, ...bibleUrls];
+  return [
+    ...staticUrls,
+    ...topicUrls,
+    ...staticPlanUrls,
+    ...customPlanUrls,
+    ...postUrls,
+    ...bibleUrls,
+  ];
 }

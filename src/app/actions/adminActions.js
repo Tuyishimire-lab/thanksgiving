@@ -10,6 +10,7 @@ import {
   isSafeTestimonyCoverUrl,
 } from "@/data/testimonyCovers";
 import { deleteUploadedMediaByUrl } from "@/lib/mediaStorage";
+import { pingIndexNow } from "@/lib/indexNow";
 import { getMe } from "./authActions";
 import { revalidatePath, revalidateTag } from "next/cache";
 
@@ -31,13 +32,17 @@ function safeRevalidateTag(tag) {
   }
 }
 
-function revalidatePublicContentPaths(extraPaths = []) {
+function revalidatePublicContentPaths(extraPaths = [], indexNowPaths = []) {
   for (const target of extraPaths) {
     if (target) safeRevalidatePath(target);
   }
   safeRevalidatePath("/llms.txt");
   safeRevalidatePath("/llms-full.txt");
   safeRevalidatePath("/sitemap.xml");
+  safeRevalidatePath("/rss.xml");
+  if (indexNowPaths.length > 0) {
+    void pingIndexNow(indexNowPaths);
+  }
 }
 
 function logAdminAction(message) {
@@ -623,7 +628,12 @@ export async function updateTestimonyMeta(testimonyId, title, tag, image = undef
     safeRevalidatePath("/");
     safeRevalidatePath("/feed");
     safeRevalidatePath("/admin");
-    revalidatePublicContentPaths([`/posts/${testimonyId}`]);
+    revalidatePublicContentPaths([`/posts/${testimonyId}`], [
+      `/posts/${testimonyId}`,
+      "/feed",
+      "/sitemap.xml",
+      "/rss.xml",
+    ]);
     return { success: true, title: cleanTitle, tag: cleanTag, image: nextImage };
   } catch (error) {
     return { error: error.message };
@@ -898,7 +908,7 @@ export async function deleteTestimony(testimonyId) {
     safeRevalidatePath("/");
     safeRevalidatePath("/feed");
     safeRevalidatePath("/admin");
-    revalidatePublicContentPaths([`/posts/${testimonyId}`]);
+    revalidatePublicContentPaths([`/posts/${testimonyId}`], ["/feed", "/sitemap.xml", "/rss.xml"]);
     return { success: true };
   } catch (error) {
     logAdminAction(`deleteTestimony error: ${error.message}`);
@@ -1007,7 +1017,10 @@ export async function createCustomDevotional(title, category, days, image) {
     safeRevalidatePath("/plans");
     safeRevalidatePath(`/plans/${id}`);
     safeRevalidatePath("/admin");
-    revalidatePublicContentPaths();
+    revalidatePublicContentPaths(
+      [`/plans/${id}`, "/topics"],
+      [`/plans/${id}`, "/plans", "/topics", "/sitemap.xml", "/rss.xml"]
+    );
     return { success: true, id };
   } catch (error) {
     logAdminAction(`createCustomDevotional error: ${error.message}`);
@@ -1049,7 +1062,10 @@ export async function updateCustomDevotional(id, title, category, days, image) {
     safeRevalidatePath("/plans");
     safeRevalidatePath(`/plans/${id}`);
     safeRevalidatePath("/admin");
-    revalidatePublicContentPaths();
+    revalidatePublicContentPaths(
+      [`/plans/${id}`, "/topics"],
+      [`/plans/${id}`, "/plans", "/topics", "/sitemap.xml", "/rss.xml"]
+    );
     return { success: true };
   } catch (error) {
     logAdminAction(`updateCustomDevotional error: ${error.message}`);
@@ -1096,7 +1112,10 @@ export async function deleteCustomDevotional(id) {
     safeRevalidatePath("/plans");
     safeRevalidatePath(`/plans/${id}`);
     safeRevalidatePath("/admin");
-    revalidatePublicContentPaths();
+    revalidatePublicContentPaths(
+      [`/plans/${id}`, "/topics"],
+      ["/plans", "/topics", "/sitemap.xml", "/rss.xml"]
+    );
     return { success: true };
   } catch (error) {
     logAdminAction(`deleteCustomDevotional error: ${error.message}`);

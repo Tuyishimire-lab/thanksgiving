@@ -58,6 +58,12 @@ export default function Footer() {
               <Link href="/plans">Reading Plans</Link>
             </li>
             <li>
+              <Link href="/topics">Faith Topics</Link>
+            </li>
+            <li>
+              <Link href="/verse-of-the-day">Verse of the Day</Link>
+            </li>
+            <li>
               <Link href="/quotes">Daily Quotes</Link>
             </li>
           </ul>
@@ -76,6 +82,9 @@ export default function Footer() {
             </li>
             <li>
               <Link href="/share">Share PraisePage</Link>
+            </li>
+            <li>
+              <a href="/rss.xml">RSS Feed</a>
             </li>
           </ul>
         </div>

@@ -1,5 +1,6 @@
 import { devotionals } from "@/data/devotionals";
 import { posts } from "@/data/posts";
+import { TOPICS } from "@/data/topics";
 import { SITE_URL, stripMarkup, truncateDescription } from "@/lib/seo";
 import { getCustomDevotionals, getPublicTestimoniesList } from "@/app/actions/dbActions";
 
@@ -76,6 +77,8 @@ export async function GET() {
     "## Primary Pages",
     "",
     `- [Home — Verse of the Day & Gratitude Sanctuary](${SITE_URL}/): ${SITE_URL}/`,
+    `- [Verse of the Day & Recent Archive](${SITE_URL}/verse-of-the-day): ${SITE_URL}/verse-of-the-day — Daily scripture spotlight and 7-day archive.`,
+    `- [Faith & Emotion Topics Hub](${SITE_URL}/topics): ${SITE_URL}/topics — Guided scriptures, prayers, FAQs, and plans across 17 faith & emotional themes.`,
     `- [Holy Bible Reader](${SITE_URL}/bible): ${SITE_URL}/bible — Read every book and chapter of scripture with verse notes and highlights.`,
     `- [Guided Devotional Plans](${SITE_URL}/plans): ${SITE_URL}/plans — Browse ${allPlans.length} multi-day devotional plans across ${categories.length} themes.`,
     `- [Community Testimonies Feed](${SITE_URL}/feed): ${SITE_URL}/feed — Real stories of faith, gratitude, healing, and answered prayer.`,
@@ -84,6 +87,7 @@ export async function GET() {
     `- [Contact PraisePage](${SITE_URL}/contacts): ${SITE_URL}/contacts — Reach the PraisePage ministry team.`,
     `- [Share PraisePage](${SITE_URL}/share): ${SITE_URL}/share — Invite friends and community members.`,
     `- [Privacy Policy](${SITE_URL}/privacy): ${SITE_URL}/privacy — Data handling and privacy commitments.`,
+    `- [RSS Feed (Verse, Testimonies & Plans)](${SITE_URL}/rss.xml): ${SITE_URL}/rss.xml`,
     `- [Full Text Index for AI Crawlers](${SITE_URL}/llms-full.txt): ${SITE_URL}/llms-full.txt`,
     `- [XML Sitemap](${SITE_URL}/sitemap.xml): ${SITE_URL}/sitemap.xml`,
     "",
@@ -93,9 +97,21 @@ export async function GET() {
     "",
   ];
 
+  const topicByCategory = new Map();
+  for (const topic of TOPICS) {
+    if (topic?.category) {
+      topicByCategory.set(topic.category.trim().toLowerCase(), topic);
+    }
+  }
+
   for (const [category, catPlans] of plansByCategory.entries()) {
     lines.push(`### ${category} (${catPlans.length} ${catPlans.length === 1 ? "plan" : "plans"})`);
     lines.push("");
+    const matchingTopic = topicByCategory.get(String(category).trim().toLowerCase());
+    if (matchingTopic?.slug) {
+      lines.push(`Topic Hub: ${SITE_URL}/topics/${encodeURIComponent(matchingTopic.slug)}`);
+      lines.push("");
+    }
     for (const plan of catPlans) {
       const daysCount = Array.isArray(plan.days) ? plan.days.length : 0;
       const canonicalUrl = `${SITE_URL}/plans/${encodeURIComponent(plan.id)}`;

@@ -4365,6 +4365,275 @@ body.light-theme .sanc-highlight-dot.highlight-pink {
 }
 
 /* ==========================================================================
+   Faith Topics, FAQ Accordions & Verse of the Day
+   ========================================================================== */
+.sanc-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.sanc-topic-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.sanc-topic-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--sanc-gold-border);
+  box-shadow: var(--sanc-shadow-hover);
+}
+
+.sanc-topic-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: var(--sanc-surface-2);
+  overflow: hidden;
+}
+
+.sanc-topic-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.sanc-topic-card:hover .sanc-topic-cover img {
+  transform: scale(1.03);
+}
+
+.sanc-topic-cover-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 16, 22, 0.06) 35%,
+    rgba(13, 16, 22, 0.8) 100%
+  );
+}
+
+.sanc-topic-body {
+  padding: 1.8rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+}
+
+.sanc-topic-hero {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--sanc-border);
+  border-top: 2px solid var(--sanc-gold);
+  box-shadow: var(--sanc-shadow);
+  margin-bottom: 2.8rem;
+  background: var(--sanc-surface);
+}
+
+.sanc-topic-hero-media {
+  position: relative;
+  width: 100%;
+  min-height: 29rem;
+}
+
+.sanc-topic-hero-media img {
+  object-fit: cover;
+}
+
+.sanc-topic-hero-overlay {
+  position: relative;
+  z-index: 1;
+  padding: 3.4rem 3.2rem;
+  min-height: 29rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  background: linear-gradient(
+    115deg,
+    rgba(16, 18, 24, 0.92) 0%,
+    rgba(16, 18, 24, 0.78) 58%,
+    rgba(16, 18, 24, 0.56) 100%
+  );
+  color: #f5f2eb;
+}
+
+.sanc-topic-prayer {
+  background:
+    radial-gradient(circle at top right, var(--sanc-gold-soft), transparent 55%),
+    var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-left: 3px solid var(--sanc-gold);
+  border-radius: 16px;
+  padding: 2.2rem 2.4rem;
+  box-shadow: var(--sanc-shadow);
+  font-family: var(--font-family-reader), Georgia, serif;
+  font-size: 1.62rem;
+  line-height: 1.72;
+  color: var(--sanc-text);
+}
+
+.sanc-verse-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem;
+}
+
+.sanc-verse-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-top: 2px solid var(--sanc-gold-border);
+  border-radius: 16px;
+  padding: 2rem 2.2rem;
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.2rem;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sanc-verse-card:hover {
+  border-color: var(--sanc-gold-border);
+  transform: translateY(-2px);
+  box-shadow: var(--sanc-shadow-hover);
+}
+
+.sanc-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sanc-faq-item {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 14px;
+  box-shadow: var(--sanc-shadow);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.sanc-faq-item[open] {
+  border-color: var(--sanc-gold-border);
+}
+
+.sanc-faq-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1.65rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  font-family: var(--font-family-serif), Georgia, serif;
+  font-size: 1.68rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--sanc-text);
+  user-select: none;
+}
+
+.sanc-faq-summary::-webkit-details-marker {
+  display: none;
+}
+
+.sanc-faq-summary i {
+  font-size: 1.85rem;
+  color: var(--sanc-gold);
+  flex-shrink: 0;
+  line-height: 1;
+  transition: transform 0.22s ease;
+}
+
+.sanc-faq-item[open] .sanc-faq-summary i {
+  transform: rotate(180deg);
+}
+
+.sanc-faq-summary:focus-visible {
+  outline: 2px solid var(--sanc-gold);
+  outline-offset: -2px;
+}
+
+.sanc-faq-body {
+  padding: 1.3rem 2rem 1.8rem;
+  border-top: 1px solid var(--sanc-border);
+  font-size: 1.46rem;
+  line-height: 1.72;
+  color: var(--sanc-muted);
+}
+
+.sanc-votd-hero {
+  background:
+    radial-gradient(circle at top right, var(--sanc-gold-soft), transparent 55%),
+    linear-gradient(155deg, var(--sanc-surface) 0%, var(--sanc-surface-2) 100%);
+  border: 1px solid var(--sanc-border);
+  border-top: 2px solid var(--sanc-gold);
+  border-radius: 22px;
+  padding: 3.4rem 3.2rem;
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+  margin-bottom: 2.8rem;
+}
+
+.sanc-votd-quote {
+  font-family: var(--font-family-reader), Georgia, serif;
+  font-size: clamp(2.1rem, 2.8vw, 2.85rem);
+  line-height: 1.5;
+  color: var(--sanc-text);
+  font-style: italic;
+  margin: 0;
+  padding-left: 2rem;
+  border-left: 3px solid var(--sanc-gold);
+}
+
+.sanc-votd-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.sanc-votd-history-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.6rem;
+}
+
+.sanc-votd-day-card {
+  background: var(--sanc-surface);
+  border: 1px solid var(--sanc-border);
+  border-radius: 16px;
+  padding: 1.8rem 2rem;
+  box-shadow: var(--sanc-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.1rem;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sanc-votd-day-card:hover {
+  border-color: var(--sanc-gold-border);
+  transform: translateY(-2px);
+  box-shadow: var(--sanc-shadow-hover);
+}
+
+/* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
 @media (min-width: 1024px) {
@@ -4423,14 +4692,17 @@ body.light-theme .sanc-highlight-dot.highlight-pink {
 }
 
 @media (max-width: 860px) {
-  .sanc-grid-3 {
+  .sanc-grid-3,
+  .sanc-topic-grid,
+  .sanc-votd-history-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .sanc-grid-2,
   .sanc-feed-grid,
   .sanc-admin-form-grid,
-  .sanc-profile-hero-grid {
+  .sanc-profile-hero-grid,
+  .sanc-verse-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -4589,6 +4861,37 @@ body.light-theme .sanc-highlight-dot.highlight-pink {
     width: 3.2rem;
     height: 3.2rem;
     font-size: 1.2rem;
+  }
+
+  .sanc-topic-grid,
+  .sanc-votd-history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sanc-topic-hero-media,
+  .sanc-topic-hero-overlay {
+    min-height: 22rem;
+  }
+
+  .sanc-topic-hero-overlay {
+    padding: 2.2rem 1.8rem;
+  }
+
+  .sanc-votd-hero {
+    padding: 2.2rem 1.8rem;
+  }
+
+  .sanc-votd-quote {
+    padding-left: 1.4rem;
+  }
+
+  .sanc-faq-summary {
+    padding: 1.4rem 1.6rem;
+    font-size: 1.55rem;
+  }
+
+  .sanc-faq-body {
+    padding: 1.1rem 1.6rem 1.5rem;
   }
 }
 
