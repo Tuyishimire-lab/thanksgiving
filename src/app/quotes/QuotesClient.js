@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
+import ShareCardTrigger from "@/components/ShareCardTrigger";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -103,7 +104,27 @@ function QuotesContent({ quotes = [], categories = [], initialCategory = "All" }
                     <blockquote className="sanc-quote-text">
                       &ldquo;{quote.text}&rdquo;
                     </blockquote>
-                    <cite className="sanc-quote-ref">&mdash; {quote.reference}</cite>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: "0.8rem",
+                        marginTop: "0.2rem",
+                      }}
+                    >
+                      <cite className="sanc-quote-ref">&mdash; {quote.reference}</cite>
+                      <ShareCardTrigger
+                        verseText={quote.text}
+                        verseTag={quote.reference}
+                        sharePath="/quotes"
+                        initialAspectRatio="9:16"
+                        modalTitle="Share Scripture Quote Card"
+                        label="Share Card"
+                        className="sanc-btn-gold sanc-btn-sm"
+                      />
+                    </div>
                   </div>
                 </article>
               </SwiperSlide>

@@ -79,21 +79,12 @@ export const metadata = {
     description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
     url: SITE_URL,
     siteName: "PraisePage",
-    images: [
-      {
-        url: "/assets/images/praisepage.jpeg",
-        width: 1200,
-        height: 630,
-        alt: "PraisePage Logo",
-      },
-    ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "PraisePage | A Sanctuary of Gratitude & Faith",
     description: "Explore devotional plans, scripture highlights, community testimonies, and reflections to anchor your life in gratitude and faith.",
-    images: ["/assets/images/praisepage.jpeg"],
   },
 };
 

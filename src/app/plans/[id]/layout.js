@@ -41,7 +41,6 @@ export async function generateMetadata({ params }) {
   const title = `${plan.title} Devotional Plan`;
   const description = buildPlanDescription(plan);
   const canonicalPath = `/plans/${encodeURIComponent(id)}`;
-  const imageUrl = toAbsoluteUrl(plan.image || DEFAULT_OG_IMAGE);
 
   return {
     title,
@@ -54,18 +53,11 @@ export async function generateMetadata({ params }) {
       description,
       url: toAbsoluteUrl(canonicalPath),
       type: "article",
-      images: [
-        {
-          url: imageUrl,
-          alt: plan.title,
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | PraisePage`,
       description,
-      images: [imageUrl],
     },
   };
 }

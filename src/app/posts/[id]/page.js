@@ -11,7 +11,9 @@ import {
   serializeJsonLd,
   truncateDescription,
   sanitizeArticleHtml,
+  stripMarkup,
 } from "@/lib/seo";
+import ShareCardTrigger from "@/components/ShareCardTrigger";
 
 export const revalidate = 300;
 
@@ -49,8 +51,6 @@ export async function generateMetadata({ params }) {
   const cleanDescription =
     truncateDescription(post.excerpt || extractFirstParagraph(post) || post.title, 155) ||
     "Read this community testimony of gratitude and faith on PraisePage.";
-  const coverSrc = post.image || getDefaultTestimonyCover(post.tag) || DEFAULT_OG_IMAGE;
-  const coverUrl = toAbsoluteUrl(coverSrc);
   const canonicalPath = `/posts/${encodeURIComponent(id)}`;
   const publishedTime = toSafeIsoDate(post.createdAtRaw || post.date);
   const authorName = post.author || "PraisePage";
@@ -70,18 +70,11 @@ export async function generateMetadata({ params }) {
       publishedTime,
       authors: [authorName],
       tags: postTags,
-      images: [
-        {
-          url: coverUrl,
-          alt: post.title,
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${post.title} | PraisePage`,
       description: cleanDescription,
-      images: [coverUrl],
     },
   };
 }
@@ -104,6 +97,11 @@ export default async function PostPage({ params }) {
   const authorName = post.author || "PraisePage";
   const postTag = post.tag || "Gratitude";
   const blocks = Array.isArray(post.content) ? post.content : [];
+  const rawStorySnippet =
+    extractFirstParagraph(post) || post.excerpt || post.title || "";
+  const storySnippet =
+    truncateDescription(rawStorySnippet, 180) || stripMarkup(post.title);
+  const storyAttribution = `${authorName} · PraisePage`;
 
   const schemaJson = {
     "@context": "https://schema.org",
@@ -184,13 +182,24 @@ export default async function PostPage({ params }) {
               <span>Back to Community Feed</span>
             </Link>
 
-            <Link
-              href={`/feed?post=${encodeURIComponent(post.id)}`}
-              className="sanc-btn-secondary"
-            >
-              <i className="ri-chat-3-line" aria-hidden="true"></i>
-              <span>Join Discussion in Feed</span>
-            </Link>
+            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "0.8rem" }}>
+              <ShareCardTrigger
+                verseText={storySnippet}
+                verseTag={storyAttribution}
+                sharePath={`/posts/${encodeURIComponent(post.id)}`}
+                initialAspectRatio="9:16"
+                modalTitle="Share Testimony Card"
+                label="Share as Story Card"
+                className="sanc-btn-gold"
+              />
+              <Link
+                href={`/feed?post=${encodeURIComponent(post.id)}`}
+                className="sanc-btn-secondary"
+              >
+                <i className="ri-chat-3-line" aria-hidden="true"></i>
+                <span>Join Discussion in Feed</span>
+              </Link>
+            </div>
           </div>
 
           <article className="sanc-stack" style={{ gap: "2.4rem" }}>

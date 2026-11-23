@@ -9,6 +9,11 @@ import BibleReaderClient from "./BibleReaderClient";
 export async function generateMetadata({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const target = resolveBibleParams(resolvedSearchParams);
+  const ogImageUrl = `/api/og?type=bible&book=${encodeURIComponent(
+    target.book
+  )}&chapter=${target.chapter}&translation=${encodeURIComponent(
+    target.translation
+  )}`;
 
   if (target.hasExplicitTarget) {
     const title = `${target.book} ${target.chapter} (${target.translation.toUpperCase()}) Bible`;
@@ -27,26 +32,51 @@ export async function generateMetadata({ searchParams }) {
         url: `https://praisepage.com${canonicalPath}`,
         images: [
           {
-            url: "/assets/images/praisepage.jpeg",
+            url: ogImageUrl,
             width: 1200,
             height: 630,
-            alt: "PraisePage Bible"
-          }
-        ]
+            alt: title,
+          },
+        ],
       },
       twitter: {
         card: "summary_large_image",
         title: `${title} | PraisePage`,
-        description
-      }
+        description,
+        images: [ogImageUrl],
+      },
     };
   }
 
+  const defaultTitle = "Bible Reader";
+  const defaultDescription =
+    "Read, search, highlight, and write reflections on Holy Scriptures of gratitude and faith.";
+
   return {
-    title: "Bible Reader",
-    description: "Read, search, highlight, and write reflections on Holy Scriptures of gratitude and faith.",
+    title: defaultTitle,
+    description: defaultDescription,
     alternates: {
       canonical: "/bible",
+    },
+    openGraph: {
+      title: `${defaultTitle} | PraisePage`,
+      description: defaultDescription,
+      url: "https://praisepage.com/bible",
+      type: "website",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${target.book} ${target.chapter} (${target.translation.toUpperCase()}) — PraisePage Bible Reader`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${defaultTitle} | PraisePage`,
+      description: defaultDescription,
+      images: [ogImageUrl],
     },
   };
 }

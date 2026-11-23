@@ -13,6 +13,7 @@ import {
 } from "@/data/testimonyCovers";
 import { SITE_URL, toAbsoluteUrl, serializeJsonLd } from "@/lib/seo";
 import CopyVerseButton from "@/components/CopyVerseButton";
+import ShareCardTrigger from "@/components/ShareCardTrigger";
 
 export const revalidate = 3600;
 
@@ -33,7 +34,6 @@ export async function generateMetadata({ params }) {
   }
 
   const canonicalPath = `/topics/${topic.slug}`;
-  const coverUrl = toAbsoluteUrl(topic.cover);
 
   return {
     title: topic.seoTitle,
@@ -46,18 +46,11 @@ export async function generateMetadata({ params }) {
       description: topic.metaDescription,
       url: toAbsoluteUrl(canonicalPath),
       type: "website",
-      images: [
-        {
-          url: coverUrl,
-          alt: topic.seoTitle,
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${topic.seoTitle} | PraisePage`,
       description: topic.metaDescription,
-      images: [coverUrl],
     },
   };
 }
@@ -407,12 +400,30 @@ export default async function TopicDetailPage({ params }) {
                       <i className="ri-arrow-right-line" aria-hidden="true"></i>
                     </Link>
 
-                    <CopyVerseButton
-                      verseText={item.verse}
-                      reference={item.reference}
-                      sharePath={`/topics/${topic.slug}`}
-                      className="sanc-btn-ghost sanc-btn-sm"
-                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: "0.6rem",
+                      }}
+                    >
+                      <CopyVerseButton
+                        verseText={item.verse}
+                        reference={item.reference}
+                        sharePath={`/topics/${topic.slug}`}
+                        className="sanc-btn-ghost sanc-btn-sm"
+                      />
+                      <ShareCardTrigger
+                        verseText={item.verse}
+                        verseTag={item.reference}
+                        sharePath={`/topics/${topic.slug}`}
+                        initialAspectRatio="9:16"
+                        modalTitle={`Share ${topic.name} Verse`}
+                        label="Share Card"
+                        className="sanc-btn-gold sanc-btn-sm"
+                      />
+                    </div>
                   </div>
                 </article>
               ))}

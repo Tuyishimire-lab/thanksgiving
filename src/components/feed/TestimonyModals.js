@@ -8,7 +8,25 @@ import {
   getDefaultTestimonyCover,
   shouldBypassNextImageOpt,
 } from "@/data/testimonyCovers";
+import { stripMarkup, truncateDescription } from "@/lib/seo";
+import ShareCardTrigger from "@/components/ShareCardTrigger";
 import TestimonyCoverPicker from "./TestimonyCoverPicker";
+
+function extractStoryCardSnippet(post) {
+  if (!post) return "";
+  let raw = "";
+  if (Array.isArray(post.content) && post.content.length > 0) {
+    const firstBlock = post.content.find(
+      (b) => b && (b.type === "paragraph" || b.type === "blockquote") && b.text
+    );
+    raw =
+      firstBlock?.text || (typeof post.content[0] === "string" ? post.content[0] : "");
+  }
+  if (!raw) {
+    raw = post.bodyText || post.excerpt || post.title || "";
+  }
+  return truncateDescription(raw, 180) || stripMarkup(post.title || "");
+}
 
 function sanitizeStoryHtml(html) {
   if (typeof html !== "string") return "";
@@ -117,6 +135,8 @@ function ReaderDialogContent({
   const authorInitial = (post.author || "A").trim().charAt(0).toUpperCase() || "A";
   const commentDisplayCount = Math.max(comments.length, post.commentsCount || 0);
   const coverSrc = post.image || getDefaultTestimonyCover(post.tag);
+  const storySnippet = extractStoryCardSnippet(post);
+  const storyAttribution = `${post.author || "PraisePage"} · PraisePage`;
 
   return (
     <div
@@ -254,6 +274,15 @@ function ReaderDialogContent({
               </div>
 
               <div className="sanc-story-engage-right">
+                <ShareCardTrigger
+                  verseText={storySnippet}
+                  verseTag={storyAttribution}
+                  sharePath={`/posts/${encodeURIComponent(post.id)}`}
+                  initialAspectRatio="9:16"
+                  modalTitle="Share Testimony Card"
+                  label="Share Card"
+                  className="sanc-story-action-pill"
+                />
                 <Link
                   href={`/posts/${encodeURIComponent(post.id)}`}
                   className="sanc-story-action-pill"

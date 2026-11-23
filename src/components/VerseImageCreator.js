@@ -483,23 +483,44 @@ async function renderVerseCard(canvas, config, isCancelled = () => false) {
   }
 }
 
+function normalizeSharePath(sharePath) {
+  if (typeof sharePath !== "string") return "";
+  const trimmed = sharePath.trim();
+  if (!trimmed || trimmed === "/") return "";
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
 export default function VerseImageCreator({
   verseText,
   verseTag,
   onClose,
   embedded = false,
+  sharePath = "",
+  initialAspectRatio = "1:1",
+  modalTitle = "Shareable Verse Card",
+  defaultBgId = null,
 }) {
-  const [selectedBg, setSelectedBg] = useState(CARD_BG_PRESETS[0]);
+  const initialRatio = CARD_ASPECT_RATIOS.some(
+    (ratio) => ratio.id === initialAspectRatio
+  )
+    ? initialAspectRatio
+    : "1:1";
+  const initialBg =
+    CARD_BG_PRESETS.find((preset) => preset.id === defaultBgId) ||
+    CARD_BG_PRESETS[0];
+  const normalizedSharePath = normalizeSharePath(sharePath);
+
+  const [selectedBg, setSelectedBg] = useState(initialBg);
   const [bgCategory, setBgCategory] = useState("all");
   const [customUploadBg, setCustomUploadBg] = useState(null);
-  const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [aspectRatio, setAspectRatio] = useState(initialRatio);
   const [frame, setFrame] = useState("classic");
   const [fontStyle, setFontStyle] = useState("Classic");
   const [isItalic, setIsItalic] = useState(true);
   const [fontSize, setFontSize] = useState(21);
   const [alignment, setAlignment] = useState("center");
-  const [textColor, setTextColor] = useState(CARD_BG_PRESETS[0].defaultTextColor);
-  const [overlayOpacity, setOverlayOpacity] = useState(CARD_BG_PRESETS[0].defaultOverlay);
+  const [textColor, setTextColor] = useState(initialBg.defaultTextColor);
+  const [overlayOpacity, setOverlayOpacity] = useState(initialBg.defaultOverlay);
   const [showVignette, setShowVignette] = useState(true);
   const [showGrain, setShowGrain] = useState(false);
   const [showWatermark, setShowWatermark] = useState(true);
@@ -704,11 +725,13 @@ export default function VerseImageCreator({
       if (blob) {
         const file = new File([blob], filename, { type: fileFormat });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          const rawShareUrl = `https://${brandHost}${normalizedSharePath}`;
           try {
             await navigator.share({
               files: [file],
-              title: "Daily Word of PraisePage",
+              title: modalTitle || "Daily Word of PraisePage",
               text: `"${verseText}" - ${verseTag}`,
+              url: rawShareUrl,
             });
             showToast("ok", "Shared card!");
             return;
@@ -739,10 +762,11 @@ export default function VerseImageCreator({
       ? allPresets
       : allPresets.filter((p) => p.category === bgCategory);
 
+  const rawShareUrl = `https://${brandHost}${normalizedSharePath}`;
   const shareText = encodeURIComponent(
     `"${verseText}" \u2014 ${verseTag} via ${brandHost}`
   );
-  const shareUrl = encodeURIComponent(`https://${brandHost}`);
+  const shareUrl = encodeURIComponent(rawShareUrl);
 
   return (
     <div>
@@ -756,7 +780,7 @@ export default function VerseImageCreator({
           }}
         >
           <h3 style={{ fontSize: "1.9rem", fontWeight: 700, margin: 0 }}>
-            Shareable Verse Card
+            {modalTitle || "Shareable Verse Card"}
           </h3>
           {onClose && (
             <button

@@ -3,6 +3,7 @@ import { SITE_URL } from "@/lib/seo";
 const SHARED_ALLOW = [
   "/",
   "/api/media/",
+  "/api/og",
   "/llms.txt",
   "/llms-full.txt",
   "/rss.xml",

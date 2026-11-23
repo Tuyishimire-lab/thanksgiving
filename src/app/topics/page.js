@@ -5,7 +5,6 @@ import { devotionals } from "@/data/devotionals";
 import { getCustomDevotionals } from "@/app/actions/dbActions";
 import {
   SITE_URL,
-  DEFAULT_OG_IMAGE,
   toAbsoluteUrl,
   serializeJsonLd,
 } from "@/lib/seo";
@@ -27,20 +26,11 @@ export const metadata = {
     description: PAGE_DESCRIPTION,
     url: toAbsoluteUrl("/topics"),
     type: "website",
-    images: [
-      {
-        url: toAbsoluteUrl(DEFAULT_OG_IMAGE),
-        width: 1200,
-        height: 630,
-        alt: "PraisePage Faith & Life Topics",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${PAGE_TITLE} | PraisePage`,
     description: PAGE_DESCRIPTION,
-    images: [toAbsoluteUrl(DEFAULT_OG_IMAGE)],
   },
 };
 

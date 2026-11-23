@@ -10,6 +10,7 @@ import {
   truncateDescription,
 } from "@/lib/seo";
 import CopyVerseButton from "@/components/CopyVerseButton";
+import ShareCardTrigger from "@/components/ShareCardTrigger";
 
 export const revalidate = 3600;
 
@@ -40,7 +41,6 @@ export async function generateMetadata() {
     155
   );
   const ogUrl = toAbsoluteUrl("/verse-of-the-day");
-  const ogImage = toAbsoluteUrl(DEFAULT_OG_IMAGE);
 
   return {
     title,
@@ -53,20 +53,11 @@ export async function generateMetadata() {
       description,
       url: ogUrl,
       type: "article",
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: `Verse of the Day: ${votd.tag}`,
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | PraisePage`,
       description,
-      images: [ogImage],
     },
   };
 }
@@ -220,6 +211,15 @@ export default function VerseOfTheDayPage() {
                   reference={votd.tag}
                   sharePath="/verse-of-the-day"
                   className="sanc-btn-gold"
+                />
+                <ShareCardTrigger
+                  verseText={votd.verse}
+                  verseTag={votd.tag}
+                  sharePath="/verse-of-the-day"
+                  initialAspectRatio="9:16"
+                  modalTitle="Share Verse of the Day Story"
+                  label="Share Story Card"
+                  className="sanc-btn-secondary"
                 />
                 <Link href={chapterHref} className="sanc-btn-primary">
                   <span>Read Full Chapter</span>
