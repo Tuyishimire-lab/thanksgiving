@@ -1,7 +1,9 @@
 import { SITE_URL, toAbsoluteUrl } from "@/lib/seo";
 
+export const DEFAULT_INDEXNOW_KEY = "1f0ed3d8617a44cbb1fcb9aa32c758e1";
+
 export function getIndexNowKey() {
-  return (process.env.INDEXNOW_KEY || "").trim();
+  return (process.env.INDEXNOW_KEY || "").trim() || DEFAULT_INDEXNOW_KEY;
 }
 
 export function isIndexNowConfigured() {
