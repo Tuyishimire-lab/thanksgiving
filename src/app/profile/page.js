@@ -23,6 +23,8 @@ export default async function ProfilePage() {
     const meta = {
       id: p.id,
       title: p.title,
+      category: p.category || "Devotional",
+      image: p.image || "",
       daysCount: p.days?.length || 0,
     };
     if (reflectionPlanIds.has(p.id)) {
@@ -38,6 +40,8 @@ export default async function ProfilePage() {
       planMetaMap[p.id] = {
         id: p.id,
         title: p.title,
+        category: p.category || "Devotional",
+        image: p.image || "",
         daysCount: p.daysCount || 0,
       };
     });

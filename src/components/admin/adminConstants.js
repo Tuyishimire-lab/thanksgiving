@@ -174,3 +174,67 @@ export function sanitizeAdminHtml(html) {
     .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|`[^`]*`|[^\s>]+)/gi, "")
     .replace(/javascript\s*:/gi, "");
 }
+
+export const TESTIMONY_CATEGORIES = [
+  "Gratitude",
+  "Hope",
+  "Love",
+  "Strength",
+  "Patience",
+  "Joy",
+];
+
+export const PUSH_AUDIENCE_OPTIONS = [
+  { id: "self", label: "Test Push (My Devices Only)" },
+  { id: "all", label: "All Push Subscribers" },
+  { id: "verse_of_day", label: "Verse of the Day Subscribers" },
+  { id: "devotional_reminder", label: "Devotional Reminder Subscribers" },
+  { id: "gratitude_journal", label: "Gratitude Journal Subscribers" },
+  { id: "scripture_quiz", label: "Scripture Quiz Subscribers" },
+];
+
+function escapeCsvCell(value) {
+  const raw = value == null ? "" : String(value);
+  const neutralized = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  if (/[",\r\n]/.test(neutralized)) {
+    return `"${neutralized.replace(/"/g, '""')}"`;
+  }
+  return neutralized;
+}
+
+export function exportRowsToCsv(filename, columns, rows) {
+  if (typeof document === "undefined" || typeof Blob === "undefined" || typeof URL === "undefined") {
+    return;
+  }
+
+  const normalizedCols = (Array.isArray(columns) ? columns : []).map((col) =>
+    typeof col === "string"
+      ? { key: col, label: col }
+      : { key: col?.key ?? "", label: col?.label ?? col?.key ?? "" }
+  );
+  const safeRows = Array.isArray(rows) ? rows : [];
+
+  const headerLine = normalizedCols.map((col) => escapeCsvCell(col.label)).join(",");
+  const dataLines = safeRows.map((row) =>
+    normalizedCols.map((col) => escapeCsvCell(row?.[col.key])).join(",")
+  );
+  const csvContent = [headerLine, ...dataLines].join("\r\n");
+
+  const trimmedName = typeof filename === "string" ? filename.trim() : "";
+  const safeFilename = trimmedName
+    ? trimmedName.toLowerCase().endsWith(".csv")
+      ? trimmedName
+      : `${trimmedName}.csv`
+    : "export.csv";
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", safeFilename);
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

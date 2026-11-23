@@ -1,13 +1,30 @@
 "use server";
 
 import { getDb } from "@/data/db";
-import { unstable_cache, revalidateTag } from "next/cache";
+import { unstable_cache, revalidatePath, revalidateTag } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { parseContentBlocks } from "@/data/utils";
+import {
+  estimateReadTime,
+  getDefaultTestimonyCover,
+  getThemeCovers,
+  isSafeTestimonyCoverUrl,
+  isUploadedMediaUrl,
+} from "@/data/testimonyCovers";
+import { verifyUploadedCoverOwnership } from "@/lib/mediaStorage";
 import { getMe, updateStreakAction } from "./authActions";
 import crypto from "node:crypto";
 
 // ================= SHARED HELPERS & CACHE WRAPPERS =================
+
+function safeRevalidatePath(targetPath) {
+  try {
+    revalidatePath(targetPath);
+  } catch (err) {
+    if (err?.message?.includes("static generation store missing")) return;
+    throw err;
+  }
+}
 
 function safeRevalidateTag(tag) {
   try {
@@ -126,7 +143,7 @@ function formatPublicTestimonyRow(r) {
     tag: r.tag || "Gratitude",
     date: formatDateLabel(r.created_at),
     readTime: r.read_time,
-    image: r.image || "/assets/images/featured/featured-2.jpg",
+    image: r.image || getDefaultTestimonyCover(r.tag || "Gratitude"),
     excerpt: r.excerpt || fallbackText.substring(0, 100) + "...",
     likesCount: r.likes_count,
     commentsCount: r.comments_count,
@@ -315,7 +332,7 @@ export async function getTestimonies(limit = 0) {
   }
 }
 
-export async function createTestimony(title, content, tag = "Gratitude") {
+export async function createTestimony(title, content, tag = "Gratitude", coverImage = "") {
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
@@ -326,20 +343,61 @@ export async function createTestimony(title, content, tag = "Gratitude") {
       return { error: "Please fill in all fields." };
     }
 
+    const cleanTag = typeof tag === "string" && tag.trim() ? tag.trim() : "Gratitude";
     const trimmedContent = content.trim();
     const id = `testimony_${crypto.randomUUID()}`;
     const contentBlocks = parseContentBlocks(trimmedContent);
     const excerpt = trimmedContent.substring(0, 120) + (trimmedContent.length > 120 ? "..." : "");
     const dateStr = new Date().toISOString();
+    const readTime = estimateReadTime(trimmedContent);
 
     const db = await getDb();
+    const rawCover = typeof coverImage === "string" ? coverImage.trim() : "";
+    let finalImage = "";
+
+    if (rawCover) {
+      if (!isSafeTestimonyCoverUrl(rawCover)) {
+        return { error: "Invalid cover image URL." };
+      }
+      if (isUploadedMediaUrl(rawCover)) {
+        const ownsCover = await verifyUploadedCoverOwnership(rawCover, user.user_id, db);
+        if (!ownsCover) {
+          return { error: "Unauthorized cover image reference." };
+        }
+      }
+      finalImage = rawCover;
+    } else {
+      const themeCovers = getThemeCovers(cleanTag);
+      const recentRes = await db.execute(
+        "SELECT image FROM testimonies ORDER BY created_at DESC LIMIT 4"
+      );
+      const recentImages = new Set(recentRes.rows.map((r) => r.image).filter(Boolean));
+      const nonRepeating = themeCovers.find((preset) => !recentImages.has(preset.url));
+      finalImage = nonRepeating
+        ? nonRepeating.url
+        : getDefaultTestimonyCover(cleanTag, recentRes.rows.length);
+    }
+
     await db.execute({
       sql: `INSERT INTO testimonies (id, user_id, author_name, title, content, tag, created_at, read_time, image, excerpt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, '2 Min read', '/assets/images/featured/featured-2.jpg', ?)`,
-      args: [id, user.user_id, user.name, title.trim(), JSON.stringify(contentBlocks), tag, dateStr, excerpt],
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        id,
+        user.user_id,
+        user.name,
+        title.trim(),
+        JSON.stringify(contentBlocks),
+        cleanTag,
+        dateStr,
+        readTime,
+        finalImage,
+        excerpt,
+      ],
     });
 
     safeRevalidateTag("public-testimonies");
+    safeRevalidatePath("/");
+    safeRevalidatePath("/feed");
     return { success: true };
   } catch (error) {
     console.error("Error creating testimony:", error);
@@ -803,18 +861,23 @@ export async function syncLocalData(localData) {
             .join(" ")
             .trim();
           const excerpt = contentText.substring(0, 120) + (contentText.length > 120 ? "..." : "");
+          const cleanTag = t.tag || "Gratitude";
+          const readTime = estimateReadTime(contentText);
+          const defaultImage = getDefaultTestimonyCover(cleanTag);
 
           await db.execute({
             sql: `INSERT INTO testimonies (id, user_id, author_name, title, content, tag, created_at, read_time, image, excerpt)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, '2 Min read', '/assets/images/featured/featured-2.jpg', ?)`,
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
               id,
               userId,
               authorName,
               t.title,
               JSON.stringify(contentBlocks),
-              t.tag || "Gratitude",
+              cleanTag,
               t.date || new Date().toISOString(),
+              readTime,
+              defaultImage,
               excerpt,
             ],
           });

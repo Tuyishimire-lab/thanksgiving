@@ -1,6 +1,6 @@
 import { posts } from "./posts.js";
 
-let isInitialized = false;
+const initializedClients = new WeakSet();
 
 const REQUIRED_TABLES = [
   "users",
@@ -21,6 +21,8 @@ const REQUIRED_TABLES = [
   "prayer_encouragements",
   "push_subscriptions",
   "notification_preferences",
+  "admin_audit_logs",
+  "media_uploads",
 ];
 
 const REQUIRED_INDEXES = [
@@ -39,6 +41,8 @@ const REQUIRED_INDEXES = [
   "idx_prayers_status_created",
   "idx_gratitude_journal_user",
   "idx_plan_reflections_user",
+  "idx_admin_audit_logs_created",
+  "idx_media_uploads_user_created",
 ];
 
 const TABLE_DDL = [
@@ -197,6 +201,25 @@ const TABLE_DDL = [
     gratitude_journal INTEGER DEFAULT 1,
     scripture_quiz INTEGER DEFAULT 1
   )`,
+  `CREATE TABLE IF NOT EXISTS admin_audit_logs (
+    id TEXT PRIMARY KEY,
+    admin_id TEXT,
+    admin_email TEXT NOT NULL,
+    action TEXT NOT NULL,
+    target_type TEXT,
+    target_id TEXT,
+    details TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS media_uploads (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
+    size_bytes INTEGER NOT NULL,
+    data_base64 TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`,
 ];
 
 const INDEX_DDL = [
@@ -215,6 +238,8 @@ const INDEX_DDL = [
   "CREATE INDEX IF NOT EXISTS idx_prayers_status_created ON prayers(status, created_at DESC)",
   "CREATE INDEX IF NOT EXISTS idx_gratitude_journal_user ON gratitude_journal(user_id, created_at DESC)",
   "CREATE INDEX IF NOT EXISTS idx_plan_reflections_user ON plan_reflections(user_id)",
+  "CREATE INDEX IF NOT EXISTS idx_admin_audit_logs_created ON admin_audit_logs(created_at DESC)",
+  "CREATE INDEX IF NOT EXISTS idx_media_uploads_user_created ON media_uploads(user_id, created_at DESC)",
 ];
 
 function hasAllSchema(objectsMap) {
@@ -240,28 +265,33 @@ function hasAllSchema(objectsMap) {
 }
 
 export async function initializeDb(client) {
-  if (isInitialized) return;
+  if (initializedClients.has(client)) return;
 
   try {
-    // Fast-path check: verify schema & seed posts in 1 single read batch
+    // Fast-path check: verify schema, seed posts, and legacy cover status in 1 single read batch
     const postIds = posts.map((p) => p.id);
     const placeholders = postIds.map(() => "?").join(", ");
     let objectsMap = new Map();
 
     try {
-      const [schemaRes, seededRes] = await client.batch(
+      const [schemaRes, seededRes, legacyRes] = await client.batch(
         [
           "SELECT name, sql FROM sqlite_master WHERE type IN ('table', 'index')",
           {
             sql: `SELECT id FROM testimonies WHERE id IN (${placeholders})`,
             args: postIds,
           },
+          "SELECT COUNT(*) AS cnt FROM testimonies WHERE image IN ('/assets/images/featured/featured-1.jpg', '/assets/images/featured/featured-2.jpg')",
         ],
         "read"
       );
       objectsMap = new Map(schemaRes.rows.map((r) => [r.name, r.sql || ""]));
-      if (hasAllSchema(objectsMap) && seededRes.rows.length === postIds.length) {
-        isInitialized = true;
+      if (
+        hasAllSchema(objectsMap) &&
+        seededRes.rows.length === postIds.length &&
+        Number(legacyRes.rows[0]?.cnt ?? 0) === 0
+      ) {
+        initializedClients.add(client);
         return;
       }
     } catch {
@@ -339,10 +369,16 @@ export async function initializeDb(client) {
       ],
     }));
 
-    // 4. Create indexes + seed posts in one batch
-    await client.batch([...postInserts, ...INDEX_DDL], "write");
+    // 4. Create indexes, seed posts, and upgrade legacy featured covers in one batch
+    const legacyCoverUpgrades = [
+      "UPDATE testimonies SET image = '/assets/images/testimonies/hope-open-scripture.png' WHERE id = 'post1' AND image = '/assets/images/featured/featured-1.jpg'",
+      "UPDATE testimonies SET image = '/assets/images/testimonies/gratitude-dawn-journal.png' WHERE id = 'post2' AND image = '/assets/images/featured/featured-2.jpg'",
+      "UPDATE testimonies SET image = '/assets/images/testimonies/gratitude-lifted-hands.png' WHERE id != 'post2' AND image = '/assets/images/featured/featured-2.jpg'",
+      "UPDATE testimonies SET image = '/assets/images/testimonies/hope-open-scripture.png' WHERE id != 'post1' AND image = '/assets/images/featured/featured-1.jpg'",
+    ];
+    await client.batch([...postInserts, ...INDEX_DDL, ...legacyCoverUpgrades], "write");
 
-    isInitialized = true;
+    initializedClients.add(client);
   } catch (error) {
     console.error("Database initialization error:", error);
     throw error;

@@ -2,7 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import Link from "next/link";
+import {
+  getDefaultTestimonyCover,
+  shouldBypassNextImageOpt,
+} from "@/data/testimonyCovers";
+import TestimonyCoverPicker from "./TestimonyCoverPicker";
 
 function sanitizeStoryHtml(html) {
   if (typeof html !== "string") return "";
@@ -110,6 +116,7 @@ function ReaderDialogContent({
 
   const authorInitial = (post.author || "A").trim().charAt(0).toUpperCase() || "A";
   const commentDisplayCount = Math.max(comments.length, post.commentsCount || 0);
+  const coverSrc = post.image || getDefaultTestimonyCover(post.tag);
 
   return (
     <div
@@ -179,6 +186,21 @@ function ReaderDialogContent({
         {/* Scrollable Editorial Article + Encouragements */}
         <div className="sanc-modal-body sanc-story-body" onScroll={handleBodyScroll}>
           <article className="sanc-story-article">
+            <div className="sanc-story-cover">
+              <Image
+                src={coverSrc}
+                alt={post.title || "Testimony cover"}
+                fill
+                sizes="(max-width: 768px) 100vw, 660px"
+                unoptimized={shouldBypassNextImageOpt(coverSrc)}
+              />
+              <div className="sanc-story-cover-scrim" aria-hidden="true" />
+              <span className="sanc-story-cover-badge">
+                <i className="ri-sparkling-line" aria-hidden="true"></i>
+                #{post.tag || "Gratitude"}
+              </span>
+            </div>
+
             <div className="sanc-story-kicker">
               <span className="sanc-badge emerald">#{post.tag}</span>
               <span>&bull;</span>
@@ -410,8 +432,14 @@ export function ShareTestimonyModal({
   formSubmitted,
   postLoading,
   postError,
+  pendingUpload = null,
+  coverUploadError = "",
   onClose,
   onFormChange,
+  onSelectStockCover,
+  onCoverUploadReady,
+  onClearCoverUpload,
+  onCoverUploadError,
   onInsertFormatting,
   onSubmit,
 }) {
@@ -432,7 +460,7 @@ export function ShareTestimonyModal({
       }}
     >
       <div
-        className="sanc-modal-dialog"
+        className="sanc-modal-dialog wide"
         role="dialog"
         aria-modal="true"
         aria-labelledby="share-story-title"
@@ -530,6 +558,22 @@ export function ShareTestimonyModal({
                   <option value="Patience">Patience</option>
                   <option value="Joy">Joy</option>
                 </select>
+              </div>
+
+              <div className="sanc-field">
+                <span className="sanc-label">Story Cover Artwork</span>
+                <TestimonyCoverPicker
+                  tag={formData?.tag || "Gratitude"}
+                  title={formData?.title || ""}
+                  selectedCover={formData?.image || ""}
+                  pendingUpload={pendingUpload}
+                  uploadError={coverUploadError}
+                  disabled={postLoading}
+                  onSelectStock={onSelectStockCover}
+                  onUploadReady={onCoverUploadReady}
+                  onClearUpload={onClearCoverUpload}
+                  onUploadError={onCoverUploadError}
+                />
               </div>
 
               <div className="sanc-field">

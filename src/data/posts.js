@@ -5,7 +5,7 @@ export const posts = [
     title: "Finding Faith in a Modern World",
     date: "12 March 2024",
     readTime: "3 Min read",
-    image: "/assets/images/featured/featured-1.jpg",
+    image: "/assets/images/testimonies/hope-open-scripture.png",
     excerpt: "The modern world is a whirlwind of information, technology, and constant change. In this fast-paced environment, it can be easy to feel lost...",
     content: [
       {
@@ -50,7 +50,7 @@ export const posts = [
     title: "We Can Use Faith",
     date: "18 May 2024",
     readTime: "3 Min read",
-    image: "/assets/images/featured/featured-2.jpg",
+    image: "/assets/images/testimonies/gratitude-dawn-journal.png",
     excerpt: "Today I am testifying wondrous deeds of our Lord. Fear gripped my heart for so long, tightening its hold with each passing day. But today, I am here...",
     content: [
       {

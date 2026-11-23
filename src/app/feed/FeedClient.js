@@ -21,6 +21,12 @@ function subscribeNoop() {
   return () => {};
 }
 
+function revokeBlobUrl(url) {
+  if (typeof url === "string" && url.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
+
 function buildLikedMap(posts) {
   const initialLikes = {};
   if (Array.isArray(posts)) {
@@ -49,7 +55,15 @@ export default function FeedClient({
   const [allPosts, setAllPosts] = useState(initialPosts);
   const [showModal, setShowModal] = useState(() => Boolean(initialShare && initialUser));
   const [likedPosts, setLikedPosts] = useState(() => buildLikedMap(initialPosts));
-  const [formData, setFormData] = useState({ title: "", content: "", tag: "Gratitude" });
+  const [formData, setFormData] = useState({
+    title: "",
+    content: "",
+    tag: "Gratitude",
+    image: "",
+  });
+  const [pendingUpload, setPendingUpload] = useState(null);
+  const [coverUploadError, setCoverUploadError] = useState("");
+  const [manualStockPick, setManualStockPick] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [activeTag, setActiveTag] = useState("All");
   const [visibleCount, setVisibleCount] = useState(6);
@@ -75,6 +89,7 @@ export default function FeedClient({
   const alertTimerRef = useRef(null);
   const submitTimerRef = useRef(null);
   const focusTimerRef = useRef(null);
+  const pendingPreviewUrlRef = useRef("");
 
   const showTimedFeedAlert = (nextAlert) => {
     setFeedAlert(nextAlert);
@@ -91,6 +106,8 @@ export default function FeedClient({
       if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
       if (submitTimerRef.current) clearTimeout(submitTimerRef.current);
       if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
+      revokeBlobUrl(pendingPreviewUrlRef.current);
+      pendingPreviewUrlRef.current = "";
     };
   }, []);
 
@@ -148,8 +165,9 @@ export default function FeedClient({
         setCommentsLoading(false);
         setNewCommentText("");
         setCommentError("");
-      } else if (showModal) {
+      } else if (showModal && !postLoading) {
         setShowModal(false);
+        setCoverUploadError("");
       }
     };
 
@@ -158,7 +176,7 @@ export default function FeedClient({
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isClient, isAnyModalOpen, selectedPost, showModal]);
+  }, [isClient, isAnyModalOpen, selectedPost, showModal, postLoading]);
 
   const refreshFeed = async () => {
     const [currentUser, testimonies] = await Promise.all([getMe(), getTestimonies()]);
@@ -268,8 +286,56 @@ export default function FeedClient({
     }
   };
 
+  const handleCloseShareModal = () => {
+    if (postLoading) return;
+    setShowModal(false);
+    setCoverUploadError("");
+  };
+
+  const handleSelectStockCover = (url) => {
+    revokeBlobUrl(pendingUpload?.previewUrl || pendingPreviewUrlRef.current);
+    pendingPreviewUrlRef.current = "";
+    setPendingUpload(null);
+    setCoverUploadError("");
+    setManualStockPick(true);
+    setFormData((prev) => ({
+      ...prev,
+      image: typeof url === "string" ? url : "",
+    }));
+  };
+
+  const handleCoverUploadReady = (uploadObj) => {
+    const oldUrl = pendingUpload?.previewUrl || pendingPreviewUrlRef.current;
+    const nextUrl = uploadObj?.previewUrl || "";
+    if (oldUrl && oldUrl !== nextUrl) {
+      revokeBlobUrl(oldUrl);
+    }
+    pendingPreviewUrlRef.current = nextUrl;
+    setPendingUpload(uploadObj || null);
+    setCoverUploadError("");
+  };
+
+  const handleClearCoverUpload = () => {
+    revokeBlobUrl(pendingUpload?.previewUrl || pendingPreviewUrlRef.current);
+    pendingPreviewUrlRef.current = "";
+    setPendingUpload(null);
+    setCoverUploadError("");
+  };
+
+  const handleCoverUploadError = (msg) => {
+    setCoverUploadError(typeof msg === "string" ? msg : "");
+  };
+
   const handleFormChange = (e) => {
     const { name, value } = e.target;
+    if (name === "tag") {
+      setFormData((prev) => ({
+        ...prev,
+        tag: value,
+        image: manualStockPick ? prev.image : "",
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -306,12 +372,57 @@ export default function FeedClient({
     setPostLoading(true);
     setPostError("");
 
-    const res = await createTestimony(formData.title, formData.content, formData.tag);
+    const uploadSnapshot = pendingUpload;
+    let finalCoverUrl = formData.image || "";
+
+    if (uploadSnapshot) {
+      if (uploadSnapshot.uploadedUrl) {
+        finalCoverUrl = uploadSnapshot.uploadedUrl;
+      } else {
+        try {
+          const fd = new FormData();
+          const ext = uploadSnapshot.mimeType === "image/jpeg" ? "jpg" : "webp";
+          fd.append("file", uploadSnapshot.blob, `cover.${ext}`);
+          const uploadRes = await fetch("/api/uploads/testimony-cover", {
+            method: "POST",
+            body: fd,
+          });
+          const uploadJson = await uploadRes.json().catch(() => null);
+          if (!uploadRes.ok || !uploadJson?.url) {
+            setPostError(uploadJson?.error || "Could not upload cover image.");
+            setPostLoading(false);
+            return;
+          }
+          finalCoverUrl = uploadJson.url;
+          setPendingUpload((prev) =>
+            prev && prev.previewUrl === uploadSnapshot.previewUrl
+              ? { ...prev, uploadedUrl: uploadJson.url }
+              : prev
+          );
+        } catch {
+          setPostError("Could not upload cover image. Please try again.");
+          setPostLoading(false);
+          return;
+        }
+      }
+    }
+
+    const res = await createTestimony(
+      formData.title,
+      formData.content,
+      formData.tag,
+      finalCoverUrl
+    );
     if (res.error) {
       setPostError(res.error);
       setPostLoading(false);
     } else {
-      setFormData({ title: "", content: "", tag: "Gratitude" });
+      revokeBlobUrl(uploadSnapshot?.previewUrl || pendingPreviewUrlRef.current);
+      pendingPreviewUrlRef.current = "";
+      setPendingUpload(null);
+      setCoverUploadError("");
+      setManualStockPick(false);
+      setFormData({ title: "", content: "", tag: "Gratitude", image: "" });
       setFormSubmitted(true);
       setPostLoading(false);
       router.refresh();
@@ -562,8 +673,14 @@ export default function FeedClient({
         formSubmitted={formSubmitted}
         postLoading={postLoading}
         postError={postError}
-        onClose={() => setShowModal(false)}
+        pendingUpload={pendingUpload}
+        coverUploadError={coverUploadError}
+        onClose={handleCloseShareModal}
         onFormChange={handleFormChange}
+        onSelectStockCover={handleSelectStockCover}
+        onCoverUploadReady={handleCoverUploadReady}
+        onClearCoverUpload={handleClearCoverUpload}
+        onCoverUploadError={handleCoverUploadError}
         onInsertFormatting={insertFormatting}
         onSubmit={handleFormSubmit}
       />

@@ -16,6 +16,7 @@ import JournalWidget from "@/components/JournalWidget";
 import PrayerWallSnippet from "@/components/PrayerWallSnippet";
 import BibleReflectionTrivia from "@/components/BibleReflectionTrivia";
 import FaithFootprintsTracker from "@/components/FaithFootprintsTracker";
+import { getDefaultTestimonyCover, shouldBypassNextImageOpt } from "@/data/testimonyCovers";
 
 export const revalidate = 3600; // Revalidate homepage at most once per hour
 
@@ -329,8 +330,7 @@ export default async function Home() {
 
             <div className="home-stories-grid">
               {dbTestimonies.slice(0, 4).map((post) => {
-                const postImg = post.image || "/assets/images/featured/featured-2.jpg";
-                const isExternalImg = !postImg.startsWith("/") || postImg.startsWith("//");
+                const postImg = post.image || getDefaultTestimonyCover(post.tag);
                 return (
                   <Link
                     href={`/feed?post=${encodeURIComponent(post.id)}`}
@@ -343,7 +343,7 @@ export default async function Home() {
                         alt={post.title || "Testimony"}
                         fill
                         sizes="(max-width: 960px) 100vw, 240px"
-                        unoptimized={isExternalImg}
+                        unoptimized={shouldBypassNextImageOpt(postImg)}
                         style={{ objectFit: "cover" }}
                       />
                     </div>
